@@ -50,7 +50,6 @@ public:
     using hasher = Hash;
     using key_equal = KeyEqual;
     using size_type = std::size_t;
-    using difference_type = std::ptrdiff_t;
 
     constexpr static size_type default_bucket_count = 16; // the number of buckets the hash table is initialized with
 
@@ -183,12 +182,14 @@ private:
     public:
         using iterator_concept = std::forward_iterator_tag;
         using iterator_category = std::forward_iterator_tag;
-        using difference_type = size_type;
+        using difference_type = int;
         using value_type = hash_table::value_type;
         using element_type = hash_table::value_type;
         using reference = std::conditional_t<is_const, const value_type&, value_type&>;
         using pointer = std::conditional_t<is_const, const value_type*, value_type*>;
         using info_iterator = std::conditional_t<is_const, info_storage_const_iterator, info_storage_iterator>;
+
+        constexpr iterator_impl() = default;
 
         /// @brief Iterator constructor
         ///
@@ -203,6 +204,11 @@ private:
                 fast_forward();
             }
         }
+
+        constexpr iterator_impl(const iterator_impl& other) = default;
+        constexpr iterator_impl& operator=(const iterator_impl& other) = default;
+        constexpr iterator_impl(iterator_impl&& other) = default;
+        constexpr iterator_impl& operator=(iterator_impl&& other) = default;
 
         /// @brief Pre-increment iterator
         ///
