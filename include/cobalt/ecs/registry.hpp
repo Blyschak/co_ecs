@@ -3,7 +3,7 @@
 #include <cassert>
 #include <ranges>
 
-#include <cobalt/asl/graph.hpp>
+#include <cobalt/asl/hash_map.hpp>
 #include <cobalt/asl/sparse_map.hpp>
 #include <cobalt/asl/zip.hpp>
 #include <cobalt/ecs/archetype.hpp>
@@ -19,7 +19,10 @@ public:
     entity create(Args&&... args) {
         auto entity = _entity_pool.create();
         auto components = component_meta_set::create<Args...>();
-        auto [archetype, _] = _archetypes.emplace(components);
+        auto& archetype = _archetypes[components.bitset()];
+        if (!archetype) {
+            archetype = std::make_unique<ecs::archetype>(components);
+        }
         auto location = archetype->template allocate<Args...>(entity, std::forward<Args>(args)...);
         set_location(entity.id(), location);
         return entity;
@@ -45,8 +48,12 @@ public:
         if (archetype->template contains<C>()) {
             archetype->template write<C>(location, std::forward<Args>(args)...);
         } else {
-            auto meta = component_meta::of<C>();
-            auto [new_archetype, _] = _archetypes.emplace_right(archetype, component_meta::of<C>());
+            auto components = archetype->key();
+            components.insert<C>();
+            auto& new_archetype = _archetypes[components.bitset()];
+            if (!new_archetype) {
+                new_archetype = std::make_unique<ecs::archetype>(components);
+            }
             auto [new_location, moved] = archetype->move(location, *new_archetype);
             if (moved.id() != entity::invalid_id) {
                 set_location(moved.id(), location);
@@ -54,7 +61,7 @@ public:
 
             new_archetype->template construct<C>(new_location, std::forward<Args>(args)...);
 
-            archetype = new_archetype;
+            archetype = new_archetype.get();
             set_location(id, new_location);
         }
     }
@@ -68,7 +75,12 @@ public:
             return;
         }
 
-        auto [new_archetype, _] = _archetypes.emplace_left(archetype, component_meta::of<C>());
+        auto components = archetype->key();
+        components.erase<C>();
+        auto& new_archetype = _archetypes[components.bitset()];
+        if (!new_archetype) {
+            new_archetype = std::make_unique<ecs::archetype>(components);
+        }
         auto [new_location, moved] = archetype->move(location, *new_archetype);
         if (moved.id() != entity::invalid_id) {
             set_location(moved.id(), location);
@@ -104,7 +116,7 @@ public:
         return ecs::view<Args...>(*this);
     }
 
-    asl::graph<archetype>& archetypes() {
+    asl::hash_map<component_set, std::unique_ptr<archetype>, component_set_hasher>& archetypes() {
         return _archetypes;
     }
 
@@ -127,13 +139,13 @@ private:
 
     entity_pool _entity_pool;
     asl::sparse_map<entity_id, entity_location> _entity_archetype_map;
-    asl::graph<archetype> _archetypes;
+    asl::hash_map<component_set, std::unique_ptr<archetype>, component_set_hasher> _archetypes;
 };
 
 template<component_or_reference... Args>
 auto filter_archetypes(registry& registry) -> decltype(auto) {
-    return registry.archetypes()
-           | std::views::filter([set = component_set::create<decay_component_t<Args>...>()](auto* archetype) {
+    return registry.archetypes() | std::views::values
+           | std::views::filter([set = component_set::create<decay_component_t<Args>...>()](auto& archetype) {
                  bool matched = archetype->match(set);
                  return matched;
              });
@@ -142,7 +154,7 @@ auto filter_archetypes(registry& registry) -> decltype(auto) {
 template<component_or_reference... Args>
 auto each_impl(auto archetypes) -> decltype(auto) {
     if constexpr (sizeof...(Args) == 1) {
-        return archetypes | std::views::transform([](auto* archetype) -> decltype(auto) { return archetype->chunks(); })
+        return archetypes | std::views::transform([](auto& archetype) -> decltype(auto) { return archetype->chunks(); })
                | std::views::join
                | std::views::transform([](auto& c) -> decltype(auto) { return c.template as_container_of<Args...>(); })
                | std::views::join;

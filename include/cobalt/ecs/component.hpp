@@ -231,6 +231,7 @@ public:
     }
 
 private:
+    friend class component_set_hasher;
     storage_type _component_bitset{};
 };
 
@@ -379,6 +380,13 @@ public:
 private:
     component_set _bitset;
     std::vector<component_meta> _components;
+};
+
+class component_set_hasher {
+public:
+    std::size_t operator()(const component_set& set) const {
+        return std::hash<std::uint64_t>()(set._component_bitset);
+    }
 };
 
 } // namespace cobalt::ecs
