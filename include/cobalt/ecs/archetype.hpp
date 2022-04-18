@@ -13,7 +13,7 @@ namespace cobalt::ecs {
 /// @brief Archetype is a storage for component data for entities that share the same set of components. Archetype is
 /// derived from node_base since we are going to store archetypes in a graph for fast search, insertion and erasure
 /// operations.
-class archetype : public asl::node_base<component_meta_set, archetype> {
+class archetype {
 public:
     /// @brief Construct a new archetype object
     archetype() = default;
@@ -21,14 +21,14 @@ public:
     //// @brief Construct a new archetype object
     ///
     /// @param components Components
-    archetype(const component_meta_set& components) : asl::node_base<component_meta_set, archetype>(components) {
+    archetype(const component_meta_set& components) : _components(components) {
     }
 
     /// @brief Return components set
     ///
     /// @return const component_meta_set& Component set
     [[nodiscard]] constexpr const component_meta_set& components() const noexcept {
-        return key();
+        return _components;
     }
 
     /// @brief Allocate memory for a new entity in the storage and return its location
@@ -39,11 +39,11 @@ public:
     template<component... Args>
     entity_location allocate(entity ent, Args&&... args) {
         if (_chunks.empty()) {
-            _chunks.emplace_back(key());
+            _chunks.emplace_back(components());
         }
         auto* last_chunk = &_chunks.back();
         if (last_chunk->full()) {
-            _chunks.emplace_back(key());
+            _chunks.emplace_back(components());
             last_chunk = &_chunks.back();
         }
         auto entry_index = last_chunk->size();
@@ -145,12 +145,12 @@ public:
         assert(location.entry_index < chunk.size());
 
         if (archetype._chunks.empty()) {
-            archetype._chunks.emplace_back(archetype.key());
+            archetype._chunks.emplace_back(archetype.components());
         }
 
         auto* last_chunk = &archetype._chunks.back();
         if (last_chunk->full()) {
-            archetype._chunks.emplace_back(archetype.key());
+            archetype._chunks.emplace_back(archetype.components());
             last_chunk = &archetype._chunks.back();
         }
 
@@ -169,11 +169,12 @@ public:
     }
 
     [[nodiscard]] bool match(const component_set& set) const noexcept {
-        auto u = key().bitset() & set;
+        auto u = components().bitset() & set;
         return (u == set);
     }
 
 private:
+    component_meta_set _components;
     std::vector<chunk> _chunks;
 };
 
