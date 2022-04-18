@@ -48,7 +48,7 @@ public:
         if (archetype->template contains<C>()) {
             archetype->template write<C>(location, std::forward<Args>(args)...);
         } else {
-            auto components = archetype->key();
+            auto components = archetype->components();
             components.insert<C>();
             auto& new_archetype = _archetypes[components.bitset()];
             if (!new_archetype) {
@@ -75,7 +75,7 @@ public:
             return;
         }
 
-        auto components = archetype->key();
+        auto components = archetype->components();
         components.erase<C>();
         auto& new_archetype = _archetypes[components.bitset()];
         if (!new_archetype) {

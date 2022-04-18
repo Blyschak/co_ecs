@@ -23,39 +23,6 @@ struct b {
 
 } // namespace components
 
-TEST(archetype, basic) {
-    asl::graph<ecs::archetype> g;
-    auto set = ecs::component_meta_set::create<components::a, components::b>();
-    auto [archetype, _] = g.emplace(set);
-
-    auto location = archetype->allocate(ecs::entity{ 0, 0 }, components::a(16, true), components::b(true));
-    EXPECT_EQ(location.arch, archetype);
-    EXPECT_EQ(location.chunk_index, 0);
-    EXPECT_EQ(location.entry_index, 0);
-
-    auto location1 = archetype->allocate(ecs::entity{ 1, 0 }, components::a(17, true), components::b(false));
-    EXPECT_EQ(location1.arch, archetype);
-    EXPECT_EQ(location1.chunk_index, 0);
-    EXPECT_EQ(location1.entry_index, 1);
-
-    auto& a = archetype->read<components::a>(location1);
-    EXPECT_EQ(a.foo, 17);
-    EXPECT_EQ(a.bar, true);
-
-    archetype->write<components::a>(location1, 18, false);
-
-    a = archetype->read<components::a>(location1);
-    EXPECT_EQ(a.foo, 18);
-    EXPECT_EQ(a.bar, false);
-
-    auto entity = archetype->deallocate(location);
-    EXPECT_EQ(entity, ecs::entity(1, 0));
-
-    location1.entry_index = 0;
-    auto entity1 = archetype->deallocate(location1);
-    EXPECT_EQ(entity1, ecs::entity::invalid());
-}
-
 TEST(chunk, basic) {
     auto set = ecs::component_meta_set();
     set.insert<components::a>();
