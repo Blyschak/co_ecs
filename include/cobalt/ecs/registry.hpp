@@ -21,7 +21,7 @@ public:
         auto components = component_meta_set::create<Args...>();
         auto& archetype = _archetypes[components.bitset()];
         if (!archetype) {
-            archetype = std::make_unique<ecs::archetype>(components);
+            archetype = std::make_unique<ecs::archetype>(std::move(components));
         }
         auto location = archetype->template allocate<Args...>(entity, std::forward<Args>(args)...);
         set_location(entity.id(), location);

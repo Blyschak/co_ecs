@@ -24,6 +24,9 @@ public:
     archetype(const component_meta_set& components) : _components(components) {
     }
 
+    archetype(component_meta_set&& components) : _components(std::move(components)) {
+    }
+
     /// @brief Return components set
     ///
     /// @return const component_meta_set& Component set

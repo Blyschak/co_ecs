@@ -6,8 +6,6 @@ FetchContent_Declare(
   GIT_TAG 3b3de69400164013199ea448f051d94d7fc7d81f)
 FetchContent_MakeAvailable(benchmark)
 
-add_executable(benchmarks
-  main.cpp
-)
+add_executable(benchmarks ecs/registry.cpp main.cpp)
 
 target_link_libraries(benchmarks benchmark::benchmark)
