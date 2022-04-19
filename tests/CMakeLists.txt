@@ -23,7 +23,8 @@ add_executable(
   asl/test_zip.cpp
   ecs/test_component.cpp
   ecs/test_archetype.cpp
-  ecs/test_registry.cpp)
+  ecs/test_registry.cpp
+  core/test_config.cpp)
 
 target_link_libraries(tests gtest gtest_main)
 
