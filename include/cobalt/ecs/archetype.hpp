@@ -2,7 +2,6 @@
 
 #include <iostream>
 
-#include <cobalt/asl/graph.hpp>
 #include <cobalt/ecs/chunk.hpp>
 #include <cobalt/ecs/component.hpp>
 #include <cobalt/ecs/entity.hpp>
@@ -24,6 +23,9 @@ public:
     archetype(const component_meta_set& components) : _components(components) {
     }
 
+    /// @brief Construct a new archetype object
+    ///
+    /// @param components Components
     archetype(component_meta_set&& components) : _components(std::move(components)) {
     }
 
@@ -70,6 +72,12 @@ public:
         chunk.at<Component>(location.entry_index) = Component{ std::forward<Args>(args)... };
     }
 
+    /// @brief Construct Component from Args in place
+    ///
+    /// @tparam Component Component to construct
+    /// @tparam Args Parameter pack to construct Component
+    /// @param location Location where to construct
+    /// @param args Arguments to pass to Component constructor
     template<component Component, typename... Args>
     void construct(entity_location location, Args&&... args) {
         assert(location.arch == this);
@@ -163,17 +171,18 @@ public:
         return std::make_pair(new_location, moved_id);
     }
 
+    /// @brief Return reference to chunks vector
+    ///
+    /// @return std::vector<chunk>& Reference to vector of chunks
     [[nodiscard]] std::vector<chunk>& chunks() noexcept {
         return _chunks;
     }
 
+    /// @brief Return const reference to chunks vector
+    ///
+    /// @return std::vector<chunk>& Const reference to vector of chunks
     [[nodiscard]] const std::vector<chunk>& chunks() const noexcept {
         return _chunks;
-    }
-
-    [[nodiscard]] bool match(const component_set& set) const noexcept {
-        auto u = components().bitset() & set;
-        return (u == set);
     }
 
 private:

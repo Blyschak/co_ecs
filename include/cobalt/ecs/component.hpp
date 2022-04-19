@@ -373,6 +373,9 @@ public:
         return _bitset == rhs._bitset;
     }
 
+    /// @brief Return a bitset of components
+    ///
+    /// @return const component_set& Component bitset
     const component_set& bitset() const noexcept {
         return _bitset;
     }

@@ -9,12 +9,30 @@
 #include <cobalt/ecs/archetype.hpp>
 #include <cobalt/ecs/entity.hpp>
 #include <cobalt/ecs/entity_location.hpp>
-#include <cobalt/ecs/view.hpp>
 
 namespace cobalt::ecs {
 
 class registry {
 public:
+    /// @brief Spawns a new entity in the world with components Args... attached and returns an ecs::entity that user
+    /// can use to operate on the enitty later, example:
+    ///
+    /// @code {.cpp}
+    /// struct position {
+    ///    int x;
+    ///    int y;
+    /// };
+    ///
+    /// int main() {
+    ///     ecs::registry registry;
+    ///     auto entity = registry.create<position>({ 1, 2 });
+    ///     return 0;
+    /// }
+    /// @endcode
+    ///
+    /// @tparam Args Component types
+    /// @param args components
+    /// @return entity Entity to construct
     template<component... Args>
     entity create(Args&&... args) {
         auto entity = _entity_pool.create();
@@ -28,6 +46,9 @@ public:
         return entity;
     }
 
+    /// @brief Destroy an entity
+    ///
+    /// @param ent Entity to destroy
     void destroy(entity ent) {
         assert(alive(ent));
         auto location = get_location(ent.id());
@@ -40,8 +61,37 @@ public:
         _entity_pool.recycle(ent);
     }
 
+    /// @brief Set component to an entity. It can either override a component value that is already assigned to an
+    /// entity or it may construct a new once and assign to it. Note, such operation involves an archetype change which
+    /// is a costly operation.
+    ///
+    /// @code {.cpp}
+    /// struct position {
+    ///    int x;
+    ///    int y;
+    /// };
+    ///
+    /// struct velocity {
+    ///    int x;
+    ///    int y;
+    /// };
+    ///
+    /// int main() {
+    ///     ecs::registry registry;
+    ///     auto entity = registry.create<position>({ 1, 2 });
+    ///     registry.set<position>(entity, 1, 2 );
+    ///     return 0;
+    /// }
+    /// @endcode
+    ///
+    /// @tparam C Compone type
+    /// @tparam Args Parameter pack, argument types to construct C from
+    /// @param ent Entity to assign component to
+    /// @param args Arguments to construct C from
     template<component C, typename... Args>
-    void set(entity_id id, Args&&... args) {
+    void set(entity ent, Args&&... args) {
+        assert(alive(ent));
+        auto id = ent.id();
         auto& location = get_location(id);
         auto*& archetype = location.arch;
 
@@ -66,8 +116,15 @@ public:
         }
     }
 
+    /// @brief Remove component C from an entity. In case entity does not have component attached nothing is done and
+    /// this method returns. In case component is removed it requires archetype change which is a costly operation.
+    ///
+    /// @tparam C Component type
+    /// @param ent entity to remove component from
     template<component C>
-    void remove(entity_id id) {
+    void remove(entity ent) {
+        assert(alive(ent));
+        auto id = ent.id();
         auto& location = get_location(id);
         auto*& archetype = location.arch;
 
@@ -89,35 +146,93 @@ public:
         set_location(id, new_location);
     }
 
-    bool alive(entity handle) const noexcept {
-        return _entity_pool.alive(handle);
+    /// @brief Check if an entity is alive or not
+    ///
+    /// @param ent Entity
+    /// @return true Alive
+    /// @return false Dead
+    bool alive(entity ent) const noexcept {
+        return _entity_pool.alive(ent);
     }
 
+    /// @brief Get reference to component C
+    ///
+    /// @tparam C Component C
+    /// @param ent Entity to read componet from
+    /// @return C& Reference to component C
     template<component C>
-    C& get(entity_id id) {
+    C& get(entity ent) {
+        assert(alive(ent));
+        auto id = ent.id();
         auto& location = get_location(id);
         return location.arch->template read<C>(location);
     }
 
+    /// @brief Get const reference to component C
+    ///
+    /// @tparam C Component C
+    /// @param ent Entity to read componet from
+    /// @return const C& Const reference to component C
     template<component C>
-    const C& get(entity_id id) const {
+    const C& get(entity ent) const {
+        assert(alive(ent));
+        auto id = ent.id();
         auto& location = get_location(id);
         return location.arch->template read<C>(location);
     }
 
+    /// @brief Check if entity has component attached or not
+    ///
+    /// @tparam C Compone ttype
+    /// @param ent Entity to check
+    /// @return true If entity has component C attached
+    /// @return false Otherwise
     template<component C>
-    bool has(entity_id id) const {
+    bool has(entity ent) const {
+        assert(alive(ent));
+        auto id = ent.id();
         auto& location = get_location(id);
         return location.arch->template contains<C>();
     }
 
+    /// @brief Iterate every entity that has <Args...> components attached
+    ///
+    /// @tparam Args Components types pack
+    /// @return decltype(auto) Range-like type that yields references to requested components
     template<component_or_reference... Args>
-    decltype(auto) view() {
-        return ecs::view<Args...>(*this);
-    }
+    decltype(auto) each() {
+        auto filter_archetype_predicate = [](auto& archetype) {
+            return (... && archetype->template contains<decay_component_t<Args>>());
+        };
+        auto into_chunks = [](auto& archetype) -> decltype(auto) { return archetype->chunks(); };
+        auto as_typed_chunk = [](auto& chunk) -> decltype(auto) { return chunk.template as_container_of<Args...>(); };
 
-    asl::hash_map<component_set, std::unique_ptr<archetype>, component_set_hasher>& archetypes() {
-        return _archetypes;
+        if constexpr (sizeof...(Args) == 1) {                       // Single component, base case
+            return _archetypes                                      // For every entry in archetype map
+                   | std::views::values                             // Get a reference to every archetype
+                   | std::views::filter(filter_archetype_predicate) // For every archetype in archetypes map filter
+                                                                    // those which have the required components
+                   | std::views::transform(into_chunks)             // Get reference to chunks
+                   | std::views::join                      // Join all chunks from all archetypes into a flat range
+                   | std::views::transform(as_typed_chunk) // Cast to a typed chunk container
+                   | std::views::join;                     // Join all typed chunks into a flat range
+        } else if constexpr (sizeof...(Args) == 2) {       // Two components, special recursive case
+            return asl::zip_view(                          // Zip togather
+                each<asl::first_type_t<Args...>>(),        // First type iterator
+                each<asl::second_type_t<Args...>>()        // Second type iterator
+            );
+        } else { // Recursive case that breaks down into previous cases
+            // Use generic lambda for recursion to break down Args... into T, U, Rest... to call each<> recursivelly and
+            // zip all results togather
+            return [this]<component_or_reference T, component_or_reference U, component_or_reference... Rest>() {
+                return asl::zip_view(   // Zip togather
+                    each<T>(),          // First type iterator
+                    each<U>(),          // Second type iterator
+                    (..., each<Rest>()) // All the rest types iterators
+                );
+            }
+            .template operator()<Args...>();
+        }
     }
 
 private:
@@ -141,38 +256,5 @@ private:
     asl::sparse_map<entity_id, entity_location> _entity_archetype_map;
     asl::hash_map<component_set, std::unique_ptr<archetype>, component_set_hasher> _archetypes;
 };
-
-template<component_or_reference... Args>
-auto filter_archetypes(registry& registry) -> decltype(auto) {
-    return registry.archetypes() | std::views::values
-           | std::views::filter([set = component_set::create<decay_component_t<Args>...>()](auto& archetype) {
-                 bool matched = archetype->match(set);
-                 return matched;
-             });
-}
-
-template<component_or_reference... Args>
-auto each_impl(auto archetypes) -> decltype(auto) {
-    if constexpr (sizeof...(Args) == 1) {
-        return archetypes | std::views::transform([](auto& archetype) -> decltype(auto) { return archetype->chunks(); })
-               | std::views::join
-               | std::views::transform([](auto& c) -> decltype(auto) { return c.template as_container_of<Args...>(); })
-               | std::views::join;
-    } else if constexpr (sizeof...(Args) == 2) {
-        return asl::zip_view(each_impl<std::tuple_element_t<0, std::tuple<Args...>>>(archetypes),
-            each_impl<std::tuple_element_t<1, std::tuple<Args...>>>(archetypes));
-    } else {
-        return [archetypes]<component_or_reference T, component_or_reference U, component_or_reference... Other>() {
-            return asl::zip_view(
-                each_impl<T>(archetypes), each_impl<U>(archetypes), (..., each_impl<Other>(archetypes)));
-        }
-        .template operator()<Args...>();
-    }
-}
-
-template<component_or_reference... Args>
-auto view<Args...>::each() -> decltype(auto) {
-    return each_impl<Args...>(filter_archetypes<Args...>(_registry));
-}
 
 } // namespace cobalt::ecs

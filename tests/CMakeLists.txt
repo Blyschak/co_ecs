@@ -21,11 +21,9 @@ add_executable(
   asl/test_family.cpp
   asl/test_defer.cpp
   asl/test_zip.cpp
-  asl/test_graph.cpp
   ecs/test_component.cpp
   ecs/test_archetype.cpp
-  ecs/test_registry.cpp
-  ecs/test_view.cpp)
+  ecs/test_registry.cpp)
 
 target_link_libraries(tests gtest gtest_main)
 
