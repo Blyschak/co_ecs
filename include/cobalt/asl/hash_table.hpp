@@ -5,15 +5,6 @@
 
 namespace cobalt::asl {
 
-/// @brief Calculate the value % 2^n
-///
-/// @param value Value
-/// @param n Power of 2
-/// @return decltype(auto) Result
-constexpr decltype(auto) mod(auto value, auto n) noexcept {
-    return value & ((1 << n) - 1);
-}
-
 /// @brief Approximatelly calculate 85% of passed value. 85% is used as a reserve threshold.
 ///
 /// @param value Value
