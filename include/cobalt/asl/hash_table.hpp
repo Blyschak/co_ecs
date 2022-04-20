@@ -440,7 +440,7 @@ public:
     /// @return mapped_type& Reference to the mapped type
     mapped_type& at(const key_type& key) requires(is_map) {
         if (auto iter = find_impl(*this, key); iter != end()) {
-            return *iter;
+            return iter->second;
         }
         throw std::out_of_range{ "key not found in hash_table" };
     }

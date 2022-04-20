@@ -14,11 +14,11 @@ TEST(config, read_config) {
     EXPECT_EQ(config.get("a.b.c"), "23");
     EXPECT_EQ(config.get("hey"), "world");
 
-    config.set_default("a.b.c", 25);
+    config.set_default("a.b.c", "25");
 
     EXPECT_EQ(config.get("a.b.c"), "23");
 
-    config.set_default("myval", 1);
+    config.set_default("myval", "1");
 
     EXPECT_EQ(config.get<int>("myval"), 1);
 
