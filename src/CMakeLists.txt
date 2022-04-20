@@ -10,7 +10,7 @@ FetchContent_Declare(
   GIT_TAG 6ad79aae3eb5bf809c30bf1168171e9e55857e45)
 FetchContent_MakeAvailable(glm)
 
-add_library(engine core/engine.cpp)
+add_library(engine core/application.cpp)
 
 target_link_libraries(
   engine

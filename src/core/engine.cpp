@@ -1,1 +1,0 @@
-#include <cobalt/core/logging.hpp>

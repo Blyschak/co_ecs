@@ -7,7 +7,12 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
+#include <cobalt/asl/convert.hpp>
+#include <cobalt/asl/hash_map.hpp>
+
 namespace cobalt::core {
+
+using log_level = spdlog::level::level_enum;
 
 namespace detail {
     /// @brief Create logger instance
@@ -24,6 +29,10 @@ namespace detail {
 /// @brief Global logger instance
 inline static std::shared_ptr<spdlog::logger> logger = detail::init_logger();
 
+void set_log_level(log_level lvl) {
+    logger->set_level(lvl);
+}
+
 template<typename... Args>
 struct log_critical {
     inline log_critical(fmt::format_string<Args...> fmt,
@@ -31,6 +40,7 @@ struct log_critical {
         const std::source_location& loc = std::source_location::current()) {
         logger->log(spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() },
             spdlog::level::level_enum::critical,
+            fmt,
             std::forward<Args>(args)...);
     }
 };
@@ -45,6 +55,7 @@ struct log_err {
         const std::source_location& loc = std::source_location::current()) {
         logger->log(spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() },
             spdlog::level::level_enum::err,
+            fmt,
             std::forward<Args>(args)...);
     }
 };
@@ -59,6 +70,7 @@ struct log_warn {
         const std::source_location& loc = std::source_location::current()) {
         logger->log(spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() },
             spdlog::level::level_enum::warn,
+            fmt,
             std::forward<Args>(args)...);
     }
 };
@@ -88,6 +100,7 @@ struct log_debug {
         const std::source_location& loc = std::source_location::current()) {
         logger->log(spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() },
             spdlog::level::level_enum::debug,
+            fmt,
             std::forward<Args>(args)...);
     }
 };
@@ -102,6 +115,7 @@ struct log_trace {
         const std::source_location& loc = std::source_location::current()) {
         logger->log(spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() },
             spdlog::level::level_enum::trace,
+            fmt,
             std::forward<Args>(args)...);
     }
 };
@@ -167,3 +181,20 @@ private:
 };
 
 } // namespace cobalt::core
+
+namespace cobalt::asl {
+
+template<>
+inline cobalt::core::log_level from_string<cobalt::core::log_level>(std::string_view str) {
+    static const cobalt::asl::hash_map<std::string_view, cobalt::core::log_level> _map = {
+        { "trace", cobalt::core::log_level::trace },
+        { "debug", cobalt::core::log_level::debug },
+        { "info", cobalt::core::log_level::info },
+        { "warn", cobalt::core::log_level::warn },
+        { "error", cobalt::core::log_level::err },
+        { "critical", cobalt::core::log_level::critical },
+    };
+    return _map.at(str);
+}
+
+} // namespace cobalt::asl

@@ -11,11 +11,22 @@ namespace cobalt::core {
 /// @brief config class that holds a map of keys and values that can be read from .ini file
 class config {
 public:
+    /// @brief Construct a new config object
+    config() = default;
+
     /// @brief Create config from input stream
     ///
     /// @param input Input stream
     /// @return config Config object
     static config from_stream(std::istream& input) {
+        return config(input);
+    }
+
+    /// @brief Create config from input stream
+    ///
+    /// @param input Input stream
+    /// @return config Config object
+    static config from_stream(std::istream&& input) {
         return config(input);
     }
 
@@ -31,12 +42,10 @@ public:
 
     /// @brief Set the default value into settings map, does not override if already present
     ///
-    /// @tparam T Value type
     /// @param key Key to insert
     /// @param value Value
-    template<typename T>
-    void set_default(std::string key, T value) {
-        _setting_map.emplace(key, std::to_string(value));
+    void set_default(std::string key, std::string value) {
+        _setting_map.emplace(key, value);
     }
 
 private:
