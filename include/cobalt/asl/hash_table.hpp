@@ -1,7 +1,10 @@
 #pragma once
 
+#include <cassert>
 #include <memory>
 #include <vector>
+
+#include <cobalt/asl/algorithm.hpp>
 
 namespace cobalt::asl {
 
@@ -281,6 +284,7 @@ public:
         const Allocator& alloc = Allocator()) :
         _size(0),
         _buckets(allocator_type(), bucket_count), _info(bucket_count), _hash(hash), _equal(equal) {
+        assert(bucket_count % 2 == 0);
     }
 
     /// @brief Construct hash table
@@ -324,6 +328,7 @@ public:
         const Allocator& alloc = Allocator()) :
         _size(0),
         _buckets(alloc, bucket_count), _info(default_bucket_count), _equal(equal), _hash(hash) {
+        assert(bucket_count % 2 == 0);
         for (; first != last; ++first) {
             emplace_or_assign_impl(std::move(*first));
         }
@@ -646,7 +651,7 @@ private:
 
         size_type hash = _hash(key);
         size_type psl = 0;
-        size_type i = hash % bs;
+        size_type i = mod_2n(hash, bs);
 
         value_type* ptr;
         auto info = _info.begin();
@@ -659,7 +664,7 @@ private:
             }
 
             if (info->hash != hash || !_equal(get_key(*ptr), key)) {
-                i = (i + 1) % bs;
+                i = mod_2n(i + 1, bs);
                 psl++;
                 continue;
             }
@@ -673,7 +678,7 @@ private:
         while (true) {
             info->occupied = false;
 
-            i = (i + 1) % bs;
+            i = mod_2n(i + 1, bs);
             auto nptr = _buckets.begin() + i;
             auto ninfo = _info.begin() + i;
 
@@ -712,7 +717,7 @@ private:
         size_type buckets_size = _buckets.size();
         const size_type threshold = approx_85_percent(buckets_size);
         if (_size > threshold) {
-            const auto new_size = buckets_size * 2;
+            const auto new_size = buckets_size << 1;
             reserve(new_size);
         }
         return _emplace_or_assign_impl(std::forward<Args>(args)...);
@@ -725,7 +730,7 @@ private:
         size_type hash = _hash(get_key(n));
         size_type psl = 0;
         bucket_info ninfo = { true, hash, psl };
-        size_type i = hash % buckets_size;
+        size_type i = mod_2n(hash, buckets_size);
 
         while (true) {
             value_type* ptr = _buckets.begin() + i;
@@ -741,7 +746,7 @@ private:
                     std::swap(ninfo, *info);
                 }
                 ninfo.psl++;
-                i = (i + 1) % buckets_size;
+                i = mod_2n(i + 1, buckets_size);
                 continue;
             }
             allocator_traits::construct(_buckets.allocator(), ptr, std::move(n));
@@ -758,7 +763,7 @@ private:
         size_type hash = _hash(get_key(n));
         size_type psl = 0;
         bucket_info ninfo = { true, hash, psl };
-        size_type i = hash % buckets_size;
+        size_type i = mod_2n(hash, buckets_size);
 
         while (true) {
             value_type* ptr = _buckets.begin() + i;
@@ -773,7 +778,7 @@ private:
                     std::swap(ninfo, *info);
                 }
                 ninfo.psl++;
-                i = (i + 1) % buckets_size;
+                i = mod_2n(i + 1, buckets_size);
                 continue;
             }
             allocator_traits::construct(_buckets.allocator(), ptr, std::move(n));
@@ -789,7 +794,7 @@ private:
             return self.end();
         }
         size_type hash = self._hash(key);
-        size_type i = hash % buckets_size;
+        size_type i = mod_2n(hash, buckets_size);
 
         size_type probes = 0;
         while (true) {
@@ -802,7 +807,7 @@ private:
                 return self.end();
             }
             probes++;
-            i = (i + 1) % buckets_size;
+            i = mod_2n(i + 1, buckets_size);
         }
     }
 
