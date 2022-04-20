@@ -21,6 +21,20 @@ FetchContent_Declare(
   GIT_TAG 3.3.6)
 FetchContent_MakeAvailable(glfw)
 
+if(DEFINED VULKAN_SDK_PATH)
+  set(Vulkan_INCLUDE_DIRS "${VULKAN_SDK_PATH}/Include")
+  set(Vulkan_LIBRARIES "${VULKAN_SDK_PATH}/Lib")
+  set(Vulkan_FOUND "True")
+else()
+  find_package(Vulkan REQUIRED)
+  message(STATUS "Found Vulkan: $ENV{VULKAN_SDK}")
+endif()
+if(NOT Vulkan_FOUND)
+  message(FATAL_ERROR "Could not find Vulkan library!")
+else()
+  message(STATUS "Using vulkan lib at: ${Vulkan_LIBRARIES}")
+endif()
+
 add_library(engine core/application.cpp platform/window.cpp
                    platform/glfw/glfw_window.cpp render/vulkan/vk_device.cpp)
 
