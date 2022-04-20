@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cobalt/core/config.hpp>
+#include <cobalt/platform/window.hpp>
 
 namespace cobalt::core {
 
@@ -38,17 +39,9 @@ public:
     /// @brief Run application main loop
     void run();
 
-    /// @brief Returns whether application should close
-    ///
-    /// @return true If it should
-    /// @return false If it should not
-    [[nodiscard]] bool should_close() const noexcept {
-        return _should_close;
-    }
-
 private:
     config _config;
-    bool _should_close{ false };
+    std::unique_ptr<platform::window> _window{};
 };
 
 } // namespace cobalt::core
