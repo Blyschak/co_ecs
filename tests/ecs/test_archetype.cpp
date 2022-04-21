@@ -41,10 +41,6 @@ TEST(chunk, basic_emplace) {
     EXPECT_EQ(chunk.at<components::a>(0).foo, 15);
     EXPECT_EQ(chunk.at<components::a>(0).bar, false);
     EXPECT_EQ(chunk.at<components::b>(0).c, false);
-
-    for (auto [a, b] : chunk.cast_to<components::a&, components::b&>()) {
-        std::cout << a.foo << " " << b.c << std::endl;
-    }
 }
 
 TEST(chunk, chunk_view) {
