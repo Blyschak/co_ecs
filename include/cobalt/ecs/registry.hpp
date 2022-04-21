@@ -9,6 +9,7 @@
 #include <cobalt/ecs/archetype.hpp>
 #include <cobalt/ecs/entity.hpp>
 #include <cobalt/ecs/entity_location.hpp>
+#include <cobalt/ecs/resource.hpp>
 
 namespace cobalt::ecs {
 
@@ -189,6 +190,43 @@ public:
         return location.arch->template contains<C>();
     }
 
+    /// @brief Register resource
+    ///
+    /// @tparam R Resource type
+    /// @param resource Pointer to the resource
+    template<resource R>
+    void register_resource(R* resource) {
+        assert(!_resource_map.contains(resource_family::id<R>));
+        _resource_map.emplace(resource_family::id<R>, resource);
+    }
+
+    /// @brief Unregister resource
+    ///
+    /// @tparam R Resource type
+    template<resource R>
+    void register_resource() {
+        assert(_resource_map.contains(resource_family::id<R>));
+        _resource_map.erase(resource_family::id<R>);
+    }
+
+    /// @brief Get the resource object
+    ///
+    /// @tparam R Resource type
+    /// @return R& Reference to the resource
+    template<resource R>
+    R& get_resource() {
+        _resource_map.at(resource_family::id<R>);
+    }
+
+    /// @brief Get the resource object
+    ///
+    /// @tparam R Resource type
+    /// @return R& Reference to the resource
+    template<resource R>
+    const R& get_resource() const {
+        _resource_map.at(resource_family::id<R>);
+    }
+
     /// @brief Iterate every entity that has <Args...> components attached
     ///
     /// @tparam Args Components types pack
@@ -238,6 +276,7 @@ private:
     entity_pool _entity_pool;
     asl::sparse_map<entity_id, entity_location> _entity_archetype_map;
     asl::hash_map<component_set, std::unique_ptr<archetype>, component_set_hasher> _archetypes;
+    asl::sparse_map<resource_id, void*> _resource_map;
 };
 
 } // namespace cobalt::ecs
