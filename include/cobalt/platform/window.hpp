@@ -19,7 +19,7 @@ struct window_spec {
 
 class window {
 public:
-    virtual ~window(){};
+    virtual ~window() = default;
 
     static std::unique_ptr<window> create(const window_spec& spec);
 

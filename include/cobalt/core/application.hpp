@@ -2,6 +2,7 @@
 
 #include <cobalt/core/config.hpp>
 #include <cobalt/platform/window.hpp>
+#include <cobalt/render/renderer.hpp>
 
 namespace cobalt::core {
 
@@ -42,6 +43,7 @@ public:
 private:
     config _config;
     std::unique_ptr<platform::window> _window{};
+    std::unique_ptr<render::renderer> _renderer{};
 };
 
 } // namespace cobalt::core

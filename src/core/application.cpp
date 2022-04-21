@@ -12,6 +12,8 @@ application::application(int argc, char** argv) {
     std::ifstream config_file(default_config_path);
     if (!config_file.is_open()) {
         core::log_info("config file {} does not exists, using defaults", default_config_path);
+    } else {
+        _config = config::from_stream(config_file);
     }
 
     _config.set_default("core.log_level", "info");
@@ -24,7 +26,9 @@ application::application(int argc, char** argv) {
     platform::window_spec spec{
         _config.get<int>("window.width"), _config.get<int>("window.height"), _config.get("window.title")
     };
+
     _window = platform::window::create(spec);
+    _renderer = render::renderer::create(*_window);
 }
 
 void application::run() {

@@ -3,6 +3,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include <cobalt/asl/vector.hpp>
 #include <cobalt/platform/window.hpp>
 
 namespace cobalt::platform {
@@ -21,7 +22,17 @@ public:
     bool should_close() const override;
     void poll_events() const override;
 
+    [[nodiscard]] const asl::vector<const char*>& get_glfw_required_extensions() const noexcept {
+        return _extensions;
+    }
+
+    void create_surface(VkInstance instance, VkSurfaceKHR* surface);
+
 private:
+    void query_glfw_required_extensions();
+
+    asl::vector<const char*> _extensions;
+
     window_spec _spec{};
     GLFWwindow* _window{};
 };
