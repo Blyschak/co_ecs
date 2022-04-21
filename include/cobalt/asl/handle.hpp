@@ -24,6 +24,9 @@ public:
     /// @brief Invalid generation number
     static constexpr auto invalid_generation = std::numeric_limits<generation_t>::max();
 
+    /// @brief Default construct a handle
+    constexpr handle() = default;
+
     /// @brief Construct handle from id and generation
     ///
     /// @param id ID number
@@ -67,8 +70,8 @@ public:
     constexpr auto operator<=>(const handle& rsh) const = default;
 
 private:
-    id_t _id;
-    generation_t _generation;
+    id_t _id{ invalid_id };
+    generation_t _generation{ invalid_generation };
 };
 
 } // namespace cobalt::asl

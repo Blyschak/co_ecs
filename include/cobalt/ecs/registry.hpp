@@ -195,6 +195,25 @@ public:
         return location.arch->template contains<C>();
     }
 
+    // TODO: The query is currently suboptimal.
+    // 1. The approach with C++ views makes so that each component iterator in a zip will be evaluated independently
+    // from each other while this is not required since we can pre-filter all archetypes and chunks in a query state and
+    // avoid continuous executions of lambdas, join view iterators, etc.
+    // 2. Such high level iterators makes it very hard for compiler to vectorize the code, making iterations slower than
+    // iterating over (T* begin, T* end).
+
+    /// @brief Iterate every entity T in archetypes
+    ///
+    /// @tparam T Iterate over T
+    /// @param archetypes Archetypes range
+    /// @return decltype(auto) Range-like type that yields references to requested components
+    template<component_or_reference T>
+    decltype(auto) each_single(auto chunks) {
+        auto as_typed_chunk = [](auto& chunk) -> decltype(auto) { return chunk.template as_container_of<T>(); };
+        return chunks | std::views::transform(as_typed_chunk) // Cast to a typed chunk container
+               | std::views::join;                            // Join all typed chunks into a flat range
+    }
+
     /// @brief Iterate every entity that has <Args...> components attached
     ///
     /// @tparam Args Components types pack
@@ -205,30 +224,30 @@ public:
             return (... && archetype->template contains<decay_component_t<Args>>());
         };
         auto into_chunks = [](auto& archetype) -> decltype(auto) { return archetype->chunks(); };
-        auto as_typed_chunk = [](auto& chunk) -> decltype(auto) { return chunk.template as_container_of<Args...>(); };
 
-        if constexpr (sizeof...(Args) == 1) {                       // Single component, base case
-            return _archetypes                                      // For every entry in archetype map
-                   | std::views::values                             // Get a reference to every archetype
-                   | std::views::filter(filter_archetype_predicate) // For every archetype in archetypes map filter
-                                                                    // those which have the required components
-                   | std::views::transform(into_chunks)             // Get reference to chunks
-                   | std::views::join                      // Join all chunks from all archetypes into a flat range
-                   | std::views::transform(as_typed_chunk) // Cast to a typed chunk container
-                   | std::views::join;                     // Join all typed chunks into a flat range
-        } else if constexpr (sizeof...(Args) == 2) {       // Two components, special recursive case
-            return asl::zip_view(                          // Zip togather
-                each<asl::first_type_t<Args...>>(),        // First type iterator
-                each<asl::second_type_t<Args...>>()        // Second type iterator
+        auto chunks = _archetypes                                      // For every entry in archetype map
+                      | std::views::values                             // Get a reference to every archetype
+                      | std::views::filter(filter_archetype_predicate) // For every archetype in archetypes map filter
+                                                                       // those which have the required components
+                      | std::views::transform(into_chunks)             // Get reference to chunks
+                      | std::views::join; // Join all chunks from all archetypes into a flat range
+
+        if constexpr (sizeof...(Args) == 1) { // Single component, base case
+            return each_single<asl::first_type_t<Args...>>(chunks);
+        } else if constexpr (sizeof...(Args) == 2) {             // Two components, special recursive case
+            return asl::zip_view(                                // Zip togather
+                each_single<asl::first_type_t<Args...>>(chunks), // First type iterator
+                each_single<asl::second_type_t<Args...>>(chunks) // Second type iterator
             );
         } else { // Recursive case that breaks down into previous cases
             // Use generic lambda for recursion to break down Args... into T, U, Rest... to call each<> recursivelly and
             // zip all results togather
-            return [this]<component_or_reference T, component_or_reference U, component_or_reference... Rest>() {
-                return asl::zip_view(   // Zip togather
-                    each<T>(),          // First type iterator
-                    each<U>(),          // Second type iterator
-                    (..., each<Rest>()) // All the rest types iterators
+            return
+                [ this, chunks ]<component_or_reference T, component_or_reference U, component_or_reference... Rest>() {
+                return asl::zip_view(                // Zip togather
+                    each_single<T>(chunks),          // First type iterator
+                    each_single<U>(chunks),          // Second type iterator
+                    (..., each_single<Rest>(chunks)) // All the rest types iterators
                 );
             }
             .template operator()<Args...>();
