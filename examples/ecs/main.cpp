@@ -32,7 +32,7 @@ int main() {
         transform.position[2] += velocity.vector[2];
     }
 
-    for (auto& transform : registry.each<const transform&>()) {
+    for (auto [transform] : registry.each<const transform&>()) {
         core::log_info("transform {} {} {}", transform.position[0], transform.position[1], transform.position[2]);
     }
 

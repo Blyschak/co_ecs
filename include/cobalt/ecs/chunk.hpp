@@ -11,8 +11,8 @@
 namespace cobalt::ecs {
 
 // forward declaration
-template<component T>
-class typed_chunk;
+template<component_reference... Args>
+class chunk_view;
 
 /// @brief Chunk holds a 16 Kb block of memory that holds components in blocks:
 /// |A1|A2|A3|...padding|B1|B2|B3|...padding|C1|C2|C3...padding where A, B, C are component types and A1, B1, C1 and
@@ -244,32 +244,14 @@ public:
         return size() == 0;
     }
 
-    /// @brief Cast into typed_chunk. This is needed to gain a concrete type information and act as a range giving
-    /// begin() and end() for iterating over block holding a specific type.
-    ///
-    /// @tparam T Component or its cv reference type
-    template<component_or_reference T>
-    [[nodiscard]] inline typed_chunk<decay_component_t<T>>& as_container_of() requires(
-        is_mutable_component_reference<T>()) {
+    template<component_reference... Args>
+    [[nodiscard]] inline chunk_view<Args...>& cast_to() {
         // layout has to be the same, so safe to do
-        return *reinterpret_cast<typed_chunk<decay_component_t<T>>*>(this);
+        return *reinterpret_cast<chunk_view<Args...>*>(this);
     }
 
-    /// @brief Const version of above as_container_of for immutable component reference types
-    ///
-    /// @tparam T Component or its cv reference type
-    template<component_or_reference T>
-    [[nodiscard]] inline const typed_chunk<decay_component_t<T>>& as_container_of() const
-        requires(is_immutable_component_reference<T>()) {
-        // layout has to be the same, so safe to do
-        return *reinterpret_cast<const typed_chunk<decay_component_t<T>>*>(this);
-    }
-
-private
-    :
-
-    std::size_t
-    calculate_brutto_element_size(const component_meta_set& components_meta) const noexcept {
+private:
+    std::size_t calculate_brutto_element_size(const component_meta_set& components_meta) const noexcept {
         return std::accumulate(components_meta.begin(),
             components_meta.end(),
             component_meta::of<entity>().size,
@@ -295,27 +277,82 @@ private
     asl::sparse_map<component_id, block_metadata> _blocks;
 };
 
-template<component T>
-class typed_chunk : public chunk {
+template<component_reference... Args>
+class chunk_view : public chunk {
 public:
-    [[nodiscard]] constexpr T* begin() noexcept {
-        return ptr<T>(0);
+    class iterator {
+    public:
+        using iterator_concept = std::forward_iterator_tag;
+        using iterator_category = std::forward_iterator_tag;
+        using difference_type = int;
+        using value_type = std::tuple<Args...>;
+        using reference = std::tuple<Args...>;
+        using element_type = value_type;
+
+        constexpr iterator() = default;
+
+        constexpr iterator(chunk* c, std::size_t index = 0) :
+            _ptrs(std::make_tuple(c->ptr<decay_component_t<Args>>(index)...)) {
+        }
+
+        constexpr iterator(const iterator& rhs) = default;
+        constexpr iterator& operator=(const iterator& rhs) = default;
+        constexpr iterator(iterator&& rhs) = default;
+        constexpr iterator& operator=(iterator&& rhs) = default;
+
+        /// @brief Pre-increment iterator
+        ///
+        /// @return iterator_impl& Incremented iterator
+        constexpr iterator& operator++() noexcept {
+            std::apply([](auto&&... args) { (args++, ...); }, _ptrs);
+            return *this;
+        }
+
+        /// @brief Post-increment iterator
+        ///
+        /// @return iterator_impl& Iterator
+        constexpr iterator operator++(int) noexcept {
+            iterator tmp(*this);
+            std::apply([](auto&&... args) { (args++, ...); }, _ptrs);
+            return tmp;
+        }
+
+        /// @brief Dereference iterator
+        ///
+        /// @return reference Reference to value
+        constexpr reference operator*() const noexcept {
+            return std::apply([](auto&&... args) { return std::make_tuple(std::ref(*args)...); }, _ptrs);
+        }
+
+        /// @brief Spaceship operator
+        ///
+        /// @param rhs Right hand side
+        /// @return auto Result of comparison
+        constexpr auto operator<=>(const iterator& rhs) const noexcept = default;
+
+    private:
+        std::tuple<std::add_pointer_t<decay_component_t<Args>>...> _ptrs;
+        std::size_t _index{};
+    };
+
+    [[nodiscard]] constexpr iterator begin() noexcept {
+        return iterator(this, 0);
     }
 
-    [[nodiscard]] constexpr T* end() noexcept {
-        return ptr<T>(size());
+    [[nodiscard]] constexpr iterator end() noexcept {
+        return iterator(this, size());
     }
 
-    [[nodiscard]] constexpr const T* begin() const noexcept {
-        return ptr<T>(0);
+    [[nodiscard]] constexpr const iterator begin() const noexcept {
+        return iterator(this, 0);
     }
 
-    [[nodiscard]] constexpr const T* end() const noexcept {
-        return ptr<T>(size());
+    [[nodiscard]] constexpr const iterator end() const noexcept {
+        return iterator(this, size());
     }
 };
 
 // TODO: not yet in gcc
-// static_assert(std::is_layout_compatible<chunk, typed_chunk<int>>);
+// static_assert(std::is_layout_compatible_v<chunk, chunk_view<int&, bool&>>);
 
 } // namespace cobalt::ecs

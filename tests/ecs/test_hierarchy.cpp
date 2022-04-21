@@ -19,7 +19,7 @@ TEST(hierarchy, basic) {
     ecs::entity_set_child(registry, entity1, entity12);
     ecs::entity_set_child(registry, entity12, entity121);
 
-    ecs::entity_for_each_child<some_struct>(registry, [&](auto tuple) {
+    ecs::entity_for_each_child<some_struct&>(registry, [&](auto tuple) {
         auto& parent = std::get<0>(tuple);
         auto& child = std::get<1>(tuple);
         // std::cout << "entity " << child.name << " parent " << registry.get<some_struct>(parent.entity).name
@@ -30,7 +30,7 @@ TEST(hierarchy, basic) {
 
     ecs::entity_set_child(registry, entity11, entity121);
 
-    ecs::entity_for_each_child<some_struct>(registry, [&](auto tuple) {
+    ecs::entity_for_each_child<some_struct&>(registry, [&](auto tuple) {
         auto& parent = std::get<0>(tuple);
         auto& child = std::get<1>(tuple);
         // std::cout << "entity " << child.name << " parent " << registry.get<some_struct>(parent.entity).name

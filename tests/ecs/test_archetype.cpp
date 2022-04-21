@@ -41,4 +41,22 @@ TEST(chunk, basic_emplace) {
     EXPECT_EQ(chunk.at<components::a>(0).foo, 15);
     EXPECT_EQ(chunk.at<components::a>(0).bar, false);
     EXPECT_EQ(chunk.at<components::b>(0).c, false);
+
+    for (auto [a, b] : chunk.cast_to<components::a&, components::b&>()) {
+        std::cout << a.foo << " " << b.c << std::endl;
+    }
+}
+
+TEST(chunk, chunk_view) {
+    auto set = ecs::component_meta_set();
+    set.insert<components::a>();
+    set.insert<components::b>();
+    ecs::chunk chunk(set);
+
+    chunk.emplace_back(components::a(15, false), components::b(false));
+    for (auto [a, b] : chunk.cast_to<components::a&, components::b&>()) {
+        EXPECT_EQ(a.foo, 15);
+        EXPECT_EQ(a.bar, false);
+        EXPECT_EQ(b.c, false);
+    }
 }

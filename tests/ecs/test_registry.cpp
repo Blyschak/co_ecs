@@ -133,7 +133,7 @@ TEST(registry, view) {
 
     auto set = ecs::component_set::create<velocity, position, rotation>();
 
-    for (auto [vel, pos, rot] : registry.each<velocity, position, rotation>()) {
+    for (auto [vel, pos, rot] : registry.each<velocity&, position&, rotation&>()) {
         static_assert(std::is_same_v<decltype(vel), velocity&>);
         static_assert(std::is_same_v<decltype(pos), position&>);
         static_assert(std::is_same_v<decltype(rot), rotation&>);

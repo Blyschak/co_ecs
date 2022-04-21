@@ -23,7 +23,7 @@ void entity_set_child(ecs::registry& registry, ecs::entity parent_entity, ecs::e
     registry.set<parent>(child_entity, depth, parent_entity);
 }
 
-template<component_or_reference... Args>
+template<component_reference... Args>
 void entity_for_each_child(ecs::registry& registry, auto&& func) {
     depth_t current_depth{};
     depth_t max_depth{};
