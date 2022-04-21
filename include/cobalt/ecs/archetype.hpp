@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include <cobalt/asl/vector.hpp>
 #include <cobalt/ecs/chunk.hpp>
 #include <cobalt/ecs/component.hpp>
 #include <cobalt/ecs/entity.hpp>
@@ -14,6 +15,8 @@ namespace cobalt::ecs {
 /// operations.
 class archetype {
 public:
+    using chunks_storage_type = asl::vector<chunk>;
+
     /// @brief Construct a new archetype object
     archetype() = default;
 
@@ -173,21 +176,21 @@ public:
 
     /// @brief Return reference to chunks vector
     ///
-    /// @return std::vector<chunk>& Reference to vector of chunks
-    [[nodiscard]] std::vector<chunk>& chunks() noexcept {
+    /// @return chunks_storage_type& Reference to vector of chunks
+    [[nodiscard]] chunks_storage_type& chunks() noexcept {
         return _chunks;
     }
 
     /// @brief Return const reference to chunks vector
     ///
-    /// @return std::vector<chunk>& Const reference to vector of chunks
-    [[nodiscard]] const std::vector<chunk>& chunks() const noexcept {
+    /// @return const chunks_storage_type& Const reference to vector of chunks
+    [[nodiscard]] const chunks_storage_type& chunks() const noexcept {
         return _chunks;
     }
 
 private:
     component_meta_set _components;
-    std::vector<chunk> _chunks;
+    chunks_storage_type _chunks;
 };
 
 } // namespace cobalt::ecs
