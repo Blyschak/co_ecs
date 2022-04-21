@@ -102,7 +102,7 @@ public:
         }
         for (const auto& [id, block] : _blocks) {
             for (std::size_t i = 0; i < _size; i++) {
-                block.meta.dtor(reinterpret_cast<char*>(block.begin) + i);
+                block.meta.dtor(reinterpret_cast<char*>(block.begin) + i * block.meta.size);
             }
         }
         std::free(_buffer);

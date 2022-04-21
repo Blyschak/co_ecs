@@ -202,3 +202,17 @@ TEST(registry, ref_view) {
         EXPECT_FALSE(registry.alive(entity));
     }
 }
+
+
+TEST(registry, view_part) {
+    ecs::registry registry;
+    auto entity1 = registry.create<position>({ 1, 1 });
+    auto entity2 = registry.create<position, velocity>({ 2, 2 }, { 22, 22 });
+
+    auto range = registry.each<const position&, const velocity&>();
+    auto iter = range.begin();
+    EXPECT_EQ(std::get<0>(*iter).x, 2);
+    EXPECT_EQ(std::get<0>(*iter).y, 2);
+    EXPECT_EQ(std::get<1>(*iter).x, 22);
+    EXPECT_EQ(std::get<1>(*iter).y, 22);
+}
