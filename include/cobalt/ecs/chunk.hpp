@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <type_traits>
 
+#include <cobalt/asl/algorithm.hpp>
 #include <cobalt/asl/sparse_map.hpp>
 #include <cobalt/ecs/component.hpp>
 #include <cobalt/ecs/entity.hpp>
@@ -22,6 +23,9 @@ public:
     /// @brief Chunk size in bytes
     static constexpr std::size_t chunk_bytes = 16 * 1024; // 16 KB
 
+    /// @brief Block allocation alignment
+    static constexpr std::size_t alloc_alignment = 4; // 4 bytes
+
     /// @brief Block metadata holds pointers where it begins, ends and a component metadata it holds
     struct block_metadata {
         void* begin{};
@@ -33,7 +37,7 @@ public:
     ///
     /// @param set Component metadata set
     chunk(const component_meta_set& set) {
-        _buffer = reinterpret_cast<char*>(std::aligned_alloc(4, chunk_bytes));
+        _buffer = reinterpret_cast<char*>(std::aligned_alloc(alloc_alignment, chunk_bytes));
         auto netto_size = calculate_netto_element_size(_buffer, set);
         auto remaining_space = chunk_bytes - netto_size;
         auto remaining_elements_count = remaining_space / calculate_brutto_element_size(set);
@@ -43,7 +47,7 @@ public:
         for (const auto& meta : set) {
             block_metadata block;
             block.begin = ptr;
-            block.end = ptr + (reinterpret_cast<std::size_t>(ptr) % meta->align) + _max_size * meta->size;
+            block.end = ptr + asl::mod_2n(reinterpret_cast<std::size_t>(ptr), meta->align) + _max_size * meta->size;
             ptr = reinterpret_cast<char*>(block.end);
             block.meta = meta;
             _blocks.emplace(meta->id, block);
@@ -52,7 +56,7 @@ public:
         block_metadata block;
         const component_meta* meta = component_meta::of<entity>();
         block.begin = ptr;
-        block.end = ptr + (reinterpret_cast<std::size_t>(ptr) % meta->align) + _max_size * meta->size;
+        block.end = ptr + asl::mod_2n(reinterpret_cast<std::size_t>(ptr), meta->align) + _max_size * meta->size;
         ptr = reinterpret_cast<char*>(block.end);
         block.meta = meta;
         _blocks.emplace(meta->id, block);
@@ -262,11 +266,11 @@ private:
         const component_meta_set& components_meta) const noexcept {
         auto end = begin;
         for (const auto& meta : components_meta) {
-            end += (reinterpret_cast<std::size_t>(begin) % meta->align);
+            end += asl::mod_2n(reinterpret_cast<std::size_t>(begin), meta->align);
             end += meta->size;
         }
         const auto meta = component_meta::of<entity>();
-        end += (reinterpret_cast<std::size_t>(begin) % meta->align);
+        end += asl::mod_2n(reinterpret_cast<std::size_t>(begin), meta->align);
         end += meta->size;
         return end - begin;
     }
