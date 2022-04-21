@@ -38,16 +38,10 @@ concept component =
 template<typename T>
 concept component_reference = std::is_reference_v<T> && component<std::remove_cvref_t<T>>;
 
-/// @brief Component or reference. This concept is satisfied either by a reference to component or component itself
+/// @brief Decay component; converts component_reference to component by removing cv-qualifiers and reference.
 ///
 /// @tparam T Type
-template<typename T>
-concept component_or_reference = component<T> || component_reference<T>;
-
-/// @brief Decay component; converts component_or_reference to component by removing cv-qualifiers and reference.
-///
-/// @tparam T Type
-template<component_or_reference T>
+template<component_reference T>
 using decay_component_t = std::remove_cvref_t<T>;
 
 /// @brief Returns true for non-const component references
@@ -55,7 +49,7 @@ using decay_component_t = std::remove_cvref_t<T>;
 /// @tparam T Type
 /// @return true When the component reference is mutable
 /// @return false When the component reference is immutable
-template<component_or_reference T>
+template<component_reference T>
 constexpr bool is_mutable_component_reference() noexcept {
     return !std::is_const_v<std::remove_reference_t<T>>;
 }
@@ -65,7 +59,7 @@ constexpr bool is_mutable_component_reference() noexcept {
 /// @tparam T Type
 /// @return true When the component reference is immutable
 /// @return false When the component reference is mutable
-template<component_or_reference T>
+template<component_reference T>
 constexpr bool is_immutable_component_reference() noexcept {
     return std::is_const_v<std::remove_reference_t<T>>;
 }
@@ -76,7 +70,7 @@ constexpr bool is_immutable_component_reference() noexcept {
 /// @return decltype(auto) Component ID
 template<component T>
 decltype(auto) get_component_id() {
-    return component_family::id<decay_component_t<T>>;
+    return component_family::id<T>;
 }
 
 /// @brief Component metadata. Stores an ID, size, alignment, destructor, etc.
