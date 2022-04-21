@@ -64,15 +64,6 @@ constexpr bool is_immutable_component_reference() noexcept {
     return std::is_const_v<std::remove_reference_t<T>>;
 }
 
-/// @brief Returns component ID for given T type
-///
-/// @tparam T Component type
-/// @return decltype(auto) Component ID
-template<component T>
-decltype(auto) get_component_id() {
-    return component_family::id<T>;
-}
-
 /// @brief Component metadata. Stores an ID, size, alignment, destructor, etc.
 struct component_meta {
 public:
@@ -82,7 +73,7 @@ public:
     /// @return const component_meta& Component metadata
     template<component T>
     static const component_meta* of() noexcept {
-        static component_meta meta{ get_component_id<T>(),
+        static component_meta meta{ component_family::id<T>,
             sizeof(T),
             alignof(T),
             [](void* ptr, void* rhs) { std::construct_at(static_cast<T*>(ptr), std::move(*static_cast<T*>(rhs))); },
@@ -145,7 +136,7 @@ public:
     /// @tparam T Component type
     template<component T>
     void insert() {
-        insert(get_component_id<T>());
+        insert(component_family::id<T>);
     }
 
     /// @brief Erase component of type T
@@ -153,7 +144,7 @@ public:
     /// @tparam T Component type
     template<component T>
     void erase() {
-        erase(get_component_id<T>());
+        erase(component_family::id<T>);
     }
 
     /// @brief Check if component of type T is present in the set
@@ -163,7 +154,7 @@ public:
     /// @return false When component type T is not present
     template<component T>
     bool contains() const {
-        return contains(get_component_id<T>());
+        return contains(component_family::id<T>);
     }
 
     /// @brief Inserts component into the set
@@ -250,7 +241,7 @@ public:
     /// @tparam T Component type
     template<component T>
     void erase() {
-        erase(get_component_id<T>());
+        erase(component_family::id<T>);
     }
 
     /// @brief Check if component of type T is present in the set
@@ -260,7 +251,7 @@ public:
     /// @return false When component type T is not present
     template<component T>
     bool contains() const {
-        return contains(get_component_id<T>());
+        return contains(component_family::id<T>);
     }
 
     /// @brief Inserts component into the set

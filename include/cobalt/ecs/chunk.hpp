@@ -180,7 +180,7 @@ public:
     template<component T>
     inline T& at(std::size_t index) noexcept {
         assert(index < _size);
-        return *(reinterpret_cast<T*>(_blocks.at(get_component_id<T>()).begin) + index);
+        return *(reinterpret_cast<T*>(_blocks.at(component_family::id<T>).begin) + index);
     }
 
     /// @brief Get a const reference to component T
@@ -191,7 +191,7 @@ public:
     template<component T>
     inline const T& at(std::size_t index) const noexcept {
         assert(index < _size);
-        return *(reinterpret_cast<T*>(_blocks.at(get_component_id<T>()).begin) + index);
+        return *(reinterpret_cast<T*>(_blocks.at(component_family::id<T>).begin) + index);
     }
 
     /// @brief Get a pointer to component T
@@ -201,7 +201,7 @@ public:
     /// @return T* Pointer to T
     template<component T>
     inline T* ptr(std::size_t index) noexcept {
-        return (reinterpret_cast<T*>(_blocks.at(get_component_id<T>()).begin) + index);
+        return (reinterpret_cast<T*>(_blocks.at(component_family::id<T>).begin) + index);
     }
 
     /// @brief Get a const pointer to component T
@@ -211,7 +211,7 @@ public:
     /// @return const T* Const pointer to T
     template<component T>
     inline const T* ptr(std::size_t index) const noexcept {
-        return (reinterpret_cast<T*>(_blocks.at(get_component_id<T>()).begin) + index);
+        return (reinterpret_cast<T*>(_blocks.at(component_family::id<T>).begin) + index);
     }
 
     /// @brief Get max size, how many elements can this chunk hold
