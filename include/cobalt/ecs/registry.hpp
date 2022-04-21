@@ -37,10 +37,7 @@ public:
     entity create(Args&&... args) {
         auto entity = _entity_pool.create();
         auto components = component_meta_set::create<Args...>();
-        auto& archetype = _archetypes[components.bitset()];
-        if (!archetype) {
-            archetype = std::make_unique<ecs::archetype>(std::move(components));
-        }
+        auto archetype = ensure_archetype(components);
         auto location = archetype->template allocate<Args...>(entity, std::forward<Args>(args)...);
         set_location(entity.id(), location);
         return entity;
@@ -55,9 +52,11 @@ public:
         // returns the entity ID that has been moved to a new location
         auto moved_id = location.arch->deallocate(location).id();
         remove_location(ent.id());
+
         if (moved_id != entity::invalid_id) {
             set_location(moved_id, location);
         }
+
         _entity_pool.recycle(ent);
     }
 
@@ -100,10 +99,7 @@ public:
         } else {
             auto components = archetype->components();
             components.insert<C>();
-            auto& new_archetype = _archetypes[components.bitset()];
-            if (!new_archetype) {
-                new_archetype = std::make_unique<ecs::archetype>(components);
-            }
+            auto new_archetype = ensure_archetype(components);
             auto [new_location, moved] = archetype->move(location, *new_archetype);
             if (moved.id() != entity::invalid_id) {
                 set_location(moved.id(), location);
@@ -111,7 +107,7 @@ public:
 
             new_archetype->template construct<C>(new_location, std::forward<Args>(args)...);
 
-            archetype = new_archetype.get();
+            archetype = new_archetype;
             set_location(id, new_location);
         }
     }
@@ -134,15 +130,13 @@ public:
 
         auto components = archetype->components();
         components.erase<C>();
-        auto& new_archetype = _archetypes[components.bitset()];
-        if (!new_archetype) {
-            new_archetype = std::make_unique<ecs::archetype>(components);
-        }
+        auto new_archetype = ensure_archetype(components);
         auto [new_location, moved] = archetype->move(location, *new_archetype);
         if (moved.id() != entity::invalid_id) {
             set_location(moved.id(), location);
         }
 
+        archetype = new_archetype;
         set_location(id, new_location);
     }
 
@@ -227,6 +221,14 @@ private:
 
     void remove_location(entity_id id) {
         _entity_archetype_map.erase(id);
+    }
+
+    archetype* ensure_archetype(const component_meta_set& components) {
+        auto& archetype = _archetypes[components.bitset()];
+        if (!archetype) {
+            archetype = std::make_unique<ecs::archetype>(std::move(components));
+        }
+        return archetype.get();
     }
 
     entity_pool _entity_pool;
