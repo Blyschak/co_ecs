@@ -79,7 +79,7 @@ private:
         ///
         /// @param rhs Another buckets
         constexpr buckets(buckets&& rhs) {
-            swap(rhs);
+            swap(std::move(rhs));
         }
 
         /// @brief Deleted copy assignment operator
@@ -93,7 +93,7 @@ private:
         /// @param rhs Another buckets
         /// @return Buckets
         constexpr buckets& operator=(buckets&& rhs) {
-            swap(rhs);
+            swap(std::move(rhs));
             return *this;
         }
 
@@ -105,7 +105,7 @@ private:
         /// @brief Swap two buckets
         ///
         /// @param rhs
-        void swap(buckets& rhs) {
+        void swap(buckets&& rhs) {
             std::swap(a, rhs.a);
             std::swap(b, rhs.b);
             std::swap(e, rhs.e);
@@ -407,19 +407,35 @@ public:
     /// @param rhs Right hand side
     constexpr hash_table& operator=(const hash_table& rhs) {
         hash_table copy(rhs);
-        swap(copy);
+        swap(std::move(copy));
         return *this;
     }
 
     /// @brief Move copy constructor
     ///
     /// @param rhs Right hand side
-    constexpr hash_table(hash_table&& rhs) = default;
+    constexpr hash_table(hash_table&& rhs) {
+        swap(std::move(rhs));
+    }
 
     /// @brief Move assignment operator
     ///
     /// @param rhs Right hand side
-    constexpr hash_table& operator=(hash_table&& rhs) = default;
+    constexpr hash_table& operator=(hash_table&& rhs) {
+        swap(std::move(rhs));
+        return *this;
+    }
+
+    /// @brief Swap with other hash table
+    ///
+    /// @param rhs Other hash table
+    constexpr void swap(hash_table&& rhs) {
+        std::swap(_buckets, rhs._buckets);
+        std::swap(_info, rhs._info);
+        std::swap(_size, rhs._size);
+        std::swap(_equal, rhs._equal);
+        std::swap(_hash, rhs._hash);
+    }
 
     /// @brief Get the allocator object
     ///

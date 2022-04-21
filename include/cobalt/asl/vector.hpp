@@ -472,11 +472,12 @@ public:
         return insert_impl(
             pos,
             1,
-            [... args = std::forward<Args>(args)](iterator pos, size_type count [[maybe_unused]]) mutable {
-                std::construct_at(pos, std::forward<Args>(args)...);
+            [... args = std::forward<decltype(args)>(args)](iterator pos, size_type count [[maybe_unused]]) mutable {
+                std::construct_at(pos, std::forward<decltype(args)>(args)...);
             },
-            [... args = std::forward<Args>(args)](
-                iterator pos, size_type count [[maybe_unused]]) mutable { *pos = T{ std::forward<Args>(args)... }; });
+            [... args = std::forward<decltype(args)>(args)](iterator pos, size_type count [[maybe_unused]]) mutable {
+                *pos = T{ std::forward<decltype(args)>(args)... };
+            });
     }
 
     /// @brief Erase element at position pos
@@ -523,8 +524,8 @@ public:
     template<typename... Args>
     constexpr reference emplace_back(Args&&... args) {
         insert_end_impl(
-            1, [... args = std::forward<Args>(args)](iterator pos, size_type count [[maybe_unused]]) mutable {
-                std::construct_at(pos, std::forward<Args>(args)...);
+            1, [... args = std::forward<decltype(args)>(args)](iterator pos, size_type count [[maybe_unused]]) mutable {
+                std::construct_at(pos, std::forward<decltype(args)>(args)...);
             });
         return *(end() - 1);
     }

@@ -18,7 +18,7 @@ namespace detail {
     /// @brief Create logger instance
     ///
     /// @return std::shared_ptr<spdlog::logger>
-    std::shared_ptr<spdlog::logger> init_logger() {
+    inline static std::shared_ptr<spdlog::logger> init_logger() {
         auto logger = spdlog::stderr_color_mt("cobalt");
         logger->set_pattern("[%H:%M:%S %z] [%n] [%^%l%$] [%s.%#] %v");
         logger->set_level(spdlog::level::level_enum::trace);
@@ -26,11 +26,13 @@ namespace detail {
     }
 } // namespace detail
 
-/// @brief Global logger instance
-inline static std::shared_ptr<spdlog::logger> logger = detail::init_logger();
+/// @brief Get the logger object
+///
+/// @return std::shared_ptr<spdlog::logger>
+std::shared_ptr<spdlog::logger> get_logger();
 
-void set_log_level(log_level lvl) {
-    logger->set_level(lvl);
+inline static void set_log_level(log_level lvl) {
+    get_logger()->set_level(lvl);
 }
 
 template<typename... Args>
@@ -38,7 +40,7 @@ struct log_critical {
     inline log_critical(fmt::format_string<Args...> fmt,
         Args&&... args,
         const std::source_location& loc = std::source_location::current()) {
-        logger->log(spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() },
+        get_logger()->log(spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() },
             spdlog::level::level_enum::critical,
             fmt,
             std::forward<Args>(args)...);
@@ -53,7 +55,7 @@ struct log_err {
     inline log_err(fmt::format_string<Args...> fmt,
         Args&&... args,
         const std::source_location& loc = std::source_location::current()) {
-        logger->log(spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() },
+        get_logger()->log(spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() },
             spdlog::level::level_enum::err,
             fmt,
             std::forward<Args>(args)...);
@@ -68,7 +70,7 @@ struct log_warn {
     inline log_warn(fmt::format_string<Args...> fmt,
         Args&&... args,
         const std::source_location& loc = std::source_location::current()) {
-        logger->log(spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() },
+        get_logger()->log(spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() },
             spdlog::level::level_enum::warn,
             fmt,
             std::forward<Args>(args)...);
@@ -83,7 +85,7 @@ struct log_info {
     inline log_info(fmt::format_string<Args...> fmt,
         Args&&... args,
         const std::source_location& loc = std::source_location::current()) {
-        logger->log(spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() },
+        get_logger()->log(spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() },
             spdlog::level::level_enum::info,
             fmt,
             std::forward<Args>(args)...);
@@ -98,7 +100,7 @@ struct log_debug {
     inline log_debug(fmt::format_string<Args...> fmt,
         Args&&... args,
         const std::source_location& loc = std::source_location::current()) {
-        logger->log(spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() },
+        get_logger()->log(spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() },
             spdlog::level::level_enum::debug,
             fmt,
             std::forward<Args>(args)...);
@@ -113,7 +115,7 @@ struct log_trace {
     inline log_trace(fmt::format_string<Args...> fmt,
         Args&&... args,
         const std::source_location& loc = std::source_location::current()) {
-        logger->log(spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() },
+        get_logger()->log(spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() },
             spdlog::level::level_enum::trace,
             fmt,
             std::forward<Args>(args)...);
@@ -127,7 +129,7 @@ class scoped_log {
 public:
     inline scoped_log(std::string_view ident, const std::source_location& loc = std::source_location::current()) :
         _ident(ident), _loc(loc) {
-        logger->log(spdlog::source_loc{ _loc.file_name(), static_cast<int>(_loc.line()), _loc.function_name() },
+        get_logger()->log(spdlog::source_loc{ _loc.file_name(), static_cast<int>(_loc.line()), _loc.function_name() },
             spdlog::level::level_enum::trace,
             "entered \"{}\"",
             _ident);
@@ -139,7 +141,7 @@ public:
     scoped_log& operator=(scoped_log&&) = delete;
 
     inline ~scoped_log() {
-        logger->log(spdlog::source_loc{ _loc.file_name(), static_cast<int>(_loc.line()), _loc.function_name() },
+        get_logger()->log(spdlog::source_loc{ _loc.file_name(), static_cast<int>(_loc.line()), _loc.function_name() },
             spdlog::level::level_enum::trace,
             "exited \"{}\"",
             _ident);
@@ -154,7 +156,7 @@ class scoped_timer_log {
 public:
     inline scoped_timer_log(std::string_view ident, const std::source_location& loc = std::source_location::current()) :
         _ident(ident), _loc(loc), _start(std::chrono::high_resolution_clock::now()) {
-        logger->log(spdlog::source_loc{ _loc.file_name(), static_cast<int>(_loc.line()), _loc.function_name() },
+        get_logger()->log(spdlog::source_loc{ _loc.file_name(), static_cast<int>(_loc.line()), _loc.function_name() },
             spdlog::level::level_enum::debug,
             "entered timer \"{}\"",
             _ident);
@@ -167,7 +169,7 @@ public:
 
     inline ~scoped_timer_log() {
         auto duration = std::chrono::high_resolution_clock::now() - _start;
-        logger->log(spdlog::source_loc{ _loc.file_name(), static_cast<int>(_loc.line()), _loc.function_name() },
+        get_logger()->log(spdlog::source_loc{ _loc.file_name(), static_cast<int>(_loc.line()), _loc.function_name() },
             spdlog::level::level_enum::debug,
             "exited timer \"{}\", took {} us",
             _ident,

@@ -35,11 +35,19 @@ else()
   message(STATUS "Using vulkan lib at: ${Vulkan_LIBRARIES}")
 endif()
 
-add_library(engine core/application.cpp platform/window.cpp
-                   platform/glfw/glfw_window.cpp render/vulkan/vk_device.cpp)
+add_library(
+  engine
+  core/logging.cpp
+  core/application.cpp
+  platform/window.cpp
+  platform/glfw/glfw_window.cpp
+  render/renderer.cpp
+  render/vulkan/vk_device.cpp
+  render/vulkan/vk_renderer.cpp)
 
 target_link_libraries(
   engine
   PUBLIC spdlog::spdlog
   PUBLIC glm
-  PUBLIC glfw)
+  PUBLIC glfw
+  PUBLIC vulkan)
