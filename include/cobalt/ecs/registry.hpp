@@ -195,15 +195,19 @@ public:
     /// @return decltype(auto) Range-like type that yields references to requested components
     template<component_reference... Args>
     decltype(auto) each() {
-        auto filter_archetype_predicate = [](auto& archetype) {
+        auto filter_archetypes = [](auto& archetype) {
             return (... && archetype->template contains<decay_component_t<Args>>());
         };
         auto into_chunks = [](auto& archetype) -> decltype(auto) { return archetype->chunks(); };
         auto as_typed_chunk = [](auto& chunk) -> decltype(auto) { return chunk.template cast_to<Args...>(); };
 
-        return _archetypes | std::views::values | std::views::filter(filter_archetype_predicate)
-               | std::views::transform(into_chunks) | std::views::join | std::views::transform(as_typed_chunk)
-               | std::views::join;
+        return _archetypes                             // for each archetype entry in archetype map
+               | std::views::values                    // for each value, a pointer to archetype
+               | std::views::filter(filter_archetypes) // filter archetype by requested components
+               | std::views::transform(into_chunks)    // fetch chunks vector
+               | std::views::join                      // join chunks togather
+               | std::views::transform(as_typed_chunk) // each chunk casted to a typed chunk view range-like type
+               | std::views::join;                     // join all chunk views togather
     }
 
 private:

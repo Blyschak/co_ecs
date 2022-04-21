@@ -6,10 +6,10 @@
 #include <functional>
 #include <numeric>
 #include <stdexcept>
-#include <vector>
 
 #include <cobalt/asl/family.hpp>
 #include <cobalt/asl/type_traits.hpp>
+#include <cobalt/asl/vector.hpp>
 #include <cobalt/ecs/entity.hpp>
 
 namespace cobalt::ecs {
@@ -214,8 +214,9 @@ public:
 class component_meta_set {
 public:
     using size_type = std::size_t;
-    using value_type = typename std::vector<const component_meta*>::value_type;
-    using const_iterator = typename std::vector<const component_meta*>::const_iterator;
+    using storage_type = asl::vector<const component_meta*>;
+    using value_type = typename storage_type::value_type;
+    using const_iterator = typename storage_type::const_iterator;
 
     /// @brief Default constructor
     component_meta_set() = default;
@@ -349,7 +350,7 @@ public:
 
 private:
     component_set _bitset;
-    std::vector<const component_meta*> _components;
+    storage_type _components;
 };
 
 } // namespace cobalt::ecs

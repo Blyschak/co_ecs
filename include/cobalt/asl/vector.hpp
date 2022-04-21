@@ -15,9 +15,11 @@ namespace cobalt::asl {
 template<typename T, std::size_t grow_factor = 2>
 struct default_grow_policy {
     static constexpr std::size_t initial_size_bytes = 64;
+    static constexpr std::size_t initial_size =
+        std::max(static_cast<size_t>(initial_size_bytes) / sizeof(T), std::size_t(1));
 
     constexpr static std::size_t next_capacity(std::size_t cap) {
-        return std::max(cap * grow_factor, static_cast<size_t>(initial_size_bytes) / sizeof(T));
+        return std::max(cap * grow_factor, initial_size);
     }
 };
 
