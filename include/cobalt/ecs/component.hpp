@@ -119,7 +119,7 @@ public:
 /// @brief Component set holds a set of component IDs
 class component_set {
 public:
-    using storage_type = std::uint64_t;
+    using storage_type = std::bitset<1024>;
 
     /// @brief Default constructor
     component_set() = default;
@@ -170,20 +170,14 @@ public:
     ///
     /// @param id Component ID
     void insert(component_id id) {
-        if (contains(id)) {
-            return;
-        }
-        _component_bitset |= (1 << id);
+        _component_bitset.set(id);
     }
 
     /// @brief Erases component from the set
     ///
     /// @param id Component ID
     void erase(component_id id) {
-        if (!contains(id)) {
-            return;
-        }
-        _component_bitset &= ~(1 << id);
+        _component_bitset.set(id, false);
     }
 
     /// @brief Check if component is present in the set
@@ -192,18 +186,7 @@ public:
     /// @return true When component ID is present
     /// @return false When component ID is not present
     [[nodiscard]] bool contains(component_id id) const {
-        if (id >= 64) {
-            throw std::invalid_argument("id should be < 64");
-        }
-        return _component_bitset & (1 << id);
-    }
-
-    /// @brief Spaceship operator
-    ///
-    /// @param rhs Right hand side
-    /// @return auto Result of comparison
-    auto operator<=>(const component_set& rhs) const noexcept {
-        return _component_bitset <=> rhs._component_bitset;
+        return _component_bitset.test(id);
     }
 
     /// @brief Equality operator
@@ -215,19 +198,16 @@ public:
         return _component_bitset == rhs._component_bitset;
     }
 
-    operator bool() const {
-        return _component_bitset > 0;
-    }
-
-    component_set operator&(const component_set& rhs) const noexcept {
-        component_set s;
-        s._component_bitset = _component_bitset & rhs._component_bitset;
-        return s;
-    }
-
 private:
     friend class component_set_hasher;
     storage_type _component_bitset{};
+};
+
+class component_set_hasher {
+public:
+    std::size_t operator()(const component_set& set) const {
+        return std::hash<typename component_set::storage_type>()(set._component_bitset);
+    }
 };
 
 /// @brief Component set holds a set of components metadata
@@ -351,14 +331,6 @@ public:
         return end();
     }
 
-    /// @brief Spaceship operator
-    ///
-    /// @param rhs Right hand side
-    /// @return auto Result of comparison
-    auto operator<=>(const component_meta_set& rhs) const noexcept {
-        return _bitset <=> rhs._bitset;
-    }
-
     /// @brief Equality operator
     ///
     /// @param rhs Right hand side
@@ -378,13 +350,6 @@ public:
 private:
     component_set _bitset;
     std::vector<const component_meta*> _components;
-};
-
-class component_set_hasher {
-public:
-    std::size_t operator()(const component_set& set) const {
-        return std::hash<std::uint64_t>()(set._component_bitset);
-    }
 };
 
 } // namespace cobalt::ecs
