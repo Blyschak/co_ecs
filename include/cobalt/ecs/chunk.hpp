@@ -26,7 +26,7 @@ public:
     struct block_metadata {
         void* begin{};
         void* end{};
-        component_meta meta{};
+        const component_meta* meta{};
     };
 
     /// @brief Construct a new chunk object
@@ -41,21 +41,21 @@ public:
 
         char* ptr = _buffer;
         for (const auto& meta : set) {
-            block_metadata cmeta;
-            cmeta.begin = ptr;
-            cmeta.end = ptr + (reinterpret_cast<std::size_t>(ptr) % meta.align) + _max_size * meta.size;
-            ptr = reinterpret_cast<char*>(cmeta.end);
-            cmeta.meta = meta;
-            _blocks.emplace(meta.id, cmeta);
+            block_metadata block;
+            block.begin = ptr;
+            block.end = ptr + (reinterpret_cast<std::size_t>(ptr) % meta->align) + _max_size * meta->size;
+            ptr = reinterpret_cast<char*>(block.end);
+            block.meta = meta;
+            _blocks.emplace(meta->id, block);
         }
         // make space for entity
-        block_metadata cmeta;
-        const component_meta meta = component_meta::of<entity>();
-        cmeta.begin = ptr;
-        cmeta.end = ptr + (reinterpret_cast<std::size_t>(ptr) % meta.align) + _max_size * meta.size;
-        ptr = reinterpret_cast<char*>(cmeta.end);
-        cmeta.meta = meta;
-        _blocks.emplace(meta.id, cmeta);
+        block_metadata block;
+        const component_meta* meta = component_meta::of<entity>();
+        block.begin = ptr;
+        block.end = ptr + (reinterpret_cast<std::size_t>(ptr) % meta->align) + _max_size * meta->size;
+        ptr = reinterpret_cast<char*>(block.end);
+        block.meta = meta;
+        _blocks.emplace(meta->id, block);
         assert(ptr <= _buffer + chunk_bytes);
     }
 
@@ -102,7 +102,7 @@ public:
         }
         for (const auto& [id, block] : _blocks) {
             for (std::size_t i = 0; i < _size; i++) {
-                block.meta.dtor(reinterpret_cast<char*>(block.begin) + i * block.meta.size);
+                block.meta->dtor(reinterpret_cast<char*>(block.begin) + i * block.meta->size);
             }
         }
         std::free(_buffer);
@@ -124,7 +124,7 @@ public:
         assert(!empty());
         _size--;
         for (const auto& [id, block] : _blocks) {
-            block.meta.dtor(reinterpret_cast<char*>(block.begin) + _size * block.meta.size);
+            block.meta->dtor(reinterpret_cast<char*>(block.begin) + _size * block.meta->size);
         }
     }
 
@@ -144,8 +144,8 @@ public:
         std::size_t other_chunk_index = other_chunk._size - 1;
         entity ent = other_chunk.at<entity>(other_chunk_index);
         for (const auto& [id, block] : _blocks) {
-            block.meta.move_assign(reinterpret_cast<char*>(block.begin) + index * block.meta.size,
-                reinterpret_cast<char*>(other_chunk._blocks[id].begin) + other_chunk_index * block.meta.size);
+            block.meta->move_assign(reinterpret_cast<char*>(block.begin) + index * block.meta->size,
+                reinterpret_cast<char*>(other_chunk._blocks[id].begin) + other_chunk_index * block.meta->size);
         }
         other_chunk.pop_back();
         return ent;
@@ -164,9 +164,9 @@ public:
             if (!other_chunk._blocks.contains(id)) {
                 continue;
             }
-            block.meta.move_ctor(
-                reinterpret_cast<char*>(other_chunk._blocks.at(id).begin) + other_chunk_index * block.meta.size,
-                reinterpret_cast<char*>(block.begin) + index * block.meta.size);
+            block.meta->move_ctor(
+                reinterpret_cast<char*>(other_chunk._blocks.at(id).begin) + other_chunk_index * block.meta->size,
+                reinterpret_cast<char*>(block.begin) + index * block.meta->size);
         }
         other_chunk._size++;
         return other_chunk_index;
@@ -254,20 +254,20 @@ private:
     std::size_t calculate_brutto_element_size(const component_meta_set& components_meta) const noexcept {
         return std::accumulate(components_meta.begin(),
             components_meta.end(),
-            component_meta::of<entity>().size,
-            [](const auto& res, const auto& meta) { return res + meta.size; });
+            component_meta::of<entity>()->size,
+            [](const auto& res, const auto& meta) { return res + meta->size; });
     }
 
     std::size_t calculate_netto_element_size(const char* begin,
         const component_meta_set& components_meta) const noexcept {
         auto end = begin;
         for (const auto& meta : components_meta) {
-            end += (reinterpret_cast<std::size_t>(begin) % meta.align);
-            end += meta.size;
+            end += (reinterpret_cast<std::size_t>(begin) % meta->align);
+            end += meta->size;
         }
         const auto meta = component_meta::of<entity>();
-        end += (reinterpret_cast<std::size_t>(begin) % meta.align);
-        end += meta.size;
+        end += (reinterpret_cast<std::size_t>(begin) % meta->align);
+        end += meta->size;
         return end - begin;
     }
 
