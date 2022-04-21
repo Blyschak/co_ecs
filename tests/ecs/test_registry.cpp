@@ -203,7 +203,6 @@ TEST(registry, ref_view) {
     }
 }
 
-
 TEST(registry, view_part) {
     ecs::registry registry;
     auto entity1 = registry.create<position>({ 1, 1 });
@@ -215,4 +214,19 @@ TEST(registry, view_part) {
     EXPECT_EQ(std::get<0>(*iter).y, 2);
     EXPECT_EQ(std::get<1>(*iter).x, 22);
     EXPECT_EQ(std::get<1>(*iter).y, 22);
+}
+
+TEST(registry, resources) {
+    struct my_resource {
+        std::string name;
+    } res, other_res;
+
+    ecs::registry registry;
+
+    registry.register_resource(res);
+    auto& pres = registry.get_resource<my_resource>();
+    EXPECT_EQ(&pres, &res);
+    EXPECT_THROW(registry.register_resource(other_res), std::invalid_argument);
+    registry.unregister_resource<my_resource>();
+    EXPECT_THROW(registry.get_resource<my_resource>(), std::out_of_range);
 }

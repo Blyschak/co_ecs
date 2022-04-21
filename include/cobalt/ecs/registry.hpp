@@ -193,19 +193,20 @@ public:
     /// @brief Register resource
     ///
     /// @tparam R Resource type
-    /// @param resource Pointer to the resource
+    /// @param resource Reference to the resource
     template<resource R>
-    void register_resource(R* resource) {
-        assert(!_resource_map.contains(resource_family::id<R>));
-        _resource_map.emplace(resource_family::id<R>, resource);
+    void register_resource(R& resource) {
+        if (_resource_map.contains(resource_family::id<R>)) {
+            throw std::invalid_argument{ "resource already registered" };
+        }
+        _resource_map.emplace(resource_family::id<R>, &resource);
     }
 
     /// @brief Unregister resource
     ///
     /// @tparam R Resource type
     template<resource R>
-    void register_resource() {
-        assert(_resource_map.contains(resource_family::id<R>));
+    void unregister_resource() {
         _resource_map.erase(resource_family::id<R>);
     }
 
@@ -215,7 +216,7 @@ public:
     /// @return R& Reference to the resource
     template<resource R>
     R& get_resource() {
-        _resource_map.at(resource_family::id<R>);
+        return *reinterpret_cast<R*>(_resource_map.at(resource_family::id<R>));
     }
 
     /// @brief Get the resource object
@@ -224,7 +225,7 @@ public:
     /// @return R& Reference to the resource
     template<resource R>
     const R& get_resource() const {
-        _resource_map.at(resource_family::id<R>);
+        return *reinterpret_cast<const R*>(_resource_map.at(resource_family::id<R>));
     }
 
     /// @brief Iterate every entity that has <Args...> components attached
