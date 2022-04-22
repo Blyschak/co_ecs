@@ -37,19 +37,13 @@ public:
 
     /// @brief Run func on every entity that matches the Args requirement
     ///
-    /// @param func A callable to run on entity components
-    void each(auto&& func);
-
-    /// @brief Iterate over chunks inside registry and run func
-    ///
     /// NOTE: This kind of iteration might be faster and better optimized by the compiler since the func can operate on
     /// a chunk that yields two tuples of pointers to the actual data whereas an each() variant returns an iterator over
     /// iterator over iterator to the actual data which is a challange for compiler to optimize. Look at the benchmarks
     /// to see the actual difference.
     ///
-    /// @param func A callable to run on a chunk
-    /// @return decltype(auto)
-    void iter(auto&& func);
+    /// @param func A callable to run on entity components
+    void each(auto&& func);
 
 private:
     registry& _registry;
@@ -285,9 +279,10 @@ public:
     /// @param func A callable to run on components
     template<component_reference... Args>
     void each(auto&& func) {
-        for (auto entry : each<Args...>()) {
-            std::apply(
-                [func = std::move(func)](auto&&... args) { func(std::forward<decltype(args)>(args)...); }, entry);
+        for (auto& chunk : chunks<Args...>()) {
+            for (auto entry : chunk) {
+                std::apply([func](auto&&... args) { func(std::forward<decltype(args)>(args)...); }, entry);
+            }
         }
     }
 
@@ -359,13 +354,6 @@ decltype(auto) view<Args...>::each() {
 template<component_reference... Args>
 void view<Args...>::each(auto&& func) {
     _registry.each<Args...>(std::move(func));
-}
-
-template<component_reference... Args>
-void view<Args...>::iter(auto&& func) {
-    for (auto& chunk : _registry.chunks<Args...>()) {
-        func(chunk);
-    }
 }
 
 } // namespace cobalt::ecs
