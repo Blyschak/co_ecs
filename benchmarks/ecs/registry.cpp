@@ -1,4 +1,5 @@
 #include <cobalt/ecs/registry.hpp>
+#include <cobalt/ecs/system.hpp>
 
 #include <benchmark/benchmark.h>
 
@@ -90,10 +91,32 @@ static void bm_entity_iterate_component_with_chunk_view(benchmark::State& state)
     for (auto _ : state) {
         auto view = registry.view<const position&, const rotation&>();
         view.iter([&sum](auto& chunk) {
-            for (auto [pos, vel] : chunk) {
+            for (auto [pos, rot] : chunk) {
                 sum += pos.x;
             }
         });
+    }
+
+    benchmark::DoNotOptimize(sum);
+}
+
+static void bm_entity_iterate_component_with_system(benchmark::State& state) {
+    auto registry = cobalt::ecs::registry();
+    for (int i = 0; i < 20; i++) {
+        registry.create<position, rotation>({ i, i * 2 }, { i * 3, i });
+    }
+
+    int sum = 0;
+    cobalt::ecs::system system(registry, [&sum](cobalt::ecs::view<const position&, const rotation&> view) {
+        view.iter([&](auto& chunk) {
+            for (auto [pos, rot] : chunk) {
+                sum += pos.x;
+            }
+        });
+    });
+
+    for (auto _ : state) {
+        system.run();
     }
 
     benchmark::DoNotOptimize(sum);
@@ -106,3 +129,4 @@ BENCHMARK(bm_entity_archetype_change);
 BENCHMARK(bm_entity_iterate_component);
 BENCHMARK(bm_entity_iterate_component_with_view);
 BENCHMARK(bm_entity_iterate_component_with_chunk_view);
+BENCHMARK(bm_entity_iterate_component_with_system);

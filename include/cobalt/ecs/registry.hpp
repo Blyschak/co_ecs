@@ -27,7 +27,7 @@ public:
     /// @brief Construct a new view object
     ///
     /// @param registry Reference to the registry
-    view(registry& registry) : _registry(registry) {
+    view(registry& registry) noexcept : _registry(registry) {
     }
 
     /// @brief Returns an iterator that yields a std::tuple<Args...>
