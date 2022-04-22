@@ -110,7 +110,7 @@ public:
 /// @brief Component set holds a set of component IDs
 class component_set {
 public:
-    using storage_type = std::bitset<1024>;
+    using storage_type = std::bitset<64>;
 
     /// @brief Default constructor
     component_set() = default;
