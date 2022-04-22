@@ -216,6 +216,26 @@ TEST(registry, view_part) {
     EXPECT_EQ(std::get<1>(*iter).y, 22);
 }
 
+TEST(registry, view_class) {
+    ecs::registry registry;
+    auto entity1 = registry.create<position>({ 1, 1 });
+    auto entity2 = registry.create<position, velocity>({ 2, 2 }, { 22, 22 });
+
+    auto view = registry.view<const position&, const velocity&>();
+
+    int sum = 0;
+    view.each([&sum](const auto& pos, const auto& vel) { sum += pos.x + vel.x; });
+    EXPECT_EQ(sum, 24);
+
+    sum = 0;
+
+    view.iter([&sum](auto& chunk) {
+        for (auto [pos, vel] : chunk) {
+            sum += pos.x + vel.x;
+        }
+    });
+}
+
 TEST(registry, resources) {
     struct my_resource {
         std::string name;

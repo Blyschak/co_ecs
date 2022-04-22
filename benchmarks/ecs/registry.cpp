@@ -65,8 +65,44 @@ static void bm_entity_iterate_component(benchmark::State& state) {
     benchmark::DoNotOptimize(sum);
 }
 
+static void bm_entity_iterate_component_with_view(benchmark::State& state) {
+    auto registry = cobalt::ecs::registry();
+    for (int i = 0; i < 20; i++) {
+        registry.create<position, rotation>({ i, i * 2 }, { i * 3, i });
+    }
+
+    int sum = 0;
+    for (auto _ : state) {
+        auto view = registry.view<const position&, const rotation&>();
+        view.each([&sum](const auto& pos, const auto& vel) { sum += pos.x; });
+    }
+
+    benchmark::DoNotOptimize(sum);
+}
+
+static void bm_entity_iterate_component_with_chunk_view(benchmark::State& state) {
+    auto registry = cobalt::ecs::registry();
+    for (int i = 0; i < 20; i++) {
+        registry.create<position, rotation>({ i, i * 2 }, { i * 3, i });
+    }
+
+    int sum = 0;
+    for (auto _ : state) {
+        auto view = registry.view<const position&, const rotation&>();
+        view.iter([&sum](auto& chunk) {
+            for (auto [pos, vel] : chunk) {
+                sum += pos.x;
+            }
+        });
+    }
+
+    benchmark::DoNotOptimize(sum);
+}
+
 BENCHMARK(bm_entity_creation);
 BENCHMARK(bm_entity_set_component);
 BENCHMARK(bm_entity_get_component);
 BENCHMARK(bm_entity_archetype_change);
 BENCHMARK(bm_entity_iterate_component);
+BENCHMARK(bm_entity_iterate_component_with_view);
+BENCHMARK(bm_entity_iterate_component_with_chunk_view);

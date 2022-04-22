@@ -13,9 +13,51 @@
 
 namespace cobalt::ecs {
 
+// forward declaration
+class registry;
+
+/// @brief A view lets you get a viewable range over components of Args out of a registry
+///
+/// A view isn't invalidated when there are changes made to the registry which lets a create one an re-use over time.
+///
+/// @tparam Args Component references types
+template<component_reference... Args>
+class view {
+public:
+    /// @brief Construct a new view object
+    ///
+    /// @param registry Reference to the registry
+    view(registry& registry) : _registry(registry) {
+    }
+
+    /// @brief Returns an iterator that yields a std::tuple<Args...>
+    ///
+    /// @return decltype(auto) Iterator
+    decltype(auto) each();
+
+    /// @brief Run func on every entity that matches the Args requirement
+    ///
+    /// @param func A callable to run on entity components
+    void each(auto&& func);
+
+    /// @brief Iterate over chunks inside registry and run func
+    ///
+    /// NOTE: This kind of iteration might be faster and better optimized by the compiler since the func can operate on
+    /// a chunk that yields two tuples of pointers to the actual data whereas an each() variant returns an iterator over
+    /// iterator over iterator to the actual data which is a challange for compiler to optimize. Look at the benchmarks
+    /// to see the actual difference.
+    ///
+    /// @param func A callable to run on a chunk
+    /// @return decltype(auto)
+    void iter(auto&& func);
+
+private:
+    registry& _registry;
+};
+
 class registry {
 public:
-    /// @brief Spawns a new entity in the world with components Args... attached and returns an ecs::entity that user
+    /// @brief Creates a new entity in the world with components Args... attached and returns an ecs::entity that user
     /// can use to operate on the enitty later, example:
     ///
     /// @code {.cpp}
@@ -234,22 +276,50 @@ public:
     /// @return decltype(auto) Range-like type that yields references to requested components
     template<component_reference... Args>
     decltype(auto) each() {
+        return chunks<Args...>() | std::views::join; // join all chunks togather
+    }
+
+    /// @brief Iterate every entity that has <Args...> components attached and run a func
+    ///
+    /// @tparam Args Components types pack
+    /// @param func A callable to run on components
+    template<component_reference... Args>
+    void each(auto&& func) {
+        for (auto entry : each<Args...>()) {
+            std::apply(
+                [func = std::move(func)](auto&&... args) { func(std::forward<decltype(args)>(args)...); }, entry);
+        }
+    }
+
+    /// @brief Construct a view out of the registry
+    ///
+    /// @tparam Args Components types pack
+    /// @return ecs::view<Args...>
+    template<component_reference... Args>
+    ecs::view<Args...> view() {
+        return ecs::view<Args...>(*this);
+    }
+
+private:
+    template<component_reference... Args>
+    friend class view;
+
+    template<component_reference... Args>
+    decltype(auto) chunks() {
         auto filter_archetypes = [](auto& archetype) {
             return (... && archetype->template contains<decay_component_t<Args>>());
         };
         auto into_chunks = [](auto& archetype) -> decltype(auto) { return archetype->chunks(); };
         auto as_typed_chunk = [](auto& chunk) -> decltype(auto) { return chunk.template cast_to<Args...>(); };
 
-        return _archetypes                             // for each archetype entry in archetype map
-               | std::views::values                    // for each value, a pointer to archetype
-               | std::views::filter(filter_archetypes) // filter archetype by requested components
-               | std::views::transform(into_chunks)    // fetch chunks vector
-               | std::views::join                      // join chunks togather
-               | std::views::transform(as_typed_chunk) // each chunk casted to a typed chunk view range-like type
-               | std::views::join;                     // join all chunk views togather
+        return _archetypes                              // for each archetype entry in archetype map
+               | std::views::values                     // for each value, a pointer to archetype
+               | std::views::filter(filter_archetypes)  // filter archetype by requested components
+               | std::views::transform(into_chunks)     // fetch chunks vector
+               | std::views::join                       // join chunks togather
+               | std::views::transform(as_typed_chunk); // each chunk casted to a typed chunk view range-like type
     }
 
-private:
     [[nodiscard]] const entity_location& get_location(entity_id id) const {
         return _entity_archetype_map.at(id);
     }
@@ -279,5 +349,23 @@ private:
     asl::hash_map<component_set, std::unique_ptr<archetype>, component_set_hasher> _archetypes;
     asl::sparse_map<resource_id, void*> _resource_map;
 };
+
+
+template<component_reference... Args>
+decltype(auto) view<Args...>::each() {
+    return _registry.each<Args...>();
+}
+
+template<component_reference... Args>
+void view<Args...>::each(auto&& func) {
+    _registry.each<Args...>(std::move(func));
+}
+
+template<component_reference... Args>
+void view<Args...>::iter(auto&& func) {
+    for (auto& chunk : _registry.chunks<Args...>()) {
+        func(chunk);
+    }
+}
 
 } // namespace cobalt::ecs
