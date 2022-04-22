@@ -226,14 +226,6 @@ TEST(registry, view_class) {
     int sum = 0;
     view.each([&sum](const auto& pos, const auto& vel) { sum += pos.x + vel.x; });
     EXPECT_EQ(sum, 24);
-
-    sum = 0;
-
-    view.iter([&sum](auto& chunk) {
-        for (auto [pos, vel] : chunk) {
-            sum += pos.x + vel.x;
-        }
-    });
 }
 
 TEST(registry, resources) {

@@ -28,11 +28,7 @@ TEST(system, system_state) {
     registry.create<pos>({ 2, 5 });
 
     ecs::system system(registry, [](ecs::view<pos&> view, const my_resource& resource, counter& count) {
-        view.iter([&](auto& chunk) {
-            for (auto [pos] : chunk) {
-                count.x += pos.x;
-            }
-        });
+        view.each([&](const auto& p) { count.x += p.x; });
     });
 
     system.run();
