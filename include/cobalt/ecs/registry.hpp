@@ -24,6 +24,8 @@ class registry;
 template<component_reference... Args>
 class view {
 public:
+    using value_type = std::tuple<Args...>;
+
     /// @brief Construct a new view object
     ///
     /// @param registry Reference to the registry
@@ -44,6 +46,12 @@ public:
     ///
     /// @param func A callable to run on entity components
     void each(auto&& func);
+
+    /// @brief Get components for a single entity
+    ///
+    /// @param ent Entity to query
+    /// @return value_type Components tuple
+    value_type get(entity ent);
 
 private:
     registry& _registry;
@@ -354,6 +362,12 @@ decltype(auto) view<Args...>::each() {
 template<component_reference... Args>
 void view<Args...>::each(auto&& func) {
     _registry.each<Args...>(std::move(func));
+}
+
+template<component_reference... Args>
+std::tuple<Args...> view<Args...>::get(entity ent) {
+    // TODO: Optimize, we only need to find chunk once and get components out of it
+    return std::tuple<Args...>(std::ref(_registry.get<decay_component_t<Args>>(ent))...);
 }
 
 } // namespace cobalt::ecs
