@@ -6,7 +6,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(
-  cobalt 
+  cobalt
   VERSION 0.1
   DESCRIPTION "Cobalt Game Engine"
   LANGUAGES CXX)
@@ -30,7 +30,7 @@ endif()
 
 option(ENABLE_EXAMPLES "Enable examples build" ON)
 if(ENABLE_EXAMPLES)
-    add_subdirectory(examples)
+  add_subdirectory(examples)
 endif()
 
 option(ENABLE_TESTING "Enable tests" ON)
