@@ -77,7 +77,7 @@ private:
 
     VkPhysicalDeviceProperties _properties;
 
-    bool _enable_validation_layers{ false };
+    bool _enable_validation_layers{ true };
     platform::window& _window;
 };
 

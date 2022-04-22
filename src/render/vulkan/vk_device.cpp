@@ -25,6 +25,7 @@ vk_device::vk_device(platform::window& window) : _window(window) {
     query_validation_layers();
     query_instance_extensions();
     create_instance();
+    create_surface();
     choose_physical_device();
     create_logical_device();
     create_command_pool();
@@ -216,7 +217,7 @@ void vk_device::init_required_instance_extensions() {
 
 void vk_device::init_required_validation_layers() {
     if (enable_validation_layers()) {
-        _required_validation_layers.emplace_back("VK_LAYER_KHRONOS_validation");
+        _required_validation_layers.emplace_back("VK_LAYER_LUNARG_standard_validation");
     }
 }
 

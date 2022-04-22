@@ -36,7 +36,7 @@ void glfw_window::query_glfw_required_extensions() {
 }
 
 void glfw_window::create_surface(VkInstance instance, VkSurfaceKHR* surface) {
-    asl::check(glfwCreateWindowSurface(instance, _window, nullptr, surface) != VK_SUCCESS,
+    asl::check(glfwCreateWindowSurface(instance, _window, nullptr, surface) == VK_SUCCESS,
         "failed to create GLFW window surface");
 }
 
