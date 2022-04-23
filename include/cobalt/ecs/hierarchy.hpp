@@ -149,12 +149,10 @@ public:
     /// @param child_entity Child entity
     static void remove_child(ecs::registry& registry, ecs::entity parent_entity, ecs::entity child_entity) {
         registry.remove<parent_component>(child_entity);
-        for_each_child(registry,
-            parent_entity,
-            [parent_entity](std::tuple<ecs::entity&> parent, std::tuple<parent_component&> child) {
-                auto [child_parent_component] = child;
-                child_parent_component.depth--;
-            });
+        for_each_child(registry, parent_entity, [](std::tuple<> parent, std::tuple<parent_component&> child) {
+            auto [child_parent_component] = child;
+            child_parent_component.depth--;
+        });
     }
 };
 } // namespace cobalt::ecs
