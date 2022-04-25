@@ -228,6 +228,17 @@ TEST(registry, view_class) {
     EXPECT_EQ(sum, 24);
 }
 
+TEST(registry, view_entity) {
+    ecs::registry registry;
+    registry.create<position>({ 1, 1 });
+    registry.create<position, velocity>({ 2, 2 }, { 22, 22 });
+
+    auto view = registry.view<const ecs::entity&>();
+    int sum = 0;
+    view.each([&sum](auto& ent) { sum += ent.id(); });
+    EXPECT_EQ(sum, 1);
+}
+
 TEST(registry, resources) {
     struct my_resource {
         std::string name;
