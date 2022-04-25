@@ -115,7 +115,7 @@ public:
     template<component... Args>
     void emplace_back(Args&&... args) {
         assert(!full());
-        (..., std::construct_at(ptr<Args>(size()), args));
+        (..., std::construct_at(ptr_unchecked<Args>(size()), args));
         _size++;
     }
 
@@ -142,7 +142,7 @@ public:
         }
         assert(!other_chunk.empty());
         std::size_t other_chunk_index = other_chunk._size - 1;
-        entity ent = other_chunk.at<entity>(other_chunk_index);
+        entity ent = *other_chunk.ptr_unchecked<entity>(other_chunk_index);
         for (const auto& [id, block] : _blocks) {
             block.meta->move_assign(reinterpret_cast<char*>(block.begin) + index * block.meta->size,
                 reinterpret_cast<char*>(other_chunk._blocks[id].begin) + other_chunk_index * block.meta->size);
@@ -201,7 +201,9 @@ public:
     /// @return T* Pointer to T
     template<component T>
     inline T* ptr(std::size_t index) noexcept {
-        return (reinterpret_cast<T*>(_blocks.at(component_family::id<T>).begin) + index);
+        // TODO: make entity non-writable
+        // static_assert(!std::is_same_v<T, entity>, "Cannot give a mutable reference to entity storage");
+        return ptr_unchecked<T>(index);
     }
 
     /// @brief Get a const pointer to component T
@@ -211,7 +213,7 @@ public:
     /// @return const T* Const pointer to T
     template<component T>
     inline const T* ptr(std::size_t index) const noexcept {
-        return (reinterpret_cast<T*>(_blocks.at(component_family::id<T>).begin) + index);
+        return ptr_unchecked<T>(index);
     }
 
     /// @brief Get max size, how many elements can this chunk hold
@@ -245,6 +247,16 @@ public:
     }
 
 private:
+    template<component T>
+    inline T* ptr_unchecked(std::size_t index) noexcept {
+        return (reinterpret_cast<T*>(_blocks.at(component_family::id<T>).begin) + index);
+    }
+
+    template<component T>
+    inline const T* ptr_unchecked(std::size_t index) const noexcept {
+        return (reinterpret_cast<T*>(_blocks.at(component_family::id<T>).begin) + index);
+    }
+
     std::size_t calculate_brutto_element_size(const component_meta_set& components_meta) const noexcept {
         return std::accumulate(components_meta.begin(),
             components_meta.end(),
