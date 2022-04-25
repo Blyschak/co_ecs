@@ -236,6 +236,20 @@ public:
         return location.arch->template read<C>(location);
     }
 
+    /// @brief Get components for a single entity
+    ///
+    /// @tparam Args Component reference
+    /// @param ent Entity to query
+    /// @return value_type Components tuple
+    template<component_reference... Args>
+    std::tuple<Args...> get(entity ent) {
+        assert(alive(ent));
+        auto id = ent.id();
+        auto& location = get_location(id);
+        auto* archetype = location.arch;
+        return std::tuple<Args...>(std::ref(archetype->template read<decay_component_t<Args>>(location))...);
+    }
+
     /// @brief Check if entity has component attached or not
     ///
     /// @tparam C Compone ttype
@@ -382,8 +396,7 @@ void view<Args...>::each(auto&& func) {
 
 template<component_reference... Args>
 std::tuple<Args...> view<Args...>::get(entity ent) {
-    // TODO: Optimize, we only need to find chunk once and get components out of it
-    return std::tuple<Args...>(std::ref(_registry.get<decay_component_t<Args>>(ent))...);
+    return _registry.get<Args...>(ent);
 }
 
 } // namespace cobalt::ecs
