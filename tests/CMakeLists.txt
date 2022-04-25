@@ -24,7 +24,6 @@ add_executable(
   ecs/test_component.cpp
   ecs/test_archetype.cpp
   ecs/test_registry.cpp
-  ecs/test_hierarchy.cpp
   ecs/test_system.cpp
   core/test_config.cpp)
 
