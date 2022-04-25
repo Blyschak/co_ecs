@@ -303,7 +303,7 @@ public:
     /// @param func A callable to run on components
     template<component_reference... Args>
     void each(auto&& func) {
-        for (auto& chunk : chunks<Args...>()) {
+        for (auto chunk : chunks<Args...>()) {
             for (auto entry : chunk) {
                 std::apply([func](auto&&... args) { func(std::forward<decltype(args)>(args)...); }, entry);
             }
@@ -329,7 +329,7 @@ private:
             return (... && detail::match_archetype<decay_component_t<Args>>::match(archetype));
         };
         auto into_chunks = [](auto& archetype) -> decltype(auto) { return archetype->chunks(); };
-        auto as_typed_chunk = [](auto& chunk) -> decltype(auto) { return chunk.template cast_to<Args...>(); };
+        auto as_typed_chunk = [](auto& chunk) -> decltype(auto) { return chunk_view<Args...>(chunk); };
 
         return _archetypes                              // for each archetype entry in archetype map
                | std::views::values                     // for each value, a pointer to archetype

@@ -11,10 +11,6 @@
 
 namespace cobalt::ecs {
 
-// forward declaration
-template<component_reference... Args>
-class chunk_view;
-
 /// @brief Chunk holds a 16 Kb block of memory that holds components in blocks:
 /// |A1|A2|A3|...padding|B1|B2|B3|...padding|C1|C2|C3...padding where A, B, C are component types and A1, B1, C1 and
 /// others are components instances.
@@ -248,12 +244,6 @@ public:
         return size() == 0;
     }
 
-    template<component_reference... Args>
-    [[nodiscard]] inline chunk_view<Args...>& cast_to() {
-        // layout has to be the same, so safe to do
-        return *reinterpret_cast<chunk_view<Args...>*>(this);
-    }
-
 private:
     std::size_t calculate_brutto_element_size(const component_meta_set& components_meta) const noexcept {
         return std::accumulate(components_meta.begin(),
@@ -281,9 +271,13 @@ private:
     asl::sparse_map<component_id, block_metadata> _blocks;
 };
 
+/// @brief A type aware view into a chunk components
+///
+/// @tparam Args Components
 template<component_reference... Args>
-class chunk_view : public chunk {
+class chunk_view {
 public:
+    /// @brief Chunk view iterator
     class iterator {
     public:
         using iterator_concept = std::forward_iterator_tag;
@@ -293,15 +287,37 @@ public:
         using reference = std::tuple<Args...>;
         using element_type = value_type;
 
+        /// @brief Default constructor
         constexpr iterator() = default;
 
-        constexpr iterator(chunk* c, std::size_t index = 0) :
-            _ptrs(std::make_tuple(c->ptr<decay_component_t<Args>>(index)...)) {
+        /// @brief Create iterator out of chunk pointing to the index
+        ///
+        /// @param c Chunk reference
+        /// @param index Index this iterator is pointing to
+        constexpr iterator(chunk& c, std::size_t index = 0) :
+            _ptrs(std::make_tuple(c.ptr<decay_component_t<Args>>(index)...)) {
         }
 
+        /// @brief Default copy constructor
+        ///
+        /// @param rhs Right hand side iterator
         constexpr iterator(const iterator& rhs) = default;
+
+        /// @brief Default copy assignment operator
+        ///
+        /// @param rhs Right hand side iterator
+        /// @return iterator& this iterator
         constexpr iterator& operator=(const iterator& rhs) = default;
+
+        /// @brief Default move constructor
+        ///
+        /// @param rhs Right hand side iterator
         constexpr iterator(iterator&& rhs) = default;
+
+        /// @brief Default move assignment operator
+        ///
+        /// @param rhs Right hand side iterator
+        /// @return iterator& this iterator
         constexpr iterator& operator=(iterator&& rhs) = default;
 
         /// @brief Pre-increment iterator
@@ -339,24 +355,28 @@ public:
         std::size_t _index{};
     };
 
+    /// @brief Construct a new chunk view object
+    ///
+    /// @param c Chunk reference
+    chunk_view(chunk& c) : _chunk(c) {
+    }
+
+    /// @brief Return iterator to the beginning of a chunk
+    ///
+    /// @return constexpr iterator
     [[nodiscard]] constexpr iterator begin() noexcept {
-        return iterator(this, 0);
+        return iterator(_chunk, 0);
     }
 
+    /// @brief Return iterator to the end of a chunk
+    ///
+    /// @return constexpr iterator
     [[nodiscard]] constexpr iterator end() noexcept {
-        return iterator(this, size());
+        return iterator(_chunk, _chunk.size());
     }
 
-    [[nodiscard]] constexpr const iterator begin() const noexcept {
-        return iterator(this, 0);
-    }
-
-    [[nodiscard]] constexpr const iterator end() const noexcept {
-        return iterator(this, size());
-    }
+private:
+    chunk& _chunk;
 };
-
-// TODO: not yet in gcc
-// static_assert(std::is_layout_compatible_v<chunk, chunk_view<int&, bool&>>);
 
 } // namespace cobalt::ecs
