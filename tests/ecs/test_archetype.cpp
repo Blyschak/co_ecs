@@ -50,7 +50,7 @@ TEST(chunk, chunk_view) {
     ecs::chunk chunk(set);
 
     chunk.emplace_back(components::a(15, false), components::b(false));
-    for (auto [a, b] : chunk.cast_to<components::a&, components::b&>()) {
+    for (auto [a, b] : ecs::chunk_view<components::a&, components::b&>(chunk)) {
         EXPECT_EQ(a.foo, 15);
         EXPECT_EQ(a.bar, false);
         EXPECT_EQ(b.c, false);
