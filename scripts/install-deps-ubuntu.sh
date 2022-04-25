@@ -18,5 +18,5 @@ apt-get install -y      \
 wget -qO - http://packages.lunarg.com/lunarg-signing-key-pub.asc | apt-key add -
 wget -qO /etc/apt/sources.list.d/lunarg-vulkan-$UBUNTU_CODENAME.list http://packages.lunarg.com/vulkan/lunarg-vulkan-$UBUNTU_CODENAME.list
 apt-get update
-apt-get install vulkan-sdk
+apt-get install -y vulkan-sdk
 
