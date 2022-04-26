@@ -234,6 +234,8 @@ TEST(registry, view_entity) {
     registry.create<position, velocity>({ 2, 2 }, { 22, 22 });
 
     auto view = registry.view<const ecs::entity&>();
+    // This should not compile:
+    // auto view = registry.view<const ecs::entity&>();
     int sum = 0;
     view.each([&sum](auto& ent) { sum += ent.id(); });
     EXPECT_EQ(sum, 1);
@@ -245,6 +247,7 @@ TEST(registry, view_get) {
 
     auto view = registry.view<const position&, velocity&>();
     auto components = view.get(ent);
+    // TODO: make this fail to compile registry.get<const ecs::entity&>(ent);
     EXPECT_EQ(std::get<0>(components).x, 2);
     EXPECT_EQ(std::get<0>(components).y, 2);
     EXPECT_EQ(std::get<1>(components).x, 22);
