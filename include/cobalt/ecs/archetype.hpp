@@ -96,28 +96,28 @@ public:
     ///
     /// @tparam Component Component type
     /// @param location Entity location
-    /// @return const Component& Component reference
-    template<component Component>
-    const Component& read(entity_location location) const {
+    /// @return Component& Component reference
+    template<component_reference Component>
+    Component& read(entity_location location) {
         assert(location.arch == this);
         assert(location.chunk_index < _chunks.size());
         auto& chunk = _chunks[location.chunk_index];
         assert(location.entry_index < chunk.size());
-        return chunk.at<Component>(location.entry_index);
+        return *chunk.ptr<Component>(location.entry_index);
     }
 
     /// @brief Read component data
     ///
     /// @tparam Component Component type
     /// @param location Entity location
-    /// @return Component& Component reference
-    template<component Component>
-    Component& read(entity_location location) {
+    /// @return const Component& Component reference
+    template<component_reference Component>
+    Component& read(entity_location location) const {
         assert(location.arch == this);
         assert(location.chunk_index < _chunks.size());
         auto& chunk = _chunks[location.chunk_index];
         assert(location.entry_index < chunk.size());
-        return chunk.at<Component>(location.entry_index);
+        return *chunk.ptr<Component>(location.entry_index);
     }
 
     /// @brief Check if archetype has component C

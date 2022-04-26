@@ -201,8 +201,6 @@ public:
     /// @return T* Pointer to T
     template<component T>
     inline T* ptr(std::size_t index) noexcept {
-        // TODO: make entity non-writable
-        // static_assert(!std::is_same_v<T, entity>, "Cannot give a mutable reference to entity storage");
         return ptr_unchecked<T>(index);
     }
 
@@ -214,6 +212,20 @@ public:
     template<component T>
     inline const T* ptr(std::size_t index) const noexcept {
         return ptr_unchecked<T>(index);
+    }
+
+    template<component_reference T>
+    inline decay_component_t<T>* ptr(std::size_t index) noexcept {
+        if constexpr (mutable_component_reference_v<T>) {
+            static_assert(
+                !std::is_same_v<decay_component_t<T>, entity>, "Cannot give a mutable reference to the entity");
+        }
+        return ptr_unchecked<decay_component_t<T>>(index);
+    }
+
+    template<component_reference T>
+    inline const decay_component_t<T>* ptr(std::size_t index) const noexcept {
+        return ptr_unchecked<decay_component_t<T>>(index);
     }
 
     /// @brief Get max size, how many elements can this chunk hold
@@ -306,8 +318,7 @@ public:
         ///
         /// @param c Chunk reference
         /// @param index Index this iterator is pointing to
-        constexpr iterator(chunk& c, std::size_t index = 0) :
-            _ptrs(std::make_tuple(c.ptr<decay_component_t<Args>>(index)...)) {
+        constexpr iterator(chunk& c, std::size_t index = 0) : _ptrs(std::make_tuple(c.ptr<Args>(index)...)) {
         }
 
         /// @brief Default copy constructor
