@@ -201,8 +201,7 @@ public:
     /// @return T* Pointer to T
     template<component T>
     inline T* ptr(std::size_t index) noexcept {
-        // TODO: make entity non-writable
-        // static_assert(!std::is_same_v<T, entity>, "Cannot give a mutable reference to entity storage");
+        static_assert(!std::is_same_v<T, entity>, "Cannot give a mutable reference to entity storage");
         return ptr_unchecked<T>(index);
     }
 
@@ -298,6 +297,7 @@ public:
         using value_type = std::tuple<Args...>;
         using reference = std::tuple<Args...>;
         using element_type = value_type;
+        using tuple_type = std::tuple<std::add_pointer_t<std::remove_reference_t<Args>>...>;
 
         /// @brief Default constructor
         constexpr iterator() = default;
@@ -306,8 +306,7 @@ public:
         ///
         /// @param c Chunk reference
         /// @param index Index this iterator is pointing to
-        constexpr iterator(chunk& c, std::size_t index = 0) :
-            _ptrs(std::make_tuple(c.ptr<decay_component_t<Args>>(index)...)) {
+        constexpr iterator(chunk& c, std::size_t index = 0) : _ptrs(std::make_tuple(chunk_ptr<Args>(c, index)...)) {
         }
 
         /// @brief Default copy constructor
@@ -363,7 +362,14 @@ public:
         constexpr auto operator<=>(const iterator& rhs) const noexcept = default;
 
     private:
-        std::tuple<std::add_pointer_t<decay_component_t<Args>>...> _ptrs;
+        template<component_reference T>
+        inline static decltype(auto) chunk_ptr(chunk& c, std::size_t index) {
+            using chunk_type = std::conditional_t<mutable_component_reference_v<T>, chunk&, const chunk&>;
+            using component_type = decay_component_t<T>;
+            return static_cast<chunk_type>(c).template ptr<component_type>(index);
+        }
+
+        tuple_type _ptrs;
         std::size_t _index{};
     };
 
