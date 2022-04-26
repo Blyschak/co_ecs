@@ -44,25 +44,33 @@ concept component_reference = std::is_reference_v<T> && component<std::remove_cv
 template<component_reference T>
 using decay_component_t = std::remove_cvref_t<T>;
 
-/// @brief Returns true for non-const component references
+/// @brief Struct to determine const-ness of component reference type
 ///
-/// @tparam T Type
-/// @return true When the component reference is mutable
-/// @return false When the component reference is immutable
+/// @tparam T component reference type
 template<component_reference T>
-constexpr bool is_mutable_component_reference() noexcept {
-    return !std::is_const_v<std::remove_reference_t<T>>;
-}
+struct const_component_reference {
+    constexpr static bool value = std::is_const_v<std::remove_reference_t<T>>;
+};
 
 /// @brief Returns true for const component references
 ///
-/// @tparam T Type
-/// @return true When the component reference is immutable
-/// @return false When the component reference is mutable
+/// @tparam T component_reference type
 template<component_reference T>
-constexpr bool is_immutable_component_reference() noexcept {
-    return std::is_const_v<std::remove_reference_t<T>>;
-}
+constexpr bool const_component_reference_v = const_component_reference<T>::value;
+
+/// @brief Struct to determine mutability of component reference type
+///
+/// @tparam T component reference type
+template<component_reference T>
+struct mutable_component_reference {
+    constexpr static bool value = !std::is_const_v<std::remove_reference_t<T>>;
+};
+
+/// @brief Returns true for non-const component references
+///
+/// @tparam T component_reference type
+template<component_reference T>
+constexpr bool mutable_component_reference_v = mutable_component_reference<T>::value;
 
 /// @brief Component metadata. Stores an ID, size, alignment, destructor, etc.
 struct component_meta {

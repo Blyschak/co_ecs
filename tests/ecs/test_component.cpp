@@ -54,10 +54,10 @@ TEST(component, iteration) {
 }
 
 TEST(component, references) {
-    EXPECT_TRUE(ecs::is_mutable_component_reference<component_a&>());
-    EXPECT_FALSE(ecs::is_mutable_component_reference<const component_a&>());
-    EXPECT_TRUE(ecs::is_immutable_component_reference<const component_b&>());
-    EXPECT_FALSE(ecs::is_immutable_component_reference<component_b&>());
+    EXPECT_TRUE(ecs::mutable_component_reference_v<component_a&>);
+    EXPECT_FALSE(ecs::mutable_component_reference_v<const component_a&>);
+    EXPECT_TRUE(ecs::const_component_reference_v<const component_b&>);
+    EXPECT_FALSE(ecs::const_component_reference_v<component_b&>);
 }
 
 struct component_d {
