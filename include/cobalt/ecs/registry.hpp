@@ -1,11 +1,8 @@
 #pragma once
 
 #include <cassert>
-#include <ranges>
 
-#include <cobalt/asl/hash_map.hpp>
 #include <cobalt/asl/sparse_map.hpp>
-#include <cobalt/asl/zip.hpp>
 #include <cobalt/ecs/archetype.hpp>
 #include <cobalt/ecs/entity.hpp>
 #include <cobalt/ecs/entity_location.hpp>
@@ -82,7 +79,7 @@ public:
     entity create(Args&&... args) {
         auto entity = _entity_pool.create();
         auto components = component_meta_set::create<Args...>();
-        auto archetype = ensure_archetype(components);
+        auto archetype = _archetypes.ensure_archetype(std::move(components));
         auto location = archetype->template allocate<Args...>(entity, std::forward<Args>(args)...);
         set_location(entity.id(), location);
         return entity;
@@ -144,7 +141,7 @@ public:
         } else {
             auto components = archetype->components();
             components.insert<C>();
-            auto new_archetype = ensure_archetype(components);
+            auto new_archetype = _archetypes.ensure_archetype(std::move(components));
             auto [new_location, moved] = archetype->move(location, *new_archetype);
             if (moved.id() != entity::invalid_id) {
                 set_location(moved.id(), location);
@@ -175,7 +172,7 @@ public:
 
         auto components = archetype->components();
         components.erase<C>();
-        auto new_archetype = ensure_archetype(components);
+        auto new_archetype = _archetypes.ensure_archetype(std::move(components));
         auto [new_location, moved] = archetype->move(location, *new_archetype);
         if (moved.id() != entity::invalid_id) {
             set_location(moved.id(), location);
@@ -292,7 +289,7 @@ public:
     /// @return decltype(auto) Range-like type that yields references to requested components
     template<component_reference... Args>
     decltype(auto) each() {
-        return chunks<Args...>() | std::views::join; // join all chunks togather
+        return _archetypes.chunks<Args...>() | std::views::join; // join all chunks togather
     }
 
     /// @brief Iterate every entity that has <Args...> components attached and run a func
@@ -301,7 +298,7 @@ public:
     /// @param func A callable to run on components
     template<component_reference... Args>
     void each(auto&& func) {
-        for (auto chunk : chunks<Args...>()) {
+        for (auto chunk : _archetypes.chunks<Args...>()) {
             for (auto entry : chunk) {
                 std::apply([func](auto&&... args) { func(std::forward<decltype(args)>(args)...); }, entry);
             }
@@ -321,22 +318,6 @@ private:
     template<component_reference... Args>
     friend class view;
 
-    template<component_reference... Args>
-    decltype(auto) chunks() {
-        auto filter_archetypes = [](auto& archetype) {
-            return (... && archetype->template contains<decay_component_t<Args>>());
-        };
-        auto into_chunks = [](auto& archetype) -> decltype(auto) { return archetype->chunks(); };
-        auto as_typed_chunk = [](auto& chunk) -> decltype(auto) { return chunk_view<Args...>(chunk); };
-
-        return _archetypes                              // for each archetype entry in archetype map
-               | std::views::values                     // for each value, a pointer to archetype
-               | std::views::filter(filter_archetypes)  // filter archetype by requested components
-               | std::views::transform(into_chunks)     // fetch chunks vector
-               | std::views::join                       // join chunks togather
-               | std::views::transform(as_typed_chunk); // each chunk casted to a typed chunk view range-like type
-    }
-
     [[nodiscard]] const entity_location& get_location(entity_id id) const {
         return _entity_archetype_map.at(id);
     }
@@ -353,17 +334,9 @@ private:
         _entity_archetype_map.erase(id);
     }
 
-    archetype* ensure_archetype(const component_meta_set& components) {
-        auto& archetype = _archetypes[components.bitset()];
-        if (!archetype) {
-            archetype = std::make_unique<ecs::archetype>(std::move(components));
-        }
-        return archetype.get();
-    }
-
     entity_pool _entity_pool;
+    archetypes _archetypes;
     asl::sparse_map<entity_id, entity_location> _entity_archetype_map;
-    asl::hash_map<component_set, std::unique_ptr<archetype>, component_set_hasher> _archetypes;
     asl::sparse_map<resource_id, void*> _resource_map;
 };
 

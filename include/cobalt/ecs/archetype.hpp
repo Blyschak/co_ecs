@@ -1,7 +1,9 @@
 #pragma once
 
 #include <iostream>
+#include <ranges>
 
+#include <cobalt/asl/hash_map.hpp>
 #include <cobalt/asl/vector.hpp>
 #include <cobalt/ecs/chunk.hpp>
 #include <cobalt/ecs/component.hpp>
@@ -196,6 +198,76 @@ public:
 private:
     component_meta_set _components;
     chunks_storage_type _chunks;
+};
+
+/// @brief Container for archetypes, holds a map from component set to archetype
+class archetypes {
+public:
+    /// @brief Underlaying container storage type
+    using storage_type = asl::hash_map<component_set, std::unique_ptr<archetype>, component_set_hasher>;
+
+    /// @brief Get or create and return an archetype for given component set
+    ///
+    /// @param components Component set
+    /// @return archetype* Archetype pointer
+    archetype* ensure_archetype(component_meta_set components) {
+        auto& archetype = _archetypes[components.bitset()];
+        if (!archetype) {
+            archetype = std::make_unique<ecs::archetype>(std::move(components));
+        }
+        return archetype.get();
+    }
+
+    /// @brief Returns iterator to the beginning of archetypes container
+    ///
+    /// @return decltype(auto)
+    decltype(auto) begin() noexcept {
+        return _archetypes.begin();
+    }
+
+    /// @brief Returns an iterator to the end of archetypes container
+    ///
+    /// @return decltype(auto)
+    decltype(auto) end() noexcept {
+        return _archetypes.end();
+    }
+
+    /// @brief Returns iterator to the beginning of archetypes container
+    ///
+    /// @return decltype(auto)
+    decltype(auto) begin() const noexcept {
+        return _archetypes.begin();
+    }
+
+    /// @brief Returns an iterator to the end of archetypes container
+    ///
+    /// @return decltype(auto)
+    decltype(auto) end() const noexcept {
+        return _archetypes.end();
+    }
+
+    /// @brief Return a range of chunks that match given component set in Args
+    ///
+    /// @tparam Args
+    /// @return decltype(auto)
+    template<component_reference... Args>
+    decltype(auto) chunks() {
+        auto filter_archetypes = [](auto& archetype) {
+            return (... && archetype->template contains<decay_component_t<Args>>());
+        };
+        auto into_chunks = [](auto& archetype) -> decltype(auto) { return archetype->chunks(); };
+        auto as_typed_chunk = [](auto& chunk) -> decltype(auto) { return chunk_view<Args...>(chunk); };
+
+        return *this                                    // for each archetype entry in archetype map
+               | std::views::values                     // for each value, a pointer to archetype
+               | std::views::filter(filter_archetypes)  // filter archetype by requested components
+               | std::views::transform(into_chunks)     // fetch chunks vector
+               | std::views::join                       // join chunks togather
+               | std::views::transform(as_typed_chunk); // each chunk casted to a typed chunk view range-like type
+    }
+
+private:
+    storage_type _archetypes;
 };
 
 } // namespace cobalt::ecs
