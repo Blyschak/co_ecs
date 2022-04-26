@@ -201,7 +201,7 @@ public:
         assert(alive(ent));
         auto id = ent.id();
         auto& location = get_location(id);
-        return location.arch->template read<C>(location);
+        return location.arch->template read<C&>(location);
     }
 
     /// @brief Get const reference to component C
@@ -214,7 +214,7 @@ public:
         assert(alive(ent));
         auto id = ent.id();
         auto& location = get_location(id);
-        return location.arch->template read<C>(location);
+        return location.arch->template read<const C&>(location);
     }
 
     /// @brief Get components for a single entity
@@ -228,7 +228,7 @@ public:
         auto id = ent.id();
         auto& location = get_location(id);
         auto* archetype = location.arch;
-        return std::tuple<Args...>(std::ref(archetype->template read<decay_component_t<Args>>(location))...);
+        return std::tuple<Args...>(std::ref(archetype->template read<Args>(location))...);
     }
 
     /// @brief Check if entity has component attached or not
