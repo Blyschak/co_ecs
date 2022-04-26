@@ -4,6 +4,21 @@ FetchContent_Declare(
   GIT_TAG v1.9.2)
 FetchContent_MakeAvailable(spdlog)
 
+set(LUA_BUILD_COMPILER OFF CACHE INTERNAL "")
+set(LUA_BUILD_INTERPRETER OFF CACHE INTERNAL "")
+
+FetchContent_Declare(
+  lua
+  GIT_REPOSITORY https://github.com/marovira/lua
+  GIT_TAG a32ae8de013ebe1feb3c0d22d1028ff5d2617f84)
+FetchContent_MakeAvailable(lua)
+
+FetchContent_Declare(
+  sol2
+  GIT_REPOSITORY https://github.com/ThePhD/sol2
+  GIT_TAG v3.2.3)
+FetchContent_MakeAvailable(sol2)
+
 FetchContent_Declare(
   glm
   GIT_REPOSITORY https://github.com/g-truc/glm
@@ -48,6 +63,8 @@ add_library(
 target_link_libraries(
   engine
   PUBLIC spdlog::spdlog
+  PUBLIC lua::lua
+  PUBLIC sol2
   PUBLIC glm
   PUBLIC glfw
   PUBLIC vulkan)
