@@ -13,22 +13,6 @@
 
 namespace cobalt::ecs {
 
-namespace detail {
-    template<typename T>
-    struct match_archetype {
-        static bool match(auto& archetype) noexcept {
-            return archetype->template contains<T>();
-        }
-    };
-
-    template<>
-    struct match_archetype<entity> {
-        static bool match(auto& archetype) noexcept {
-            return true;
-        }
-    };
-} // namespace detail
-
 // forward declaration
 class registry;
 
@@ -340,7 +324,7 @@ private:
     template<component_reference... Args>
     decltype(auto) chunks() {
         auto filter_archetypes = [](auto& archetype) {
-            return (... && detail::match_archetype<decay_component_t<Args>>::match(archetype));
+            return (... && archetype->template contains<decay_component_t<Args>>());
         };
         auto into_chunks = [](auto& archetype) -> decltype(auto) { return archetype->chunks(); };
         auto as_typed_chunk = [](auto& chunk) -> decltype(auto) { return chunk_view<Args...>(chunk); };

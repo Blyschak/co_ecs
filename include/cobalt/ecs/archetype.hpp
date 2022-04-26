@@ -125,7 +125,11 @@ public:
     /// @return false If this archetype does not have component C
     template<component C>
     bool contains() const noexcept {
-        return components().contains<C>();
+        if constexpr (std::is_same_v<C, entity>) {
+            return true;
+        } else {
+            return components().contains<C>();
+        }
     }
 
     /// @brief Deallocate memory for entity located at location. This method uses swap remove approach for faster
@@ -155,8 +159,9 @@ public:
     std::pair<entity_location, entity> move(entity_location location, archetype& archetype) {
         assert(location.arch == this);
         assert(location.chunk_index < _chunks.size());
-        auto& chunk = _chunks[location.chunk_index];
         assert(location.entry_index < chunk.size());
+
+        auto& chunk = _chunks[location.chunk_index];
 
         if (archetype._chunks.empty()) {
             archetype._chunks.emplace_back(archetype.components());
