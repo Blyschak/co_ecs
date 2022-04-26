@@ -13,12 +13,19 @@ class family {
 public:
     using id_type = _id_type;
 
+    /// @brief Get next ID value
+    ///
+    /// @return id_type Next ID
+    inline static id_type next() noexcept {
+        return identifier++;
+    }
+
 private:
     inline static id_type identifier{}; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
 public:
     template<typename... T>
-    inline static const id_type id = identifier++;
+    inline static const id_type id = next();
 };
 
 } // namespace cobalt::asl
