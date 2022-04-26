@@ -161,9 +161,8 @@ public:
     std::pair<entity_location, entity> move(entity_location location, archetype& archetype) {
         assert(location.arch == this);
         assert(location.chunk_index < _chunks.size());
-        assert(location.entry_index < chunk.size());
-
         auto& chunk = _chunks[location.chunk_index];
+        assert(location.entry_index < chunk.size());
 
         if (archetype._chunks.empty()) {
             archetype._chunks.emplace_back(archetype.components());
