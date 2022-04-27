@@ -54,10 +54,32 @@ private:
     registry& _registry;
 };
 
+/// @brief Runtime view, used for scripting
+class runtime_view {
+public:
+    /// @brief Construct a new runtime view object
+    ///
+    /// @tparam container_t Container type holding component IDs
+    /// @param registry Registry reference
+    /// @param ids IDs to match archetypes
+    template<typename container_t>
+    runtime_view(registry& registry, container_t ids) : _registry(registry), _ids(ids.begin(), ids.end()) {
+    }
+
+    /// @brief Iterate over entities that match given IDs
+    ///
+    /// @param func Function to call on every entity
+    void each(auto&& func);
+
+private:
+    registry& _registry;
+    std::vector<component_id> _ids;
+};
+
 class registry {
 public:
-    /// @brief Creates a new entity in the world with components Args... attached and returns an ecs::entity that user
-    /// can use to operate on the enitty later, example:
+    /// @brief Creates a new entity in the world with components Args... attached and returns an ecs::entity that
+    /// user can use to operate on the enitty later, example:
     ///
     /// @code {.cpp}
     /// struct position {
@@ -103,8 +125,8 @@ public:
     }
 
     /// @brief Set component to an entity. It can either override a component value that is already assigned to an
-    /// entity or it may construct a new once and assign to it. Note, such operation involves an archetype change which
-    /// is a costly operation.
+    /// entity or it may construct a new once and assign to it. Note, such operation involves an archetype change
+    /// which is a costly operation.
     ///
     /// @code {.cpp}
     /// struct position {
@@ -154,8 +176,9 @@ public:
         }
     }
 
-    /// @brief Remove component C from an entity. In case entity does not have component attached nothing is done and
-    /// this method returns. In case component is removed it requires archetype change which is a costly operation.
+    /// @brief Remove component C from an entity. In case entity does not have component attached nothing is done
+    /// and this method returns. In case component is removed it requires archetype change which is a costly
+    /// operation.
     ///
     /// @tparam C Component type
     /// @param ent entity to remove component from
@@ -292,6 +315,21 @@ public:
         return _archetypes.chunks<Args...>() | std::views::join; // join all chunks togather
     }
 
+    /// @brief Iterate every entity that matches given IDs
+    ///
+    /// @tparam container_t Container type holding IDs
+    /// @param ids IDs
+    /// @param func Function to call on every entity
+    /// @return decltype(auto)
+    template<typename container_t>
+    void runtime_each(const container_t& ids, auto&& func) {
+        for (auto chunk : _archetypes.chunks(ids.begin(), ids.end())) {
+            for (auto [entity] : chunk) {
+                func(entity);
+            }
+        }
+    }
+
     /// @brief Iterate every entity that has <Args...> components attached and run a func
     ///
     /// @tparam Args Components types pack
@@ -312,6 +350,16 @@ public:
     template<component_reference... Args>
     ecs::view<Args...> view() {
         return ecs::view<Args...>(*this);
+    }
+
+    /// @brief Construct a runtime view to match IDs
+    ///
+    /// @tparam container_t Container type holding IDs
+    /// @param ids IDs to match archetype
+    /// @return ecs::runtime_view
+    template<typename container_t>
+    ecs::runtime_view runtime_view(const container_t& ids) {
+        return ecs::runtime_view(*this, ids);
     }
 
 private:
@@ -351,9 +399,14 @@ void view<Args...>::each(auto&& func) {
     _registry.each<Args...>(std::move(func));
 }
 
+
 template<component_reference... Args>
 std::tuple<Args...> view<Args...>::get(entity ent) {
     return _registry.get<Args...>(ent);
+}
+
+void runtime_view::each(auto&& func) {
+    _registry.runtime_each(_ids, std::move(func));
 }
 
 } // namespace cobalt::ecs

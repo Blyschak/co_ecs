@@ -134,6 +134,19 @@ public:
         }
     }
 
+    /// @brief Check if archetype has component ID
+    ///
+    /// @param id Component ID
+    /// @return true If this archetype has component C
+    /// @return false If this archetype does not have component C
+    bool contains(component_id id) const noexcept {
+        if (id == component_family::id<entity>) {
+            return true;
+        } else {
+            return components().contains(id);
+        }
+    }
+
     /// @brief Deallocate memory for entity located at location. This method uses swap remove approach for faster
     /// erasure, so it returns an ID of a entity that has been moved to this location or invalid entity ID is returned
     /// when archetype has only a single entity.
@@ -256,6 +269,33 @@ public:
         };
         auto into_chunks = [](auto& archetype) -> decltype(auto) { return archetype->chunks(); };
         auto as_typed_chunk = [](auto& chunk) -> decltype(auto) { return chunk_view<Args...>(chunk); };
+
+        return *this                                    // for each archetype entry in archetype map
+               | std::views::values                     // for each value, a pointer to archetype
+               | std::views::filter(filter_archetypes)  // filter archetype by requested components
+               | std::views::transform(into_chunks)     // fetch chunks vector
+               | std::views::join                       // join chunks togather
+               | std::views::transform(as_typed_chunk); // each chunk casted to a typed chunk view range-like type
+    }
+
+    /// @brief Return a range of chunks that match given ids in [first, last]
+    ///
+    /// @tparam iter_t Iterator to component ID
+    /// @param first First iterator
+    /// @param last Last iterator
+    /// @return decltype(auto)
+    template<std::forward_iterator iter_t>
+    decltype(auto) chunks(iter_t first, iter_t last) {
+        auto filter_archetypes = [first, last](auto& archetype) mutable {
+            for (; first != last; first++) {
+                if (!archetype->template contains(*first)) {
+                    return false;
+                }
+            }
+            return true;
+        };
+        auto into_chunks = [](auto& archetype) -> decltype(auto) { return archetype->chunks(); };
+        auto as_typed_chunk = [](auto& chunk) -> decltype(auto) { return chunk_view<const entity&>(chunk); };
 
         return *this                                    // for each archetype entry in archetype map
                | std::views::values                     // for each value, a pointer to archetype
