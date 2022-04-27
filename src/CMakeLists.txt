@@ -54,6 +54,7 @@ add_library(
   engine
   core/logging.cpp
   core/application.cpp
+  scripting/lua_engine.cpp
   platform/window.cpp
   platform/glfw/glfw_window.cpp
   render/renderer.cpp
