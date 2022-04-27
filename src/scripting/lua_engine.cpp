@@ -7,7 +7,7 @@
 namespace cobalt::scripting {
 
 namespace {
-    void lua_log(const sol::state& lua, core::log_level level, const sol::table& log, const sol::variadic_args& args) {
+    void lua_log(const sol::state& lua, core::log_level level, const sol::variadic_args& args) {
         // format output as a space seprated output of args
         std::stringstream ss;
         for (const auto& arg : args) {
@@ -29,17 +29,15 @@ lua_engine::lua_engine() {
     lua.create_named_table(
         "log",
         "err",
-        [&](const sol::table& log, const sol::variadic_args& args) { lua_log(lua, core::log_level::err, log, args); },
+        [&](const sol::table& log, const sol::variadic_args& args) { lua_log(lua, core::log_level::err, args); },
         "warn",
-        [&](const sol::table& log, const sol::variadic_args& args) { lua_log(lua, core::log_level::warn, log, args); },
+        [&](const sol::table& log, const sol::variadic_args& args) { lua_log(lua, core::log_level::warn, args); },
         "info",
-        [&](const sol::table& log, const sol::variadic_args& args) { lua_log(lua, core::log_level::info, log, args); },
+        [&](const sol::table& log, const sol::variadic_args& args) { lua_log(lua, core::log_level::info, args); },
         "debug",
-        [&](const sol::table& log, const sol::variadic_args& args) { lua_log(lua, core::log_level::debug, log, args); },
+        [&](const sol::table& log, const sol::variadic_args& args) { lua_log(lua, core::log_level::debug, args); },
         "trace",
-        [&](const sol::table& log, const sol::variadic_args& args) {
-            lua_log(lua, core::log_level::trace, log, args);
-        });
+        [&](const sol::table& log, const sol::variadic_args& args) { lua_log(lua, core::log_level::trace, args); });
 
 
     // ecs types
@@ -67,6 +65,10 @@ lua_engine::lua_engine() {
             }));
             return self.runtime_view(rng);
         });
+}
+
+void lua_engine::script(const std::string& script) {
+    lua.script(script);
 }
 
 } // namespace cobalt::scripting

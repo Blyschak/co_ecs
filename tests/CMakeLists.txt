@@ -25,8 +25,9 @@ add_executable(
   ecs/test_archetype.cpp
   ecs/test_registry.cpp
   ecs/test_system.cpp
+  scripting/test_lua_engine.cpp
   core/test_config.cpp)
 
-target_link_libraries(tests gtest gtest_main)
+target_link_libraries(tests engine gtest gtest_main)
 
 gtest_discover_tests(tests)
