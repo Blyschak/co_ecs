@@ -28,9 +28,18 @@ public:
         lua.new_usertype<C>(
             name,
             sol::constructors<Ctors...>(),
+            "name",
+            [name]() { return name; },
             "id",
             []() { return ecs::component_family::id<C>; },
             std::forward<decltype(args)>(args)...);
+        lua["registry"][std::string("_set_") + name] =
+            [&](ecs::registry& self, ecs::entity ent, const sol::table& table) {
+                return self.set<C>(ent, table.as<C>());
+            };
+        lua["registry"][std::string("_get_") + name] = [&](ecs::registry& self, ecs::entity ent) {
+            return self.get<C>(ent);
+        };
     }
 
     /// @brief Get the state object

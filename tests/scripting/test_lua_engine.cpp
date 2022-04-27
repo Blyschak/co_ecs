@@ -24,13 +24,18 @@ TEST(scripting, lua_engine_basic_ecs) {
     lua_engine.script(R"#(
         reg = registry:new()
         ent = reg:create()
+        reg:set(ent, position:new(1, 2))
 
         local viewed_ent = nil
-        reg:view():each(
+        local viewed_pos = nil
+        reg:view(position):each(
             function(ent)
                 viewed_ent = ent
+                viewed_pos = reg:get(ent, position)
             end
         )
         assert(viewed_ent:id() == ent:id())
+        assert(viewed_pos.x == 1)
+        assert(viewed_pos.y == 2)
     )#");
 }

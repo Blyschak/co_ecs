@@ -50,7 +50,8 @@ lua_engine::lua_engine() {
             return self.each(func);
         });
 
-    lua.new_usertype<ecs::registry>("registry",
+    lua.new_usertype<ecs::registry>(
+        "registry",
         sol::constructors<ecs::registry()>(),
         "create",
         &ecs::registry::create<>,
@@ -58,8 +59,18 @@ lua_engine::lua_engine() {
         &ecs::registry::destroy,
         "alive",
         &ecs::registry::alive,
+        "set",
+        [&](ecs::registry& self, ecs::entity ent, const sol::table& table) {
+            std::string component_name = table["name"]();
+            return lua["registry"][std::string("_set_") + component_name](self, ent, table);
+        },
+        "get",
+        [&](ecs::registry& self, ecs::entity ent, const sol::table& table) {
+            std::string component_name = table["name"]();
+            return lua["registry"][std::string("_get_") + component_name](self, ent);
+        },
         "view",
-        [](ecs::registry& self, const sol::variadic_args& args) {
+        [&](ecs::registry& self, const sol::variadic_args& args) {
             auto rng = (args | std::views::transform([](const sol::table& obj) {
                 return obj["id"].get<sol::function>()().get<ecs::component_id>();
             }));
