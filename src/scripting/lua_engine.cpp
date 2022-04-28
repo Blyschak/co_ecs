@@ -59,6 +59,11 @@ lua_engine::lua_engine() {
         &ecs::registry::destroy,
         "alive",
         &ecs::registry::alive,
+        "has",
+        [&](ecs::registry& self, ecs::entity ent, const sol::table& table) {
+            std::string component_name = table["name"]();
+            return lua["registry"][std::string("_has_") + component_name](self, ent);
+        },
         "set",
         [&](ecs::registry& self, ecs::entity ent, const sol::table& table) {
             std::string component_name = table["name"]();
@@ -76,6 +81,9 @@ lua_engine::lua_engine() {
             }));
             return self.runtime_view(rng);
         });
+
+    register_component<script_component<sol::object>, script_component<sol::object>(const sol::object&)>(
+        "script_component", "state", &script_component<sol::object>::state);
 }
 
 void lua_engine::script(const std::string& script) {

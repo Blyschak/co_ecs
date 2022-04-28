@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cobalt/ecs/registry.hpp>
+#include <cobalt/scripting/script_component.hpp>
 
 #include <sol/sol.hpp>
 
@@ -39,6 +40,9 @@ public:
             };
         lua["registry"][std::string("_get_") + name] = [&](ecs::registry& self, ecs::entity ent) {
             return self.get<C>(ent);
+        };
+        lua["registry"][std::string("_has_") + name] = [&](ecs::registry& self, ecs::entity ent) {
+            return self.has<C>(ent);
         };
     }
 

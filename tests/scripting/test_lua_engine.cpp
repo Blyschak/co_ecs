@@ -38,4 +38,20 @@ TEST(scripting, lua_engine_basic_ecs) {
         assert(viewed_pos.x == 1)
         assert(viewed_pos.y == 2)
     )#");
+
+    lua_engine.script(R"#(
+        ent = reg:create()
+        s = script_component:new('Hello')
+        reg:set(ent, s)
+
+        ent2 = reg:create()
+        reg:set(ent2, script_component:new({other_ent=ent, some_more_data=15}))
+
+        reg:view(script_component):each(
+            function(ent)
+                data = reg:get(ent, script_component)
+                assert(data)
+            end
+        )
+    )#");
 }
