@@ -37,7 +37,7 @@ TEST(chunk, basic_emplace) {
     set.insert<components::b>();
     ecs::chunk chunk(set);
 
-    chunk.emplace_back(components::a(15, false), components::b(false));
+    chunk.emplace_back(ecs::entity::invalid(), components::a(15, false), components::b(false));
     EXPECT_EQ(chunk.at<components::a>(0).foo, 15);
     EXPECT_EQ(chunk.at<components::a>(0).bar, false);
     EXPECT_EQ(chunk.at<components::b>(0).c, false);
@@ -49,7 +49,7 @@ TEST(chunk, chunk_view) {
     set.insert<components::b>();
     ecs::chunk chunk(set);
 
-    chunk.emplace_back(components::a(15, false), components::b(false));
+    chunk.emplace_back(ecs::entity::invalid(), components::a(15, false), components::b(false));
     for (auto [a, b] : ecs::chunk_view<components::a&, components::b&>(chunk)) {
         EXPECT_EQ(a.foo, 15);
         EXPECT_EQ(a.bar, false);

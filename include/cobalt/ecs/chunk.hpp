@@ -42,7 +42,7 @@ public:
         std::byte* ptr = _buffer;
         block_metadata block;
         // make space for entity
-        const component_meta* meta = component_meta::of<entity>();
+        const component_meta* meta = component_traits<entity>::meta();
         block.begin = ptr;
         block.end = ptr + asl::mod_2n(reinterpret_cast<std::size_t>(ptr), meta->align) + _max_size * meta->size;
         ptr = block.end;
@@ -113,9 +113,10 @@ public:
     /// @tparam Args Paramter pack
     /// @param args component arguments
     template<component... Args>
-    void emplace_back(Args&&... args) {
+    void emplace_back(entity ent, Args&&... args) {
         assert(!full());
-        (..., std::construct_at(ptr_unchecked<Args>(size()), args));
+        std::construct_at(ptr<entity>(size()), ent);
+        (..., std::construct_at(ptr<Args>(component_traits<Args>::id(), size()), args));
         _size++;
     }
 
@@ -191,6 +192,30 @@ public:
         return *ptr<T>(index);
     }
 
+    /// @brief Get a reference to component T
+    ///
+    /// @tparam T Component type
+    /// @param id Component ID
+    /// @param index Index in blocks
+    /// @return T& Reference to T
+    template<component T>
+    inline T& at(component_id id, std::size_t index) noexcept {
+        assert(index < _size);
+        return *ptr<T>(id, index);
+    }
+
+    /// @brief Get a const reference to component T
+    ///
+    /// @tparam T Component type
+    /// @param id Component ID
+    /// @param index Index in blocks
+    /// @return const T& Const reference to T
+    template<component T>
+    inline const T& at(component_id id, std::size_t index) const noexcept {
+        assert(index < _size);
+        return *ptr<T>(id, index);
+    }
+
     /// @brief Get a pointer to component T
     ///
     /// @tparam T Component type
@@ -223,6 +248,30 @@ public:
     template<component_reference T>
     inline const decay_component_t<T>* ptr(std::size_t index) const noexcept {
         return ptr_unchecked<decay_component_t<T>>(index);
+    }
+
+    template<component_reference T>
+    inline decay_component_t<T>* ptr(component_id id, std::size_t index) noexcept {
+        if constexpr (mutable_component_reference_v<T>) {
+            static_assert(
+                !std::is_same_v<decay_component_t<T>, entity>, "Cannot give a mutable reference to the entity");
+        }
+        return ptr<decay_component_t<T>>(id, index);
+    }
+
+    template<component_reference T>
+    inline const decay_component_t<T>* ptr(component_id id, std::size_t index) const noexcept {
+        return ptr<decay_component_t<T>>(id, index);
+    }
+
+    template<component T>
+    inline const T* ptr(component_id id, std::size_t index) const noexcept {
+        return (reinterpret_cast<T*>(_blocks.at(id).begin) + index);
+    }
+
+    template<component T>
+    inline T* ptr(component_id id, std::size_t index) noexcept {
+        return (reinterpret_cast<T*>(_blocks.at(id).begin) + index);
     }
 
     /// @brief Get max size, how many elements can this chunk hold
@@ -258,18 +307,18 @@ public:
 private:
     template<component T>
     inline T* ptr_unchecked(std::size_t index) noexcept {
-        return (reinterpret_cast<T*>(_blocks.at(component_family::id<T>).begin) + index);
+        return (reinterpret_cast<T*>(_blocks.at(component_traits<T>::id()).begin) + index);
     }
 
     template<component T>
     inline const T* ptr_unchecked(std::size_t index) const noexcept {
-        return (reinterpret_cast<T*>(_blocks.at(component_family::id<T>).begin) + index);
+        return (reinterpret_cast<T*>(_blocks.at(component_traits<T>::id()).begin) + index);
     }
 
     std::size_t calculate_brutto_element_size(const component_meta_set& components_meta) const noexcept {
         return std::accumulate(components_meta.begin(),
             components_meta.end(),
-            component_meta::of<entity>()->size,
+            component_traits<entity>::meta()->size,
             [](const auto& res, const auto& meta) { return res + meta->size; });
     }
 
@@ -280,7 +329,7 @@ private:
             end += asl::mod_2n(reinterpret_cast<std::size_t>(begin), meta->align);
             end += meta->size;
         }
-        const auto meta = component_meta::of<entity>();
+        const auto meta = component_traits<entity>::meta();
         end += asl::mod_2n(reinterpret_cast<std::size_t>(begin), meta->align);
         end += meta->size;
         return end - begin;

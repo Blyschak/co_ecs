@@ -40,18 +40,50 @@ TEST(scripting, lua_engine_basic_ecs) {
     )#");
 
     lua_engine.script(R"#(
-        ent = reg:create()
-        s = script_component:new('Hello')
-        reg:set(ent, s)
+        Rectangle = {}
+        MetaRectangle = {}
+        MetaRectangle.__index = Rectangle
 
-        ent2 = reg:create()
-        reg:set(ent2, script_component:new({other_ent=ent, some_more_data=15}))
+        function Rectangle:new(length, breadth)
+            local instance = setmetatable({}, MetaRectangle)
+            instance.length = length
+            instance.breadth = breadth
+            return self
+        end
 
-        reg:view(script_component):each(
-            function(ent)
-                data = reg:get(ent, script_component)
-                assert(data)
-            end
-        )
+        Circle = {}
+        MetaCircle = {}
+        MetaCircle.__index = Circle
+
+        function Circle:new(radius)
+            local instance = setmetatable({}, MetaCircle)
+            instance.radius = radius
+            return self
+        end
+
+        reg:register_component(Rectangle)
+        reg:register_component(Circle)
+
+        r = Rectangle:new(10,20)
+        c = Circle:new(10)
+
+        print('position id', position:id())
+        print('Circle id', c:id())
+        print('Rectangle id', r:id())
+        
+        ent = reg:create(position:new(5, 10), r, c)
+        cc = reg:get(ent, Circle)
+
+        assert(cc.radius == c.radius)
+
+        rr = reg:get(ent, Rectangle)
+        assert(rr.length == r.length)
+        assert(rr.breadth == r.breadth)
+
+        pp = reg:get(ent, position)
+        assert(pp.x == 5)
+        assert(pp.y == 10)
+
+        assert(reg:has(ent, position))
     )#");
 }

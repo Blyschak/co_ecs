@@ -48,8 +48,8 @@ TEST(component, iteration) {
     EXPECT_EQ(b, e);
 
     std::set<const ecs::component_meta*> c;
-    c.insert(ecs::component_meta::of<component_a>());
-    c.insert(ecs::component_meta::of<component_b>());
+    c.insert(ecs::component_traits<component_a>::meta());
+    c.insert(ecs::component_traits<component_b>::meta());
     EXPECT_EQ(s, c);
 }
 
@@ -65,14 +65,14 @@ struct component_d {
 };
 
 TEST(component, meta) {
-    auto meta = ecs::component_meta::of<component_a>();
-    EXPECT_EQ(meta->id, ecs::component_family::id<component_a>);
+    auto meta = ecs::component_traits<component_a>::meta();
+    EXPECT_EQ(meta->id, ecs::component_traits<component_a>::id());
     EXPECT_EQ(meta->size, sizeof(component_a));
     EXPECT_EQ(meta->align, alignof(component_a));
     EXPECT_TRUE(meta->dtor);
 
-    meta = ecs::component_meta::of<component_d>();
-    EXPECT_EQ(meta->id, ecs::component_family::id<component_d>);
+    meta = ecs::component_traits<component_d>::meta();
+    EXPECT_EQ(meta->id, ecs::component_traits<component_d>::id());
     EXPECT_EQ(meta->size, sizeof(component_d));
     EXPECT_EQ(meta->align, alignof(component_d));
     EXPECT_TRUE(meta->dtor);

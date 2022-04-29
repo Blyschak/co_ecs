@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cobalt/asl/hash_map.hpp>
 #include <cobalt/ecs/registry.hpp>
 #include <cobalt/scripting/script_component.hpp>
 
@@ -10,6 +11,22 @@ namespace cobalt::scripting {
 /// @brief Lua scripting engine
 class lua_engine {
 public:
+    constexpr static auto lua_name_method = "name";
+    constexpr static auto lua_id_method = "id";
+    constexpr static auto lua_meta_method = "meta";
+    constexpr static auto lua_set_method = "__set";
+    constexpr static auto lua_get_method = "__get";
+    constexpr static auto lua_has_method = "__has";
+
+    struct lua_external_component {
+        const ecs::component_meta* _meta{};
+        sol::table table{};
+
+        const ecs::component_meta* meta() const {
+            return _meta;
+        }
+    };
+
     /// @brief Construct a new lua engine object
     lua_engine();
 
@@ -29,21 +46,21 @@ public:
         lua.new_usertype<C>(
             name,
             sol::constructors<Ctors...>(),
-            "name",
+            lua_name_method,
             [name]() { return name; },
-            "id",
-            []() { return ecs::component_family::id<C>; },
+            lua_id_method,
+            []() { return ecs::component_traits<C>::id(); },
+            lua_meta_method,
+            []() { return ecs::component_traits<C>::meta(); },
+            lua_set_method,
+            [](ecs::registry& registry, ecs::entity ent, const sol::table& table) {
+                return registry.set<C>(ent, table.as<C>());
+            },
+            lua_get_method,
+            [](ecs::registry& registry, ecs::entity ent) { return registry.get<C>(ent); },
+            lua_has_method,
+            [](ecs::registry& registry, ecs::entity ent) { return registry.has<C>(ent); },
             std::forward<decltype(args)>(args)...);
-        lua["registry"][std::string("_set_") + name] =
-            [&](ecs::registry& self, ecs::entity ent, const sol::table& table) {
-                return self.set<C>(ent, table.as<C>());
-            };
-        lua["registry"][std::string("_get_") + name] = [&](ecs::registry& self, ecs::entity ent) {
-            return self.get<C>(ent);
-        };
-        lua["registry"][std::string("_has_") + name] = [&](ecs::registry& self, ecs::entity ent) {
-            return self.has<C>(ent);
-        };
     }
 
     /// @brief Get the state object
@@ -62,6 +79,7 @@ public:
 
 private:
     sol::state lua;
+    asl::hash_map<std::string, ecs::component_meta> lua_components;
 };
 
 } // namespace cobalt::scripting

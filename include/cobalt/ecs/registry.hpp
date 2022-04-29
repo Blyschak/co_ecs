@@ -76,6 +76,9 @@ private:
     std::vector<component_id> _ids;
 };
 
+/// @brief Registry is a container for all our entities and components. Components are stored in contiguosly in memory
+/// allowing for very fast iterations, a so called SoA approach. A set of unique components form an archetype, where
+/// every entity is mapped to an archetype.
 class registry {
 public:
     /// @brief Creates a new entity in the world with components Args... attached and returns an ecs::entity that
@@ -116,11 +119,9 @@ public:
         // returns the entity ID that has been moved to a new location
         auto moved_id = location.arch->deallocate(location).id();
         remove_location(ent.id());
-
         if (moved_id != entity::invalid_id) {
             set_location(moved_id, location);
         }
-
         _entity_pool.recycle(ent);
     }
 
@@ -153,27 +154,17 @@ public:
     /// @param args Arguments to construct C from
     template<component C, typename... Args>
     void set(entity ent, Args&&... args) {
-        assert(alive(ent));
-        auto id = ent.id();
-        auto& location = get_location(id);
-        auto*& archetype = location.arch;
+        set_impl<C>(component_traits<C>::meta(), ent, std::forward<Args>(args)...);
+    }
 
-        if (archetype->template contains<C>()) {
-            archetype->template write<C>(location, std::forward<Args>(args)...);
-        } else {
-            auto components = archetype->components();
-            components.insert<C>();
-            auto new_archetype = _archetypes.ensure_archetype(std::move(components));
-            auto [new_location, moved] = archetype->move(location, *new_archetype);
-            if (moved.id() != entity::invalid_id) {
-                set_location(moved.id(), location);
-            }
+    template<external_component C>
+    void set_external(entity ent, const C& component) {
+        set_impl<C>(component.meta(), ent, component);
+    }
 
-            new_archetype->template construct<C>(new_location, std::forward<Args>(args)...);
-
-            archetype = new_archetype;
-            set_location(id, new_location);
-        }
+    template<component C, typename... Args>
+    void set(const component_meta* meta, entity ent, Args&&... args) {
+        set_impl<C>(meta, ent, std::forward<Args>(args)...);
     }
 
     /// @brief Remove component C from an entity. In case entity does not have component attached nothing is done
@@ -181,28 +172,15 @@ public:
     /// operation.
     ///
     /// @tparam C Component type
+    /// @param meta Metadata for component. It must match the component C size, alignment, constructors, etc.
     /// @param ent entity to remove component from
     template<component C>
     void remove(entity ent) {
-        assert(alive(ent));
-        auto id = ent.id();
-        auto& location = get_location(id);
-        auto*& archetype = location.arch;
+        remove_impl(component_traits<C>::id(), ent);
+    }
 
-        if (!archetype->template contains<C>()) {
-            return;
-        }
-
-        auto components = archetype->components();
-        components.erase<C>();
-        auto new_archetype = _archetypes.ensure_archetype(std::move(components));
-        auto [new_location, moved] = archetype->move(location, *new_archetype);
-        if (moved.id() != entity::invalid_id) {
-            set_location(moved.id(), location);
-        }
-
-        archetype = new_archetype;
-        set_location(id, new_location);
+    void remove(component_id id, entity ent) {
+        remove_impl(id, ent);
     }
 
     /// @brief Check if an entity is alive or not
@@ -221,10 +199,7 @@ public:
     /// @return C& Reference to component C
     template<component C>
     C& get(entity ent) {
-        assert(alive(ent));
-        auto id = ent.id();
-        auto& location = get_location(id);
-        return location.arch->template read<C&>(location);
+        return get<C>(component_traits<C>::meta(), ent);
     }
 
     /// @brief Get const reference to component C
@@ -234,10 +209,23 @@ public:
     /// @return const C& Const reference to component C
     template<component C>
     const C& get(entity ent) const {
+        return get<C>(component_traits<C>::meta(), ent);
+    }
+
+    template<component C>
+    C& get(const component_meta* meta, entity ent) {
         assert(alive(ent));
         auto id = ent.id();
         auto& location = get_location(id);
-        return location.arch->template read<const C&>(location);
+        return location.arch->template read<C&>(meta, location);
+    }
+
+    template<component C>
+    const C& get(const component_meta* meta, entity ent) const {
+        assert(alive(ent));
+        auto id = ent.id();
+        auto& location = get_location(id);
+        return location.arch->template read<const C&>(meta, location);
     }
 
     /// @brief Get components for a single entity
@@ -251,7 +239,8 @@ public:
         auto id = ent.id();
         auto& location = get_location(id);
         auto* archetype = location.arch;
-        return std::tuple<Args...>(std::ref(archetype->template read<Args>(location))...);
+        return std::tuple<Args...>(
+            std::ref(archetype->template read<Args>(component_traits<decay_component_t<Args>>::meta(), location))...);
     }
 
     /// @brief Check if entity has component attached or not
@@ -262,10 +251,11 @@ public:
     /// @return false Otherwise
     template<component C>
     bool has(entity ent) const {
-        assert(alive(ent));
-        auto id = ent.id();
-        auto& location = get_location(id);
-        return location.arch->template contains<C>();
+        return has_impl(component_traits<C>::id(), ent);
+    }
+
+    bool has(component_id c_id, entity ent) const {
+        return has_impl(c_id, ent);
     }
 
     /// @brief Register resource
@@ -380,6 +370,60 @@ private:
 
     void remove_location(entity_id id) {
         _entity_archetype_map.erase(id);
+    }
+
+    template<component C, typename... Args>
+    void set_impl(const component_meta* meta, entity ent, Args&&... args) {
+        assert(alive(ent));
+        auto id = ent.id();
+        auto& location = get_location(id);
+        auto*& archetype = location.arch;
+
+        if (archetype->contains(meta->id)) {
+            archetype->template write<C>(meta, location, std::forward<Args>(args)...);
+        } else {
+            auto components = archetype->components();
+            components.insert(meta);
+            auto new_archetype = _archetypes.ensure_archetype(std::move(components));
+            auto [new_location, moved] = archetype->move(location, *new_archetype);
+            if (moved.id() != entity::invalid_id) {
+                set_location(moved.id(), location);
+            }
+
+            new_archetype->template construct<C>(meta, new_location, std::forward<Args>(args)...);
+
+            archetype = new_archetype;
+            set_location(id, new_location);
+        }
+    }
+
+    void remove_impl(component_id cid, entity ent) {
+        assert(alive(ent));
+        auto id = ent.id();
+        auto& location = get_location(id);
+        auto*& archetype = location.arch;
+
+        if (!archetype->contains(cid)) {
+            return;
+        }
+
+        auto components = archetype->components();
+        components.erase(cid);
+        auto new_archetype = _archetypes.ensure_archetype(std::move(components));
+        auto [new_location, moved] = archetype->move(location, *new_archetype);
+        if (moved.id() != entity::invalid_id) {
+            set_location(moved.id(), location);
+        }
+
+        archetype = new_archetype;
+        set_location(id, new_location);
+    }
+
+    bool has_impl(component_id c_id, entity ent) const {
+        assert(alive(ent));
+        auto id = ent.id();
+        auto& location = get_location(id);
+        return location.arch->contains(id);
     }
 
     entity_pool _entity_pool;

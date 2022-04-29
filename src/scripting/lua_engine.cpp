@@ -7,11 +7,15 @@
 namespace cobalt::scripting {
 
 namespace {
+    std::string lua_to_string(const sol::state& lua, const sol::object& obj) {
+        return lua["tostring"](obj).get<std::string>();
+    }
+
     void lua_log(const sol::state& lua, core::log_level level, const sol::variadic_args& args) {
         // format output as a space seprated output of args
         std::stringstream ss;
         for (const auto& arg : args) {
-            ss << lua["tostring"](arg).get<std::string>() << " ";
+            ss << lua_to_string(lua, arg) << " ";
         }
         // log using core logger
         core::get_logger()->log(level, "{}", ss.str());
@@ -54,36 +58,71 @@ lua_engine::lua_engine() {
         "registry",
         sol::constructors<ecs::registry()>(),
         "create",
-        &ecs::registry::create<>,
+        [&](ecs::registry& self, const sol::variadic_args& args) {
+            auto ent = self.create<>();
+            // TODO: make lua create method immidiatelly detect the right archetype and write components to it, instead
+            // of emulating C++ create behaviour
+            for (const sol::table& table : args) {
+                auto set_func = table[lua_set_method];
+                if (!set_func.valid()) {
+                    core::log_err("Table {} is not a registered component", lua_to_string(lua, table));
+                    return ent;
+                }
+                set_func(self, ent, table);
+            }
+            return ent;
+        },
         "destroy",
         &ecs::registry::destroy,
         "alive",
         &ecs::registry::alive,
         "has",
         [&](ecs::registry& self, ecs::entity ent, const sol::table& table) {
-            std::string component_name = table["name"]();
-            return lua["registry"][std::string("_has_") + component_name](self, ent);
+            auto has_func = table[lua_has_method];
+            if (!has_func.valid()) {
+                core::log_err("Table {} is not a registered component", lua_to_string(lua, table));
+                return false;
+            }
+            return has_func(self, table).get<bool>();
         },
         "set",
         [&](ecs::registry& self, ecs::entity ent, const sol::table& table) {
-            std::string component_name = table["name"]();
-            return lua["registry"][std::string("_set_") + component_name](self, ent, table);
+            auto set_func = table[lua_set_method];
+            if (!set_func.valid()) {
+                core::log_err("Table {} is not a registered component", lua_to_string(lua, table));
+                return;
+            }
+            set_func(self, ent, table);
         },
         "get",
         [&](ecs::registry& self, ecs::entity ent, const sol::table& table) {
-            std::string component_name = table["name"]();
-            return lua["registry"][std::string("_get_") + component_name](self, ent);
+            auto get_func = table[lua_get_method];
+            if (!get_func.valid()) {
+                core::log_err("Table {} is not a registered component", lua_to_string(lua, table));
+                return sol::table();
+            }
+            return get_func(self, ent, table).get<sol::table>();
         },
         "view",
         [&](ecs::registry& self, const sol::variadic_args& args) {
-            auto rng = (args | std::views::transform([](const sol::table& obj) {
-                return obj["id"].get<sol::function>()().get<ecs::component_id>();
+            auto rng = (args | std::views::transform([](const sol::table& table) {
+                return table["id"].get<sol::function>()().get<ecs::component_id>();
             }));
             return self.runtime_view(rng);
-        });
+        },
+        "register_component",
+        [&](ecs::registry& self, sol::table table) {
+            auto meta = ecs::component_meta::external<sol::table>();
+            auto id = meta.id;
 
-    register_component<script_component<sol::object>, script_component<sol::object>(const sol::object&)>(
-        "script_component", "state", &script_component<sol::object>::state);
+            table[lua_id_method] = [id]() { return id; };
+            table[lua_meta_method] = [meta]() { return &meta; };
+            table[lua_set_method] = [meta](ecs::registry& r, ecs::entity e, const sol::table& table) {
+                return r.set<sol::table>(&meta, e, table);
+            };
+            table[lua_get_method] = [meta](ecs::registry& r, ecs::entity ent) { return r.get<sol::table>(&meta, ent); };
+            table[lua_has_method] = [meta](ecs::registry& r, ecs::entity ent) { return r.has(meta.id, ent); };
+        });
 }
 
 void lua_engine::script(const std::string& script) {

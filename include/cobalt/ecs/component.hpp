@@ -15,7 +15,7 @@
 namespace cobalt::ecs {
 
 /// @brief Type for component ID
-using component_id = std::uint8_t;
+using component_id = std::uint32_t;
 
 /// @brief Invalid component ID
 constexpr auto invalid_component_id = std::numeric_limits<component_id>::max();
@@ -75,19 +75,71 @@ constexpr bool mutable_component_reference_v = mutable_component_reference<T>::v
 /// @brief Component metadata. Stores an ID, size, alignment, destructor, etc.
 struct component_meta {
 public:
-    /// @brief Constructs component_meta for type T
+    using move_ctor_fn_t = std::function<void(void*, void*)>;
+    using move_assign_fn_t = std::function<void(void*, void*)>;
+    using dtor_fn_t = std::function<void(void*)>;
+
+    /// @brief Get move constructor function for type T
+    ///
+    /// @tparam T Component type
+    /// @return move_ctor_fn_t
+    template<component T>
+    constexpr static move_ctor_fn_t move_ctor_of() noexcept {
+        return [](void* ptr, void* rhs) { std::construct_at(static_cast<T*>(ptr), std::move(*static_cast<T*>(rhs))); };
+    }
+
+    /// @brief Get move assignment function for type T
+    ///
+    /// @tparam T Component type
+    /// @return move_assign_fn_t
+    template<component T>
+    constexpr static move_assign_fn_t move_assign_of() noexcept {
+        return [](void* lhs, void* rhs) { *static_cast<T*>(lhs) = std::move(*static_cast<T*>(rhs)); };
+    }
+
+    /// @brief Get destructor function for type T
+    ///
+    /// @tparam T Component type
+    /// @return dtor_fn_t
+    template<component T>
+    constexpr static dtor_fn_t dtor_of() noexcept {
+        return [](void* ptr) { static_cast<T*>(ptr)->~T(); };
+    }
+
+    /// @brief Get component_meta for type T. Every component_meta for T is a static object that this method returns
+    /// pointer to, which lives for the whole lifetime of application
     ///
     /// @tparam T Component type
     /// @return const component_meta& Component metadata
     template<component T>
     static const component_meta* of() noexcept {
-        static component_meta meta{ component_family::id<T>,
+        static component_meta meta{
+            component_family::id<T>,
             sizeof(T),
             alignof(T),
-            [](void* ptr, void* rhs) { std::construct_at(static_cast<T*>(ptr), std::move(*static_cast<T*>(rhs))); },
-            [](void* lhs, void* rhs) { *static_cast<T*>(lhs) = std::move(*static_cast<T*>(rhs)); },
-            [](void* ptr) { static_cast<T*>(ptr)->~T(); } };
+            move_ctor_of<T>(),
+            move_assign_of<T>(),
+            dtor_of<T>(),
+        };
         return &meta;
+    }
+
+    /// @brief Create component_meta for an external component with storage of type T. The resulting meta object will be
+    /// returned. Every new call will allocate a new unused unique component ID so that components with the same storage
+    /// may have different component IDs
+    ///
+    /// @tparam T
+    /// @return component_meta
+    template<component T>
+    static component_meta external() noexcept {
+        return component_meta{
+            component_family::next(),
+            sizeof(T),
+            alignof(T),
+            move_ctor_of<T>(),
+            move_assign_of<T>(),
+            dtor_of<T>(),
+        };
     }
 
     /// @brief Spaceship operator
@@ -110,9 +162,34 @@ public:
     component_id id;
     std::size_t size;
     std::size_t align;
-    std::function<void(void*, void*)> move_ctor;
-    std::function<void(void*, void*)> move_assign;
-    std::function<void(void*)> dtor;
+    move_ctor_fn_t move_ctor;
+    move_assign_fn_t move_assign;
+    dtor_fn_t dtor;
+};
+
+/// @brief A component trait for type T for retrieving ID and component meta
+///
+/// @tparam T Component type
+template<component T>
+struct component_traits {
+    /// @brief Get component ID
+    ///
+    /// @return component_id
+    static inline component_id id() noexcept {
+        return component_family::id<T>;
+    }
+
+    /// @brief Get component meta
+    ///
+    /// @return const component_meta*
+    static const component_meta* meta() noexcept {
+        return component_meta::of<T>();
+    }
+};
+
+template<typename T>
+concept external_component = component<T> && requires(const T& c) {
+    { c.meta() } -> std::convertible_to<const component_meta*>;
 };
 
 /// @brief Component set holds a set of component IDs
@@ -144,7 +221,7 @@ public:
     /// @tparam T Component type
     template<component T>
     void insert() {
-        insert(component_family::id<T>);
+        insert(component_traits<T>::id());
     }
 
     /// @brief Erase component of type T
@@ -152,7 +229,7 @@ public:
     /// @tparam T Component type
     template<component T>
     void erase() {
-        erase(component_family::id<T>);
+        erase(component_traits<T>::id());
     }
 
     /// @brief Check if component of type T is present in the set
@@ -162,7 +239,7 @@ public:
     /// @return false When component type T is not present
     template<component T>
     bool contains() const {
-        return contains(component_family::id<T>);
+        return contains(component_traits<T>::id());
     }
 
     /// @brief Inserts component into the set
@@ -241,7 +318,7 @@ public:
     /// @tparam T Component type
     template<component T>
     void insert() {
-        insert(component_meta::of<T>());
+        insert(component_traits<T>::meta());
     }
 
     /// @brief Erase component of type T
@@ -249,7 +326,7 @@ public:
     /// @tparam T Component type
     template<component T>
     void erase() {
-        erase(component_family::id<T>);
+        erase(component_traits<T>::id());
     }
 
     /// @brief Check if component of type T is present in the set
@@ -259,7 +336,7 @@ public:
     /// @return false When component type T is not present
     template<component T>
     bool contains() const {
-        return contains(component_family::id<T>);
+        return contains(component_traits<T>::id());
     }
 
     /// @brief Inserts component into the set

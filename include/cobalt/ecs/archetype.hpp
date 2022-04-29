@@ -66,58 +66,62 @@ public:
     ///
     /// @tparam Component Component type
     /// @tparam Args Parameter pack to construct component from
+    /// @param meta Component metadata
     /// @param location Entity location
     /// @param args Arguments to construct component from
     template<component Component, typename... Args>
-    void write(entity_location location, Args&&... args) {
+    void write(const component_meta* meta, entity_location location, Args&&... args) {
         assert(location.arch == this);
         assert(location.chunk_index < _chunks.size());
         auto& chunk = _chunks[location.chunk_index];
         assert(location.entry_index < chunk.size());
-        chunk.at<Component>(location.entry_index) = Component{ std::forward<Args>(args)... };
+        chunk.at<Component>(meta->id, location.entry_index) = Component{ std::forward<Args>(args)... };
     }
 
     /// @brief Construct Component from Args in place
     ///
     /// @tparam Component Component to construct
     /// @tparam Args Parameter pack to construct Component
+    /// @param meta Component metadata
     /// @param location Location where to construct
     /// @param args Arguments to pass to Component constructor
     template<component Component, typename... Args>
-    void construct(entity_location location, Args&&... args) {
+    void construct(const component_meta* meta, entity_location location, Args&&... args) {
         assert(location.arch == this);
         assert(location.chunk_index < _chunks.size());
         auto& chunk = _chunks[location.chunk_index];
         assert(location.entry_index < chunk.size());
-        std::construct_at(chunk.ptr<Component>(location.entry_index), std::forward<Args>(args)...);
+        std::construct_at(chunk.ptr<Component>(meta->id, location.entry_index), std::forward<Args>(args)...);
     }
 
     /// @brief Read component data
     ///
     /// @tparam Component Component type
+    /// @param meta Component metadata
     /// @param location Entity location
     /// @return Component& Component reference
     template<component_reference Component>
-    Component& read(entity_location location) {
+    Component& read(const component_meta* meta, entity_location location) {
         assert(location.arch == this);
         assert(location.chunk_index < _chunks.size());
         auto& chunk = _chunks[location.chunk_index];
         assert(location.entry_index < chunk.size());
-        return *chunk.ptr<Component>(location.entry_index);
+        return *chunk.ptr<Component>(meta->id, location.entry_index);
     }
 
     /// @brief Read component data
     ///
     /// @tparam Component Component type
+    /// @param meta Component metadata
     /// @param location Entity location
     /// @return const Component& Component reference
     template<component_reference Component>
-    Component& read(entity_location location) const {
+    Component& read(const component_meta* meta, entity_location location) const {
         assert(location.arch == this);
         assert(location.chunk_index < _chunks.size());
         auto& chunk = _chunks[location.chunk_index];
         assert(location.entry_index < chunk.size());
-        return *chunk.ptr<Component>(location.entry_index);
+        return *chunk.ptr<Component>(meta->id, location.entry_index);
     }
 
     /// @brief Check if archetype has component C
@@ -140,7 +144,7 @@ public:
     /// @return true If this archetype has component C
     /// @return false If this archetype does not have component C
     bool contains(component_id id) const noexcept {
-        if (id == component_family::id<entity>) {
+        if (id == component_traits<entity>::id()) {
             return true;
         } else {
             return components().contains(id);
