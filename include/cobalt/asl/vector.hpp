@@ -861,6 +861,7 @@ private:
             } else {
                 std::uninitialized_copy(first, last, output);
             }
+            std::destroy(first, last);
         }
     }
 
