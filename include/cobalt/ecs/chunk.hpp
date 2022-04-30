@@ -388,7 +388,6 @@ public:
 
     private:
         std::tuple<std::add_pointer_t<decay_component_t<Args>>...> _ptrs;
-        std::size_t _index{};
     };
 
     /// @brief Construct a new chunk view object

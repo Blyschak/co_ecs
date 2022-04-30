@@ -202,8 +202,8 @@ public:
 private:
     template<component_reference Component>
     static Component read_impl(auto&& self, entity_location location) {
-        assert(location.arch == this);
-        assert(location.chunk_index < _chunks.size());
+        assert(location.arch == std::addressof(self));
+        assert(location.chunk_index < self._chunks.size());
         auto& chunk = self._chunks[location.chunk_index];
         assert(location.entry_index < chunk.size());
         return *chunk.template ptr<Component>(location.entry_index);
