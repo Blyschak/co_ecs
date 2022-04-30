@@ -13,6 +13,8 @@ FetchContent_Declare(
   GIT_TAG a32ae8de013ebe1feb3c0d22d1028ff5d2617f84)
 FetchContent_MakeAvailable(lua)
 
+target_compile_definitions(lua_lib PUBLIC LUA_USE_POSIX)
+
 FetchContent_Declare(
   sol2
   GIT_REPOSITORY https://github.com/ThePhD/sol2
