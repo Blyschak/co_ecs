@@ -328,8 +328,9 @@ public:
             return;
         }
         _bitset.erase(id);
-        auto iter = std::ranges::find_if(_components, [id](const auto& meta) { return meta.id == id; });
-        _components.erase(iter);
+        // auto iter = std::ranges::find_if(_components, [id](const auto& meta) { return meta.id == id; });
+        // _components.erase(iter);
+        std::erase_if(_components, [id](const auto& meta) { return meta.id == id; });
     }
 
     /// @brief Check if component is present in the set

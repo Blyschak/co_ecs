@@ -891,3 +891,23 @@ template<typename T>
 struct is_relocatable<vector<T>> : std::true_type {};
 
 } // namespace cobalt::asl
+
+namespace std {
+
+template<typename T, typename Alloc, typename U>
+constexpr typename cobalt::asl::vector<T, Alloc>::size_type erase(cobalt::asl::vector<T, Alloc>& c, const U& value) {
+    auto it = std::remove(c.begin(), c.end(), value);
+    auto r = std::distance(it, c.end());
+    c.erase(it, c.end());
+    return r;
+}
+
+template<typename T, typename Alloc, typename Pred>
+constexpr typename cobalt::asl::vector<T, Alloc>::size_type erase_if(cobalt::asl::vector<T, Alloc>& c, Pred pred) {
+    auto it = std::remove_if(c.begin(), c.end(), pred);
+    auto r = std::distance(it, c.end());
+    c.erase(it, c.end());
+    return r;
+}
+
+} // namespace std
