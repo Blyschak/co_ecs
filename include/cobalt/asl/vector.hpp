@@ -318,7 +318,7 @@ public:
         }
 
         vector_base<T, A> temp(a, n, 0);
-        mcopy(begin(), end(), temp.b);
+        realloc_no_overlap(begin(), end(), temp.b);
         swap(temp);
     }
 
@@ -332,7 +332,7 @@ public:
         } else {
             size_type sz = size();
             vector_base<T, A> temp(a, count);
-            mcopy(begin(), end(), temp.b);
+            realloc_no_overlap(begin(), end(), temp.b);
             swap(temp);
             std::uninitialized_value_construct(begin() + sz, begin() + count);
         }
@@ -795,7 +795,7 @@ private:
         if (e + count > z) {
             vector_base<T, A> temp(a, count == 1 ? next_capacity() : size() + count, size() + count);
             insert(temp.b + size(), count);
-            mcopy(begin(), end(), temp.b);
+            realloc_no_overlap(begin(), end(), temp.b);
             swap(temp);
         } else {
             insert(end(), count);
@@ -815,44 +815,48 @@ private:
         size_type index = pos - begin();
         vector_base<T, A> temp(a, count == 1 ? next_capacity() : size() + count, size() + count);
         assign(temp.b + index, count);
-        mcopy(begin(), begin() + index, temp.b);
-        mcopy(begin() + index, end(), temp.b + index + count);
+        realloc_no_overlap(begin(), begin() + index, temp.b);
+        realloc_no_overlap(begin() + index, end(), temp.b + index + count);
         swap(temp);
         return begin() + index;
     }
 
     constexpr iterator insert_middle_no_realloc_impl(const_iterator pos, size_type count, auto assign) {
         iterator insert_pos = (pos - begin()) + begin();
-        mmove(insert_pos, end(), insert_pos + count);
+        realloc_overlap(insert_pos, end(), insert_pos + count);
         assign(insert_pos, count);
         e += count;
         return insert_pos;
     }
 
-    static constexpr void mmove(auto first, auto last, auto output) {
+    static constexpr void realloc_overlap(auto first, auto last, auto output) {
         auto count = std::distance(first, last);
         if constexpr (is_relocatable_v<value_type>) {
             std::memmove(output, first, count * sizeof(T));
         } else {
             iterator new_end = last + count - 1;
             for (iterator it = new_end; it != last - 1; it--) {
+                iterator moving = it - count;
                 if constexpr (use_move_ctor) {
-                    std::construct_at(it, std::move(*(it - count)));
+                    std::construct_at(it, std::move(*moving));
                 } else {
-                    std::construct_at(it, *(it - count));
+                    std::construct_at(it, *moving);
                 }
+                std::destroy_at(moving);
             }
             for (iterator it = last - 1; it != output; it--) {
+                iterator moving = it - count;
                 if constexpr (use_move_assign) {
-                    *it = std::move(*(it - count));
+                    *it = std::move(*moving);
                 } else {
-                    *it = *(it - count);
+                    *it = *moving;
                 }
+                std::destroy_at(moving);
             }
         }
     }
 
-    static constexpr void mcopy(auto first, auto last, auto output) {
+    static constexpr void realloc_no_overlap(auto first, auto last, auto output) {
         if constexpr (is_relocatable_v<value_type>) {
             std::memcpy(output, first, std::distance(first, last) * sizeof(T));
         } else {
