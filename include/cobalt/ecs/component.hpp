@@ -317,8 +317,7 @@ public:
             return;
         }
         _bitset.insert(meta.id);
-        auto iter = std::lower_bound(_components.begin(), _components.end(), meta);
-        _components.emplace(iter, meta);
+        _components.emplace_back(meta);
     }
 
     /// @brief Erases component from the set
@@ -329,8 +328,7 @@ public:
             return;
         }
         _bitset.erase(id);
-        auto iter = std::lower_bound(
-            _components.begin(), _components.end(), id, [](const auto& meta, auto id) { return meta.id < id; });
+        auto iter = std::ranges::find_if(_components, [id](const auto& meta) { return meta.id == id; });
         _components.erase(iter);
     }
 
