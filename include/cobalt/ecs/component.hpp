@@ -78,16 +78,15 @@ public:
     /// @brief Constructs component_meta for type T
     ///
     /// @tparam T Component type
-    /// @return const component_meta& Component metadata
+    /// @return component_meta Component metadata
     template<component T>
-    static const component_meta* of() noexcept {
-        static component_meta meta{ component_family::id<T>,
+    static component_meta of() noexcept {
+        return component_meta{ component_family::id<T>,
             sizeof(T),
             alignof(T),
             [](void* ptr, void* rhs) { std::construct_at(static_cast<T*>(ptr), std::move(*static_cast<T*>(rhs))); },
             [](void* lhs, void* rhs) { *static_cast<T*>(lhs) = std::move(*static_cast<T*>(rhs)); },
             [](void* ptr) { static_cast<T*>(ptr)->~T(); } };
-        return &meta;
     }
 
     /// @brief Spaceship operator
@@ -213,7 +212,7 @@ public:
 class component_meta_set {
 public:
     using size_type = std::size_t;
-    using storage_type = asl::vector<const component_meta*>;
+    using storage_type = asl::vector<component_meta>;
     using value_type = typename storage_type::value_type;
     using const_iterator = typename storage_type::const_iterator;
 
@@ -266,10 +265,10 @@ public:
     ///
     /// @param meta Component meta
     void insert(const value_type& meta) {
-        if (contains(meta->id)) {
+        if (contains(meta.id)) {
             return;
         }
-        _bitset.insert(meta->id);
+        _bitset.insert(meta.id);
         auto iter = std::lower_bound(_components.begin(), _components.end(), meta);
         _components.emplace(iter, meta);
     }
@@ -283,7 +282,7 @@ public:
         }
         _bitset.erase(id);
         auto iter = std::lower_bound(
-            _components.begin(), _components.end(), id, [](const auto& meta, auto id) { return meta->id < id; });
+            _components.begin(), _components.end(), id, [](const auto& meta, auto id) { return meta.id < id; });
         _components.erase(iter);
     }
 

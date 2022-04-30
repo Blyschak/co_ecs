@@ -26,7 +26,7 @@ public:
     struct block_metadata {
         std::byte* begin{};
         std::byte* end{};
-        const component_meta* meta{};
+        component_meta meta{};
     };
 
     /// @brief Construct a new chunk object
@@ -42,19 +42,19 @@ public:
         std::byte* ptr = _buffer;
         block_metadata block;
         // make space for entity
-        const component_meta* meta = component_meta::of<entity>();
+        auto meta = component_meta::of<entity>();
         block.begin = ptr;
-        block.end = ptr + asl::mod_2n(reinterpret_cast<std::size_t>(ptr), meta->align) + _max_size * meta->size;
+        block.end = ptr + asl::mod_2n(reinterpret_cast<std::size_t>(ptr), meta.align) + _max_size * meta.size;
         ptr = block.end;
         block.meta = meta;
-        _blocks.emplace(meta->id, block);
+        _blocks.emplace(meta.id, block);
         // space for all components
         for (const auto& meta : set) {
             block.begin = ptr;
-            block.end = ptr + asl::mod_2n(reinterpret_cast<std::size_t>(ptr), meta->align) + _max_size * meta->size;
+            block.end = ptr + asl::mod_2n(reinterpret_cast<std::size_t>(ptr), meta.align) + _max_size * meta.size;
             ptr = block.end;
             block.meta = meta;
-            _blocks.emplace(meta->id, block);
+            _blocks.emplace(meta.id, block);
         }
         assert(ptr <= _buffer + chunk_bytes);
     }
@@ -102,7 +102,7 @@ public:
         }
         for (const auto& [id, block] : _blocks) {
             for (std::size_t i = 0; i < _size; i++) {
-                block.meta->dtor(block.begin + i * block.meta->size);
+                block.meta.dtor(block.begin + i * block.meta.size);
             }
         }
         std::free(_buffer);
@@ -142,8 +142,8 @@ public:
         std::size_t other_chunk_index = other_chunk._size - 1;
         entity ent = *other_chunk.ptr_unchecked<entity>(other_chunk_index);
         for (const auto& [id, block] : _blocks) {
-            block.meta->move_assign(block.begin + index * block.meta->size,
-                other_chunk._blocks[id].begin + other_chunk_index * block.meta->size);
+            block.meta.move_assign(block.begin + index * block.meta.size,
+                other_chunk._blocks[id].begin + other_chunk_index * block.meta.size);
         }
         other_chunk.pop_back();
         return ent;
@@ -162,8 +162,8 @@ public:
             if (!other_chunk._blocks.contains(id)) {
                 continue;
             }
-            block.meta->move_ctor(other_chunk._blocks.at(id).begin + other_chunk_index * block.meta->size,
-                block.begin + index * block.meta->size);
+            block.meta.move_ctor(other_chunk._blocks.at(id).begin + other_chunk_index * block.meta.size,
+                block.begin + index * block.meta.size);
         }
         other_chunk._size++;
         return other_chunk_index;
@@ -269,26 +269,26 @@ private:
     std::size_t calculate_brutto_element_size(const component_meta_set& components_meta) const noexcept {
         return std::accumulate(components_meta.begin(),
             components_meta.end(),
-            component_meta::of<entity>()->size,
-            [](const auto& res, const auto& meta) { return res + meta->size; });
+            component_meta::of<entity>().size,
+            [](const auto& res, const auto& meta) { return res + meta.size; });
     }
 
     std::size_t calculate_netto_element_size(const std::byte* begin,
         const component_meta_set& components_meta) const noexcept {
         auto end = begin;
         for (const auto& meta : components_meta) {
-            end += asl::mod_2n(reinterpret_cast<std::size_t>(begin), meta->align);
-            end += meta->size;
+            end += asl::mod_2n(reinterpret_cast<std::size_t>(begin), meta.align);
+            end += meta.size;
         }
-        const auto meta = component_meta::of<entity>();
-        end += asl::mod_2n(reinterpret_cast<std::size_t>(begin), meta->align);
-        end += meta->size;
+        auto meta = component_meta::of<entity>();
+        end += asl::mod_2n(reinterpret_cast<std::size_t>(begin), meta.align);
+        end += meta.size;
         return end - begin;
     }
 
     inline void destroy_at(std::size_t index) noexcept {
         for (const auto& [id, block] : _blocks) {
-            block.meta->dtor(block.begin + index * block.meta->size);
+            block.meta.dtor(block.begin + index * block.meta.size);
         }
     }
 
