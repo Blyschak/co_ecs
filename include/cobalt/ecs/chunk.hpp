@@ -25,7 +25,6 @@ public:
     /// @brief Block metadata holds pointers where it begins, ends and a component metadata it holds
     struct block_metadata {
         std::byte* begin{};
-        std::byte* end{};
         component_meta meta{};
     };
 
@@ -44,17 +43,13 @@ public:
         // make space for entity
         auto meta = component_meta::of<entity>();
         block.begin = ptr;
-        block.end =
-            ptr + asl::mod_2n(reinterpret_cast<std::size_t>(ptr), meta.type->align) + _max_size * meta.type->size;
-        ptr = block.end;
+        ptr += asl::mod_2n(reinterpret_cast<std::size_t>(ptr), meta.type->align) + _max_size * meta.type->size;
         block.meta = meta;
         _blocks.emplace(meta.id, block);
         // space for all components
         for (const auto& meta : set) {
             block.begin = ptr;
-            block.end =
-                ptr + asl::mod_2n(reinterpret_cast<std::size_t>(ptr), meta.type->align) + _max_size * meta.type->size;
-            ptr = block.end;
+            ptr += asl::mod_2n(reinterpret_cast<std::size_t>(ptr), meta.type->align) + _max_size * meta.type->size;
             block.meta = meta;
             _blocks.emplace(meta.id, block);
         }
