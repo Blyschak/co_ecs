@@ -265,3 +265,16 @@ TEST(registry, resources) {
     registry.unregister_resource<my_resource>();
     EXPECT_THROW(registry.get_resource<my_resource>(), std::out_of_range);
 }
+
+TEST(registry, exceptions) {
+    ecs::registry registry;
+    auto ent = registry.create<position>({ 2, 2 });
+    EXPECT_THROW(static_cast<void>(registry.get<velocity>(ent)), ecs::component_not_found);
+    EXPECT_THROW(
+        static_cast<void>(registry.template get<const velocity&, const position&>(ent)), ecs::component_not_found);
+    registry.destroy(ent);
+    EXPECT_THROW(static_cast<void>(registry.get<velocity>(ent)), ecs::entity_not_found);
+    EXPECT_THROW(static_cast<void>(registry.has<velocity>(ent)), ecs::entity_not_found);
+    EXPECT_THROW(registry.set<velocity>(ent), ecs::entity_not_found);
+    EXPECT_THROW(registry.destroy(ent), ecs::entity_not_found);
+}

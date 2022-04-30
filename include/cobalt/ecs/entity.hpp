@@ -18,4 +18,13 @@ using entity = cobalt::asl::handle<entity_id, generation_id>;
 /// @brief Pool of entities, generates entity ids, recycles ids.
 using entity_pool = cobalt::asl::handle_pool<entity>;
 
+/// @brief Serialize an entity to a stream
+///
+/// @param os Stream to write to
+/// @param ent Entity to serialize
+/// @return std::ostream&
+inline std::ostream& operator<<(std::ostream& os, const entity& ent) {
+    return os << "[id=" << ent.id() << ", generation=" << ent.generation() << "]";
+}
+
 } // namespace cobalt::ecs

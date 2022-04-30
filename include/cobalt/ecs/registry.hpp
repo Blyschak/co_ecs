@@ -111,7 +111,7 @@ public:
     ///
     /// @param ent Entity to destroy
     void destroy(entity ent) {
-        assert(alive(ent));
+        ensure_alive(ent);
         auto location = get_location(ent.id());
         // returns the entity ID that has been moved to a new location
         auto moved_id = location.arch->deallocate(location).id();
@@ -153,7 +153,7 @@ public:
     /// @param args Arguments to construct C from
     template<component C, typename... Args>
     void set(entity ent, Args&&... args) {
-        assert(alive(ent));
+        ensure_alive(ent);
         auto id = ent.id();
         auto& location = get_location(id);
         auto*& archetype = location.arch;
@@ -184,7 +184,7 @@ public:
     /// @param ent entity to remove component from
     template<component C>
     void remove(entity ent) {
-        assert(alive(ent));
+        ensure_alive(ent);
         auto id = ent.id();
         auto& location = get_location(id);
         auto*& archetype = location.arch;
@@ -210,7 +210,7 @@ public:
     /// @param ent Entity
     /// @return true Alive
     /// @return false Dead
-    bool alive(entity ent) const noexcept {
+    [[nodiscard]] bool alive(entity ent) const noexcept {
         return _entity_pool.alive(ent);
     }
 
@@ -220,11 +220,8 @@ public:
     /// @param ent Entity to read componet from
     /// @return C& Reference to component C
     template<component C>
-    C& get(entity ent) {
-        assert(alive(ent));
-        auto id = ent.id();
-        auto& location = get_location(id);
-        return location.arch->template read<C&>(location);
+    [[nodiscard]] C& get(entity ent) {
+        return std::get<0>(get_impl<C&>(*this, ent));
     }
 
     /// @brief Get const reference to component C
@@ -233,11 +230,8 @@ public:
     /// @param ent Entity to read componet from
     /// @return const C& Const reference to component C
     template<component C>
-    const C& get(entity ent) const {
-        assert(alive(ent));
-        auto id = ent.id();
-        auto& location = get_location(id);
-        return location.arch->template read<const C&>(location);
+    [[nodiscard]] const C& get(entity ent) const {
+        return std::get<0>(get_impl<const C&>(*this, ent));
     }
 
     /// @brief Get components for a single entity
@@ -246,12 +240,8 @@ public:
     /// @param ent Entity to query
     /// @return value_type Components tuple
     template<component_reference... Args>
-    std::tuple<Args...> get(entity ent) {
-        assert(alive(ent));
-        auto id = ent.id();
-        auto& location = get_location(id);
-        auto* archetype = location.arch;
-        return std::tuple<Args...>(std::ref(archetype->template read<Args>(location))...);
+    [[nodiscard]] std::tuple<Args...> get(entity ent) {
+        return get_impl<Args...>(*this, ent);
     }
 
     /// @brief Check if entity has component attached or not
@@ -261,8 +251,8 @@ public:
     /// @return true If entity has component C attached
     /// @return false Otherwise
     template<component C>
-    bool has(entity ent) const {
-        assert(alive(ent));
+    [[nodiscard]] bool has(entity ent) const {
+        ensure_alive(ent);
         auto id = ent.id();
         auto& location = get_location(id);
         return location.arch->template contains<C>();
@@ -365,6 +355,21 @@ public:
 private:
     template<component_reference... Args>
     friend class view;
+
+    template<component_reference... Args>
+    static std::tuple<Args...> get_impl(auto&& self, entity ent) {
+        self.ensure_alive(ent);
+        auto id = ent.id();
+        auto& location = self.get_location(id);
+        auto* archetype = location.arch;
+        return std::tuple<Args...>(std::ref(archetype->template read<Args>(location))...);
+    }
+
+    inline void ensure_alive(const entity& ent) const {
+        if (!alive(ent)) {
+            throw entity_not_found{ ent };
+        }
+    }
 
     [[nodiscard]] const entity_location& get_location(entity_id id) const {
         return _entity_archetype_map.at(id);

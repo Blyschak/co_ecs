@@ -8,6 +8,7 @@
 #include <cobalt/asl/sparse_map.hpp>
 #include <cobalt/ecs/component.hpp>
 #include <cobalt/ecs/entity.hpp>
+#include <cobalt/ecs/exceptions.hpp>
 
 namespace cobalt::ecs {
 
@@ -172,7 +173,7 @@ public:
     /// @param index Index in blocks
     /// @return T& Reference to T
     template<component T>
-    inline T& at(std::size_t index) noexcept {
+    inline T& at(std::size_t index) {
         assert(index < _size);
         return *ptr<T>(index);
     }
@@ -183,7 +184,7 @@ public:
     /// @param index Index in blocks
     /// @return const T& Const reference to T
     template<component T>
-    inline const T& at(std::size_t index) const noexcept {
+    inline const T& at(std::size_t index) const {
         assert(index < _size);
         return *ptr<T>(index);
     }
@@ -194,7 +195,7 @@ public:
     /// @param index Index in blocks
     /// @return T* Pointer to T
     template<component T>
-    inline T* ptr(std::size_t index) noexcept {
+    inline T* ptr(std::size_t index) {
         return ptr_unchecked<T>(index);
     }
 
@@ -204,12 +205,12 @@ public:
     /// @param index Index in blocks
     /// @return const T* Const pointer to T
     template<component T>
-    inline const T* ptr(std::size_t index) const noexcept {
+    inline const T* ptr(std::size_t index) const {
         return ptr_unchecked<T>(index);
     }
 
     template<component_reference T>
-    inline decay_component_t<T>* ptr(std::size_t index) noexcept {
+    inline decay_component_t<T>* ptr(std::size_t index) {
         if constexpr (mutable_component_reference_v<T>) {
             static_assert(
                 !std::is_same_v<decay_component_t<T>, entity>, "Cannot give a mutable reference to the entity");
@@ -218,7 +219,7 @@ public:
     }
 
     template<component_reference T>
-    inline const decay_component_t<T>* ptr(std::size_t index) const noexcept {
+    inline const decay_component_t<T>* ptr(std::size_t index) const {
         return ptr_unchecked<decay_component_t<T>>(index);
     }
 
@@ -254,13 +255,25 @@ public:
 
 private:
     template<component T>
-    inline T* ptr_unchecked(std::size_t index) noexcept {
-        return (reinterpret_cast<T*>(_blocks.at(component_family::id<T>).begin) + index);
+    inline T* ptr_unchecked(std::size_t index) {
+        return ptr_unchecked_impl<T*>(*this, index);
     }
 
     template<component T>
-    inline const T* ptr_unchecked(std::size_t index) const noexcept {
-        return (reinterpret_cast<T*>(_blocks.at(component_family::id<T>).begin) + index);
+    inline const T* ptr_unchecked(std::size_t index) const {
+        return ptr_unchecked_impl<const T*>(*this, index);
+    }
+
+    template<typename P>
+    static inline P ptr_unchecked_impl(auto&& self, std::size_t index) {
+        using T = std::remove_const_t<std::remove_pointer_t<P>>;
+        auto id = component_family::id<T>;
+        try {
+            const auto& block = self._blocks.at(id);
+            return (reinterpret_cast<P>(block.begin) + index);
+        } catch (std::out_of_range) {
+            throw component_not_found{ id };
+        }
     }
 
     std::size_t calculate_brutto_element_size(const component_meta_set& components_meta) const noexcept {

@@ -98,12 +98,8 @@ public:
     /// @param location Entity location
     /// @return Component& Component reference
     template<component_reference Component>
-    Component& read(entity_location location) {
-        assert(location.arch == this);
-        assert(location.chunk_index < _chunks.size());
-        auto& chunk = _chunks[location.chunk_index];
-        assert(location.entry_index < chunk.size());
-        return *chunk.ptr<Component>(location.entry_index);
+    Component read(entity_location location) {
+        return read_impl<Component>(*this, location);
     }
 
     /// @brief Read component data
@@ -112,12 +108,8 @@ public:
     /// @param location Entity location
     /// @return const Component& Component reference
     template<component_reference Component>
-    Component& read(entity_location location) const {
-        assert(location.arch == this);
-        assert(location.chunk_index < _chunks.size());
-        auto& chunk = _chunks[location.chunk_index];
-        assert(location.entry_index < chunk.size());
-        return *chunk.ptr<Component>(location.entry_index);
+    Component read(entity_location location) const {
+        return read_impl<Component>(*this, location);
     }
 
     /// @brief Check if archetype has component C
@@ -208,6 +200,15 @@ public:
     }
 
 private:
+    template<component_reference Component>
+    static Component read_impl(auto&& self, entity_location location) {
+        assert(location.arch == this);
+        assert(location.chunk_index < _chunks.size());
+        auto& chunk = self._chunks[location.chunk_index];
+        assert(location.entry_index < chunk.size());
+        return *chunk.template ptr<Component>(location.entry_index);
+    }
+
     component_meta_set _components;
     chunks_storage_type _chunks;
 };
