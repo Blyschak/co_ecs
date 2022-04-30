@@ -43,13 +43,13 @@ public:
         // make space for entity
         auto meta = component_meta::of<entity>();
         block.begin = ptr;
-        ptr += asl::mod_2n(reinterpret_cast<std::size_t>(ptr), meta.type->align) + _max_size * meta.type->size;
+        ptr += asl::mod_2n(std::bit_cast<std::size_t>(ptr), meta.type->align) + _max_size * meta.type->size;
         block.meta = meta;
         _blocks.emplace(meta.id, block);
         // space for all components
         for (const auto& meta : set) {
             block.begin = ptr;
-            ptr += asl::mod_2n(reinterpret_cast<std::size_t>(ptr), meta.type->align) + _max_size * meta.type->size;
+            ptr += asl::mod_2n(std::bit_cast<std::size_t>(ptr), meta.type->align) + _max_size * meta.type->size;
             block.meta = meta;
             _blocks.emplace(meta.id, block);
         }
@@ -274,11 +274,11 @@ private:
         const component_meta_set& components_meta) const noexcept {
         auto end = begin;
         for (const auto& meta : components_meta) {
-            end += asl::mod_2n(reinterpret_cast<std::size_t>(begin), meta.type->align);
+            end += asl::mod_2n(std::bit_cast<std::size_t>(begin), meta.type->align);
             end += meta.type->size;
         }
         auto meta = component_meta::of<entity>();
-        end += asl::mod_2n(reinterpret_cast<std::size_t>(begin), meta.type->align);
+        end += asl::mod_2n(std::bit_cast<std::size_t>(begin), meta.type->align);
         end += meta.type->size;
         return end - begin;
     }
