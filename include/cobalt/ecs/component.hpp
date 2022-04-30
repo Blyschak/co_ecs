@@ -15,7 +15,7 @@
 namespace cobalt::ecs {
 
 /// @brief Type for component ID
-using component_id = std::uint8_t;
+using component_id = std::uint32_t;
 
 /// @brief Invalid component ID
 constexpr auto invalid_component_id = std::numeric_limits<component_id>::max();
