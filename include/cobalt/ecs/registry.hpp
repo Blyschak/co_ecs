@@ -76,6 +76,9 @@ private:
     std::vector<component_id> _ids;
 };
 
+/// @brief Registry is a container for all our entities and components. Components are stored in contiguosly in memory
+/// allowing for very fast iterations, a so called SoA approach. A set of unique components form an archetype, where
+/// every entity is mapped to an archetype.
 class registry {
 public:
     /// @brief Creates a new entity in the world with components Args... attached and returns an ecs::entity that
