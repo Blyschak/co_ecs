@@ -67,15 +67,15 @@ struct component_d {
 TEST(component, meta) {
     auto meta = ecs::component_meta::of<component_a>();
     EXPECT_EQ(meta.id, ecs::component_family::id<component_a>);
-    EXPECT_EQ(meta.size, sizeof(component_a));
-    EXPECT_EQ(meta.align, alignof(component_a));
-    EXPECT_TRUE(meta.dtor);
+    EXPECT_EQ(meta.type->size, sizeof(component_a));
+    EXPECT_EQ(meta.type->align, alignof(component_a));
+    EXPECT_TRUE(meta.type->dtor);
 
     meta = ecs::component_meta::of<component_d>();
     EXPECT_EQ(meta.id, ecs::component_family::id<component_d>);
-    EXPECT_EQ(meta.size, sizeof(component_d));
-    EXPECT_EQ(meta.align, alignof(component_d));
-    EXPECT_TRUE(meta.dtor);
+    EXPECT_EQ(meta.type->size, sizeof(component_d));
+    EXPECT_EQ(meta.type->align, alignof(component_d));
+    EXPECT_TRUE(meta.type->dtor);
 }
 
 TEST(component, sorted) {
