@@ -208,6 +208,8 @@ private:
         ///
         /// @return iterator_impl& Incremented iterator
         constexpr iterator_impl& operator++() noexcept {
+            _info++;
+            _ptr++;
             fast_forward();
             return *this;
         }
@@ -217,7 +219,7 @@ private:
         /// @return iterator_impl& Iterator
         constexpr iterator_impl operator++(int) noexcept {
             iterator_impl tmp(*this);
-            _ptr++;
+            *this ++;
             return tmp;
         }
 
@@ -243,12 +245,9 @@ private:
 
     private:
         constexpr void fast_forward() noexcept {
-            while (_ptr != _end) {
+            while (_ptr != _end && !_info->occupied) {
                 _info++;
                 _ptr++;
-                if (_info->occupied) {
-                    break;
-                }
             }
         }
 
