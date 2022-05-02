@@ -1,35 +1,46 @@
-#include <cobalt/core/logging.hpp>
-#include <cobalt/ecs/registry.hpp>
 #include <cobalt/scripting/lua_engine.hpp>
 
 #include <sstream>
 
 namespace cobalt::scripting {
 
-namespace {
-    std::string lua_to_string(const sol::state& lua, const sol::object& obj) {
-        return lua["tostring"](obj).get<std::string>();
-    }
+namespace {} // namespace
 
-    void lua_log(const sol::state& lua, core::log_level level, const sol::variadic_args& args) {
-        // format output as a space seprated output of args
-        std::stringstream ss;
-        for (const auto& arg : args) {
-            ss << lua_to_string(lua, arg) << " ";
-        }
-        // log using core logger
-        core::get_logger()->log(level, "{}", ss.str());
-    }
-
-    void check_valid_func(const sol::state& lua, const sol::table& table, auto&& func) {
-        if (!func.valid()) {
-            // TODO: how to do error handling ?
-            core::log_err("Table {} is not a registered component", lua_to_string(lua, table));
-            throw std::runtime_error("Table is not a registered component");
+class lua_runtime_view {
+public:
+    explicit lua_runtime_view(lua_engine& engine, ecs::registry& registry, const sol::variadic_args& components) :
+        _engine(engine), _registry(registry), _view(view_from_lua_components(_registry, components)) {
+        for (const sol::table& component : components) {
+            _components.emplace_back(component);
         }
     }
 
-} // namespace
+    void each(auto&& func) {
+        _view.each([&](ecs::entity ent) {
+            std::vector<sol::table> arguments;
+            for (const sol::table& component : _components) {
+                auto get_func = _engine.get_component_callback(component, lua_callbacks::get);
+                auto component_data = get_func(_registry, ent, component).get<sol::table>();
+                arguments.emplace_back(component_data);
+            }
+            func(sol::as_args(arguments));
+        });
+    }
+
+private:
+    ecs::runtime_view view_from_lua_components(ecs::registry& registry, const sol::variadic_args& components) {
+        auto rng = (components | std::views::transform([&](const sol::table& table) {
+            auto id_func = _engine.get_component_callback(table, lua_callbacks::id);
+            return id_func().get<ecs::component_id>();
+        }));
+        return ecs::runtime_view(registry, rng);
+    }
+
+    lua_engine& _engine;
+    ecs::registry& _registry;
+    ecs::runtime_view _view;
+    std::vector<sol::table> _components;
+};
 
 lua_engine::lua_engine() {
     // open required libraries
@@ -42,15 +53,15 @@ lua_engine::lua_engine() {
     lua.create_named_table(
         "log",
         "err",
-        [&](const sol::table& log, const sol::variadic_args& args) { lua_log(lua, core::log_level::err, args); },
+        [&](const sol::table& log, const sol::variadic_args& args) { log_callback(core::log_level::err, args); },
         "warn",
-        [&](const sol::table& log, const sol::variadic_args& args) { lua_log(lua, core::log_level::warn, args); },
+        [&](const sol::table& log, const sol::variadic_args& args) { log_callback(core::log_level::warn, args); },
         "info",
-        [&](const sol::table& log, const sol::variadic_args& args) { lua_log(lua, core::log_level::info, args); },
+        [&](const sol::table& log, const sol::variadic_args& args) { log_callback(core::log_level::info, args); },
         "debug",
-        [&](const sol::table& log, const sol::variadic_args& args) { lua_log(lua, core::log_level::debug, args); },
+        [&](const sol::table& log, const sol::variadic_args& args) { log_callback(core::log_level::debug, args); },
         "trace",
-        [&](const sol::table& log, const sol::variadic_args& args) { lua_log(lua, core::log_level::trace, args); });
+        [&](const sol::table& log, const sol::variadic_args& args) { log_callback(core::log_level::trace, args); });
 
 
     // ecs types
@@ -58,8 +69,8 @@ lua_engine::lua_engine() {
     lua.new_usertype<ecs::entity>(
         "entity", sol::constructors<ecs::entity()>(), "id", &ecs::entity::id, "generation", &ecs::entity::generation);
 
-    lua.new_usertype<ecs::runtime_view>(
-        "view", sol::no_constructor, "each", [](ecs::runtime_view& self, const sol::function& func) {
+    lua.new_usertype<lua_runtime_view>(
+        "view", sol::no_constructor, "each", [](lua_runtime_view& self, const sol::function& func) {
             return self.each(func);
         });
 
@@ -67,36 +78,78 @@ lua_engine::lua_engine() {
         "registry",
         sol::constructors<ecs::registry()>(),
         "create",
-        &ecs::registry::create<>,
+        [&](ecs::registry& self, const sol::variadic_args& args) {
+            auto ent = self.create<>();
+            // TODO: make lua create method immidiatelly detect the right archetype and write components to it, instead
+            // of emulating C++ create behaviour
+            for (const sol::table& table : args) {
+                auto set_func = get_component_callback(table, lua_callbacks::set);
+                set_func(self, ent, table);
+            }
+            return ent;
+        },
         "destroy",
         &ecs::registry::destroy,
         "alive",
         &ecs::registry::alive,
         "set",
         [&](ecs::registry& self, ecs::entity ent, const sol::table& table) {
-            auto set_func = table[lua_set_method];
-            check_valid_func(lua, table, set_func);
+            auto set_func = get_component_callback(table, lua_callbacks::set);
             set_func(self, ent, table);
+        },
+        "has",
+        [&](ecs::registry& self, ecs::entity ent, const sol::table& table) {
+            auto has_func = get_component_callback(table, lua_callbacks::has);
+            return has_func(self, ent, table).get<bool>();
         },
         "get",
         [&](ecs::registry& self, ecs::entity ent, const sol::table& table) {
-            auto get_func = table[lua_get_method];
-            check_valid_func(lua, table, get_func);
+            auto get_func = get_component_callback(table, lua_callbacks::get);
             return get_func(self, ent, table).get<sol::table>();
         },
         "view",
-        [&](ecs::registry& self, const sol::variadic_args& args) {
-            auto rng = (args | std::views::transform([&](const sol::table& table) {
-                auto id_func = table[lua_id_method];
-                check_valid_func(lua, table, id_func);
-                return id_func().get<ecs::component_id>();
-            }));
-            return self.runtime_view(rng);
-        });
+        [&](ecs::registry& self, const sol::variadic_args& args) { return lua_runtime_view(*this, self, args); });
+
+    lua["register_component"] = [&](sol::table table) {
+        auto id = ecs::component_family::next();
+
+        table[lua_callbacks::id] = [id]() { return id; };
+        table[lua_callbacks::set] = [id](ecs::registry& r, ecs::entity ent, const sol::table& table) {
+            r.set<sol::table>(id, ent, table);
+        };
+        table[lua_callbacks::get] = [id](ecs::registry& r, ecs::entity ent) { return r.get<sol::table>(id, ent); };
+        table[lua_callbacks::has] = [id](ecs::registry& r, ecs::entity ent) { return r.has(id, ent); };
+    };
+}
+
+sol::function lua_engine::get_component_callback(const sol::table& table, std::string callback_name) const {
+    auto func = table[callback_name];
+    if (!func.valid()) {
+        throw lua_component_error(to_string(table));
+    }
+    return func;
+}
+
+void lua_engine::log_callback(core::log_level level, const sol::variadic_args& args) const {
+    // format output as a space seprated output of args
+    std::stringstream ss;
+    for (const auto& arg : args) {
+        ss << to_string(arg) << " ";
+    }
+    // log using core logger
+    core::get_logger()->log(level, "{}", ss.str());
+}
+
+std::string lua_engine::to_string(const sol::object& obj) const {
+    return lua["tostring"](obj).get<std::string>();
 }
 
 void lua_engine::script(const std::string& script) {
-    lua.script(script);
+    try {
+        lua.script(script);
+    } catch (const sol::error& error) {
+        throw lua_execution_error(error);
+    }
 }
 
 } // namespace cobalt::scripting
