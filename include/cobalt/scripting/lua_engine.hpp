@@ -9,6 +9,12 @@ namespace cobalt::scripting {
 /// @brief Lua scripting engine
 class lua_engine {
 public:
+    constexpr static auto lua_name_method = "__name";
+    constexpr static auto lua_id_method = "__id";
+    constexpr static auto lua_set_method = "__set";
+    constexpr static auto lua_get_method = "__get";
+    constexpr static auto lua_has_method = "__has";
+
     /// @brief Construct a new lua engine object
     lua_engine();
 
@@ -25,21 +31,26 @@ public:
     /// @param args Args to pass to new_usertype<C>
     template<ecs::component C, typename... Ctors>
     void register_component(std::string name, auto&&... args) {
+        // allocate new ID for the component
+        ecs::component_id id = ecs::component_family::id<C>;
+
+        // Register component type with added lua methods
         lua.new_usertype<C>(
             name,
             sol::constructors<Ctors...>(),
-            "name",
+            lua_name_method,
             [name]() { return name; },
-            "id",
-            []() { return ecs::component_family::id<C>; },
+            lua_id_method,
+            [id]() { return id; },
+            lua_set_method,
+            [id](ecs::registry& registry, ecs::entity ent, const sol::table& table) {
+                return registry.set<sol::table>(id, ent, std::move(table));
+            },
+            lua_get_method,
+            [id](ecs::registry& registry, ecs::entity ent) { return registry.get<sol::table>(id, ent); },
+            lua_has_method,
+            [id](ecs::registry& registry, ecs::entity ent) { return registry.has(id, ent); },
             std::forward<decltype(args)>(args)...);
-        lua["registry"][std::string("_set_") + name] =
-            [&](ecs::registry& self, ecs::entity ent, const sol::table& table) {
-                return self.set<C>(ent, table.as<C>());
-            };
-        lua["registry"][std::string("_get_") + name] = [&](ecs::registry& self, ecs::entity ent) {
-            return self.get<C>(ent);
-        };
     }
 
     /// @brief Get the state object

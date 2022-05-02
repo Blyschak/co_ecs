@@ -168,7 +168,7 @@ public:
     /// @param ent Entity to assign component to
     /// @param component Component to set
     template<component C>
-    void set(component_id id, entity ent, C&& component) {
+    void set(component_id id, entity ent, C component) {
         set_impl<C>(id, ent, component);
     }
 
@@ -264,6 +264,19 @@ public:
         auto id = ent.id();
         auto& location = get_location(id);
         return location.arch->template contains<C>();
+    }
+
+    /// @brief Check if entity has component attached or not
+    ///
+    /// @param id Component ID
+    /// @param ent Entity to check
+    /// @return true If entity has component C attached
+    /// @return false Otherwise
+    [[nodiscard]] bool has(component_id c_id, entity ent) const {
+        ensure_alive(ent);
+        auto id = ent.id();
+        auto& location = get_location(id);
+        return location.arch->contains(c_id);
     }
 
     /// @brief Register resource

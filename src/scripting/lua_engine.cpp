@@ -7,15 +7,28 @@
 namespace cobalt::scripting {
 
 namespace {
+    std::string lua_to_string(const sol::state& lua, const sol::object& obj) {
+        return lua["tostring"](obj).get<std::string>();
+    }
+
     void lua_log(const sol::state& lua, core::log_level level, const sol::variadic_args& args) {
         // format output as a space seprated output of args
         std::stringstream ss;
         for (const auto& arg : args) {
-            ss << lua["tostring"](arg).get<std::string>() << " ";
+            ss << lua_to_string(lua, arg) << " ";
         }
         // log using core logger
         core::get_logger()->log(level, "{}", ss.str());
     }
+
+    void check_valid_func(const sol::state& lua, const sol::table& table, auto&& func) {
+        if (!func.valid()) {
+            // TODO: how to do error handling ?
+            core::log_err("Table {} is not a registered component", lua_to_string(lua, table));
+            throw std::runtime_error("Table is not a registered component");
+        }
+    }
+
 } // namespace
 
 lua_engine::lua_engine() {
@@ -61,18 +74,22 @@ lua_engine::lua_engine() {
         &ecs::registry::alive,
         "set",
         [&](ecs::registry& self, ecs::entity ent, const sol::table& table) {
-            std::string component_name = table["name"]();
-            return lua["registry"][std::string("_set_") + component_name](self, ent, table);
+            auto set_func = table[lua_set_method];
+            check_valid_func(lua, table, set_func);
+            set_func(self, ent, table);
         },
         "get",
         [&](ecs::registry& self, ecs::entity ent, const sol::table& table) {
-            std::string component_name = table["name"]();
-            return lua["registry"][std::string("_get_") + component_name](self, ent);
+            auto get_func = table[lua_get_method];
+            check_valid_func(lua, table, get_func);
+            return get_func(self, ent, table).get<sol::table>();
         },
         "view",
         [&](ecs::registry& self, const sol::variadic_args& args) {
-            auto rng = (args | std::views::transform([](const sol::table& obj) {
-                return obj["id"].get<sol::function>()().get<ecs::component_id>();
+            auto rng = (args | std::views::transform([&](const sol::table& table) {
+                auto id_func = table[lua_id_method];
+                check_valid_func(lua, table, id_func);
+                return id_func().get<ecs::component_id>();
             }));
             return self.runtime_view(rng);
         });
