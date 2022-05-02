@@ -156,27 +156,20 @@ public:
     /// @param args Arguments to construct C from
     template<component C, typename... Args>
     void set(entity ent, Args&&... args) {
-        ensure_alive(ent);
-        auto id = ent.id();
-        auto& location = get_location(id);
-        auto*& archetype = location.arch;
+        set_impl<C>(component_family::id<C>, ent, std::forward<Args>(args)...);
+    }
 
-        if (archetype->template contains<C>()) {
-            archetype->template write<C>(location, std::forward<Args>(args)...);
-        } else {
-            auto components = archetype->components();
-            components.insert<C>();
-            auto new_archetype = _archetypes.ensure_archetype(std::move(components));
-            auto [new_location, moved] = archetype->move(location, *new_archetype);
-            if (moved.id() != entity::invalid_id) {
-                set_location(moved.id(), location);
-            }
-
-            new_archetype->template construct<C>(new_location, std::forward<Args>(args)...);
-
-            archetype = new_archetype;
-            set_location(id, new_location);
-        }
+    /// @brief Set comopnent to an entity with custom ID. This ID must be unique and generated using
+    /// component_family::next(). This allows users to set different components of the same type. Useful in implementing
+    /// scripting language bindings
+    ///
+    /// @tparam C Component type
+    /// @param id Component ID
+    /// @param ent Entity to assign component to
+    /// @param component Component to set
+    template<component C>
+    void set(component_id id, entity ent, C&& component) {
+        set_impl<C>(id, ent, component);
     }
 
     /// @brief Remove component C from an entity. In case entity does not have component attached nothing is done
@@ -184,28 +177,18 @@ public:
     /// operation.
     ///
     /// @tparam C Component type
-    /// @param ent entity to remove component from
+    /// @param ent Entity to remove component from
     template<component C>
     void remove(entity ent) {
-        ensure_alive(ent);
-        auto id = ent.id();
-        auto& location = get_location(id);
-        auto*& archetype = location.arch;
+        remove_impl(component_family::id<C>, ent);
+    }
 
-        if (!archetype->template contains<C>()) {
-            return;
-        }
-
-        auto components = archetype->components();
-        components.erase<C>();
-        auto new_archetype = _archetypes.ensure_archetype(std::move(components));
-        auto [new_location, moved] = archetype->move(location, *new_archetype);
-        if (moved.id() != entity::invalid_id) {
-            set_location(moved.id(), location);
-        }
-
-        archetype = new_archetype;
-        set_location(id, new_location);
+    /// @brief Remove component by ID
+    ///
+    /// @param id Component ID
+    /// @param ent Entity to remove component from
+    void remove(component_id id, entity ent) {
+        remove_impl(id, ent);
     }
 
     /// @brief Check if an entity is alive or not
@@ -224,7 +207,7 @@ public:
     /// @return C& Reference to component C
     template<component C>
     [[nodiscard]] C& get(entity ent) {
-        return std::get<0>(get_impl<C&>(*this, ent));
+        return std::get<0>(get_impl<C&>(*this, ent, component_family::id<C>));
     }
 
     /// @brief Get const reference to component C
@@ -234,7 +217,29 @@ public:
     /// @return const C& Const reference to component C
     template<component C>
     [[nodiscard]] const C& get(entity ent) const {
-        return std::get<0>(get_impl<const C&>(*this, ent));
+        return std::get<0>(get_impl<const C&>(*this, ent, component_family::id<C>));
+    }
+
+    /// @brief Get reference to component by ID
+    ///
+    /// @tparam C Type to cast to. Caller must guarantee that ID corresponds to the type C
+    /// @param id Component ID
+    /// @param ent Entity
+    /// @return C& Component reference
+    template<component C>
+    [[nodiscard]] C& get(component_id id, entity ent) {
+        return std::get<0>(get_impl<C&>(*this, ent, id));
+    }
+
+    /// @brief Get const reference to component by ID
+    ///
+    /// @tparam C Type to cast to. Caller must guarantee that ID corresponds to the type C
+    /// @param id Component ID
+    /// @param ent Entity
+    /// @return const C& Component reference
+    template<component C>
+    [[nodiscard]] const C& get(component_id id, entity ent) const {
+        return std::get<0>(get_impl<const C&>(*this, ent, id));
     }
 
     /// @brief Get components for a single entity
@@ -244,7 +249,7 @@ public:
     /// @return value_type Components tuple
     template<component_reference... Args>
     [[nodiscard]] std::tuple<Args...> get(entity ent) {
-        return get_impl<Args...>(*this, ent);
+        return get_impl<Args...>(*this, ent, component_family::id<decay_component_t<Args>>...);
     }
 
     /// @brief Check if entity has component attached or not
@@ -359,13 +364,77 @@ private:
     template<component_reference... Args>
     friend class view;
 
-    template<component_reference... Args>
-    static std::tuple<Args...> get_impl(auto&& self, entity ent) {
+    template<component C, typename... Args>
+    void set_impl(component_id c_id, entity ent, Args&&... args) {
+        ensure_alive(ent);
+        auto id = ent.id();
+        auto& location = get_location(id);
+        auto*& archetype = location.arch;
+
+        if (archetype->contains(c_id)) {
+            archetype->template write<C>(c_id, location, std::forward<Args>(args)...);
+        } else {
+            auto components = archetype->components();
+            components.insert(component_meta::of<C>(c_id));
+            auto new_archetype = _archetypes.ensure_archetype(std::move(components));
+            auto [new_location, moved] = archetype->move(location, *new_archetype);
+            if (moved.id() != entity::invalid_id) {
+                set_location(moved.id(), location);
+            }
+
+            new_archetype->template construct<C>(c_id, new_location, std::forward<Args>(args)...);
+
+            archetype = new_archetype;
+            set_location(id, new_location);
+        }
+    }
+
+    void remove_impl(component_id c_id, entity ent) {
+        ensure_alive(ent);
+        auto id = ent.id();
+        auto& location = get_location(id);
+        auto*& archetype = location.arch;
+
+        if (!archetype->contains(c_id)) {
+            return;
+        }
+
+        auto components = archetype->components();
+        components.erase(c_id);
+        auto new_archetype = _archetypes.ensure_archetype(std::move(components));
+        auto [new_location, moved] = archetype->move(location, *new_archetype);
+        if (moved.id() != entity::invalid_id) {
+            set_location(moved.id(), location);
+        }
+
+        archetype = new_archetype;
+        set_location(id, new_location);
+    }
+
+    template<component_reference... Args, std::convertible_to<component_id>... Ids>
+    static std::tuple<Args...> get_impl(auto&& self, entity ent, Ids... ids) {
+        static_assert(sizeof...(Args) == sizeof...(Ids),
+            "Number of components in the template must match the number of component IDs passed");
         self.ensure_alive(ent);
         auto id = ent.id();
         auto& location = self.get_location(id);
         auto* archetype = location.arch;
-        return std::tuple<Args...>(std::ref(archetype->template read<Args>(location))...);
+
+        using tuple_t = std::tuple<Args...>;
+
+        // use two generic lambda's magic to zip Args & Ids
+
+        auto get_ref = [&]<std::size_t N>() {
+            auto id = std::get<N>(std::tuple<Ids...>(ids...));
+            using type_t = std::tuple_element_t<N, tuple_t>;
+            return std::ref(archetype->template read<type_t>(id, location));
+        };
+
+        auto get_ref_tuple = [&]<std::size_t... Is>(std::index_sequence<Is...>) {
+            return std::tuple<Args...>(get_ref.template operator()<Is>()...);
+        };
+
+        return get_ref_tuple(std::make_index_sequence<sizeof...(Args)>{});
     }
 
     inline void ensure_alive(const entity& ent) const {

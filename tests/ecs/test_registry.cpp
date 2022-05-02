@@ -278,3 +278,22 @@ TEST(registry, exceptions) {
     EXPECT_THROW(registry.set<velocity>(ent), ecs::entity_not_found);
     EXPECT_THROW(registry.destroy(ent), ecs::entity_not_found);
 }
+
+TEST(registry, external_components) {
+    ecs::registry registry;
+
+    struct external_component {
+        int data{};
+    };
+
+    auto ent = registry.create();
+
+    auto component_a_id = ecs::component_family::next();
+    auto component_b_id = ecs::component_family::next();
+
+    registry.set(component_a_id, ent, external_component{ 1 });
+    registry.set(component_b_id, ent, external_component{ 2 });
+
+    EXPECT_EQ(registry.get<external_component>(component_a_id, ent).data, 1);
+    EXPECT_EQ(registry.get<external_component>(component_b_id, ent).data, 2);
+}

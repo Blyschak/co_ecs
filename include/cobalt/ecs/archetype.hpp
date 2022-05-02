@@ -69,12 +69,8 @@ public:
     /// @param location Entity location
     /// @param args Arguments to construct component from
     template<component Component, typename... Args>
-    void write(entity_location location, Args&&... args) {
-        assert(location.arch == this);
-        assert(location.chunk_index < _chunks.size());
-        auto& chunk = _chunks[location.chunk_index];
-        assert(location.entry_index < chunk.size());
-        chunk.at<Component>(location.entry_index) = Component{ std::forward<Args>(args)... };
+    void write(component_id id, entity_location location, Args&&... args) {
+        read_impl<Component&>(*this, id, location) = Component{ std::forward<Args>(args)... };
     }
 
     /// @brief Construct Component from Args in place
@@ -84,12 +80,9 @@ public:
     /// @param location Location where to construct
     /// @param args Arguments to pass to Component constructor
     template<component Component, typename... Args>
-    void construct(entity_location location, Args&&... args) {
-        assert(location.arch == this);
-        assert(location.chunk_index < _chunks.size());
-        auto& chunk = _chunks[location.chunk_index];
-        assert(location.entry_index < chunk.size());
-        std::construct_at(chunk.ptr<Component>(location.entry_index), std::forward<Args>(args)...);
+    void construct(component_id id, entity_location location, Args&&... args) {
+        Component& p = read_impl<Component&>(*this, id, location);
+        std::construct_at(std::addressof(p), std::forward<Args>(args)...);
     }
 
     /// @brief Read component data
@@ -98,8 +91,8 @@ public:
     /// @param location Entity location
     /// @return Component& Component reference
     template<component_reference Component>
-    Component read(entity_location location) {
-        return read_impl<Component>(*this, location);
+    Component read(component_id id, entity_location location) {
+        return read_impl<Component>(*this, id, location);
     }
 
     /// @brief Read component data
@@ -108,8 +101,8 @@ public:
     /// @param location Entity location
     /// @return const Component& Component reference
     template<component_reference Component>
-    Component read(entity_location location) const {
-        return read_impl<Component>(*this, location);
+    Component read(component_id id, entity_location location) const {
+        return read_impl<Component>(*this, id, location);
     }
 
     /// @brief Check if archetype has component C
@@ -201,12 +194,17 @@ public:
 
 private:
     template<component_reference Component>
-    static Component read_impl(auto&& self, entity_location location) {
-        assert(location.arch == std::addressof(self));
-        assert(location.chunk_index < self._chunks.size());
-        auto& chunk = self._chunks[location.chunk_index];
+    inline static Component read_impl(auto&& self, component_id id, entity_location location) {
+        auto& chunk = self.get_chunk(id, location);
         assert(location.entry_index < chunk.size());
-        return *chunk.template ptr<Component>(location.entry_index);
+        return *chunk.template ptr<Component>(id, location.entry_index);
+    }
+
+    inline chunk& get_chunk(component_id id, entity_location location) {
+        assert(location.arch == this);
+        assert(location.chunk_index < _chunks.size());
+        auto& chunk = _chunks[location.chunk_index];
+        return chunk;
     }
 
     component_meta_set _components;

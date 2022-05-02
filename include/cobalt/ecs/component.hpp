@@ -113,6 +113,7 @@ public:
         template<component T>
         static const type_meta* of() noexcept {
             static const type_meta meta{
+                component_family::id<T>,
                 sizeof(T),
                 alignof(T),
                 &move_constructor<T>,
@@ -122,6 +123,7 @@ public:
             return &meta;
         }
 
+        component_id type_id;
         std::size_t size;
         std::size_t align;
         std::function<void(void*, void*)> move_ctor;
@@ -137,6 +139,18 @@ public:
     static component_meta of() noexcept {
         return component_meta{
             component_family::id<T>,
+            type_meta::of<T>(),
+        };
+    }
+
+    /// @brief Constructs component_meta for type T with ID
+    ///
+    /// @tparam T Component type
+    /// @return component_meta Component metadata
+    template<component T>
+    static component_meta of(component_id id) noexcept {
+        return component_meta{
+            id,
             type_meta::of<T>(),
         };
     }

@@ -15,7 +15,7 @@ public:
     /// @brief Construct a new component not found exception object
     ///
     /// @param id Component ID
-    component_not_found(component_id id) {
+    explicit component_not_found(component_id id) {
         std::stringstream ss;
         ss << "component [id=" << id << "] not found";
         _msg = ss.str();
