@@ -48,17 +48,10 @@ public:
     /// @return entity_location Entity location
     template<component... Args>
     entity_location allocate(entity ent, Args&&... args) {
-        if (_chunks.empty()) {
-            _chunks.emplace_back(components());
-        }
-        auto* last_chunk = &_chunks.back();
-        if (last_chunk->full()) {
-            _chunks.emplace_back(components());
-            last_chunk = &_chunks.back();
-        }
-        auto entry_index = last_chunk->size();
+        auto& free_chunk = get_free_chunk();
+        auto entry_index = free_chunk.size();
         auto chunk_index = _chunks.size() - 1;
-        last_chunk->emplace_back(std::forward<entity>(ent), std::forward<Args>(args)...);
+        free_chunk.emplace_back(std::forward<entity>(ent), std::forward<Args>(args)...);
         return entity_location{ this, chunk_index, entry_index };
     }
 
@@ -143,9 +136,9 @@ public:
         assert(location.chunk_index < _chunks.size());
         auto& chunk = _chunks[location.chunk_index];
         assert(location.entry_index < chunk.size());
-        auto& last_chunk = _chunks.back();
-        entity ent = chunk.swap_end(location.entry_index, last_chunk);
-        if (last_chunk.empty()) {
+        auto& free_chunk = _chunks.back();
+        entity ent = chunk.swap_end(location.entry_index, free_chunk);
+        if (free_chunk.empty()) {
             _chunks.pop_back();
         }
         return ent;
@@ -157,22 +150,11 @@ public:
     /// @param archetype Archetype to move to
     /// @return entity_location Moved entity location in new archetype
     std::pair<entity_location, entity> move(entity_location location, archetype& archetype) {
-        assert(location.arch == this);
-        assert(location.chunk_index < _chunks.size());
-        auto& chunk = _chunks[location.chunk_index];
+        auto& chunk = get_chunk(location);
         assert(location.entry_index < chunk.size());
 
-        if (archetype._chunks.empty()) {
-            archetype._chunks.emplace_back(archetype.components());
-        }
-
-        auto* last_chunk = &archetype._chunks.back();
-        if (last_chunk->full()) {
-            archetype._chunks.emplace_back(archetype.components());
-            last_chunk = &archetype._chunks.back();
-        }
-
-        auto entry_index = chunk.move(location.entry_index, *last_chunk);
+        auto& free_chunk = archetype.get_free_chunk();
+        auto entry_index = chunk.move(location.entry_index, free_chunk);
         auto moved_id = deallocate(location);
         auto new_location = entity_location{ &archetype, archetype._chunks.size() - 1, entry_index };
         return std::make_pair(new_location, moved_id);
@@ -195,16 +177,28 @@ public:
 private:
     template<component_reference Component>
     inline static Component read_impl(auto&& self, component_id id, entity_location location) {
-        auto& chunk = self.get_chunk(id, location);
+        auto& chunk = self.get_chunk(location);
         assert(location.entry_index < chunk.size());
         return *chunk.template ptr<Component>(id, location.entry_index);
     }
 
-    inline chunk& get_chunk(component_id id, entity_location location) {
+    inline chunk& get_chunk(entity_location location) {
         assert(location.arch == this);
         assert(location.chunk_index < _chunks.size());
         auto& chunk = _chunks[location.chunk_index];
         return chunk;
+    }
+
+    chunk& get_free_chunk() {
+        if (_chunks.empty()) {
+            _chunks.emplace_back(components());
+        }
+        auto& chunk = _chunks.back();
+        if (!chunk.full()) {
+            return chunk;
+        }
+        _chunks.emplace_back(components());
+        return _chunks.back();
     }
 
     component_meta_set _components;

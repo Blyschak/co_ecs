@@ -32,33 +32,10 @@ public:
     /// @brief Construct a new chunk object
     ///
     /// @param set Component metadata set
-    chunk(const component_meta_set& set) {
+    chunk(const component_meta_set& components_meta) {
         _buffer = reinterpret_cast<std::byte*>(std::aligned_alloc(alloc_alignment, chunk_bytes));
-        auto netto_size = calculate_netto_element_size(_buffer, set);
-        auto remaining_space = chunk_bytes - netto_size;
-        auto remaining_elements_count = remaining_space / calculate_brutto_element_size(set);
-        _max_size = remaining_elements_count + 1;
-
-        std::byte* ptr = _buffer;
-        block_metadata block;
-        // make space for entity
-        auto meta = component_meta::of<entity>();
-        auto* type = meta.type;
-        block.begin = ptr;
-        std::size_t size_in_bytes = _max_size * type->size;
-        ptr += asl::mod_2n(std::bit_cast<std::size_t>(ptr), type->align) + size_in_bytes;
-        block.meta = meta;
-        _blocks.emplace(meta.id, block);
-        // space for all components
-        for (const auto& meta : set) {
-            auto* type = meta.type;
-            block.begin = ptr;
-            std::size_t size_in_bytes = _max_size * type->size;
-            ptr += asl::mod_2n(std::bit_cast<std::size_t>(ptr), type->align) + size_in_bytes;
-            block.meta = meta;
-            _blocks.emplace(meta.id, block);
-        }
-        assert(ptr <= _buffer + chunk_bytes);
+        _max_size = get_max_size(components_meta);
+        init_blocks(components_meta);
     }
 
     /// @brief Deleted copy constructor
@@ -266,30 +243,75 @@ private:
         }
     }
 
-    std::size_t calculate_brutto_element_size(const component_meta_set& components_meta) const noexcept {
+    inline void destroy_at(std::size_t index) noexcept {
+        for (const auto& [id, block] : _blocks) {
+            block.meta.type->dtor(block.begin + index * block.meta.type->size);
+        }
+    }
+
+    void init_blocks(const component_meta_set& components_meta) {
+        std::byte* ptr = _buffer;
+
+        // make space for entity
+        ptr = add_block(ptr, component_meta::of<entity>());
+
+        // space for all components
+        for (const auto& meta : components_meta) {
+            ptr = add_block(ptr, meta);
+        }
+
+        // sanity assertion
+        assert(ptr <= _buffer + chunk_bytes);
+    }
+
+    std::byte* add_block(std::byte* ptr, const component_meta& meta) {
+        std::size_t size_in_bytes = _max_size * meta.type->size;
+        std::size_t align = meta.type->align;
+
+        _blocks.emplace(meta.id, ptr, meta);
+
+        ptr += asl::mod_2n(std::bit_cast<std::size_t>(ptr), align) + size_in_bytes;
+
+        return ptr;
+    }
+
+    // Calculates the maxium size of individual components this chunk buffer can hold
+    static std::size_t get_max_size(const component_meta_set& components_meta) {
+        // Calculate packed structure size
+        auto netto_size = aligned_components_size(components_meta);
+        // Remaining size for packed components
+        auto remaining_space = chunk_bytes - netto_size;
+        // Calculate how much components we can pack into remaining space
+        auto remaining_elements_count = remaining_space / packed_components_size(components_meta);
+        //
+        return remaining_elements_count + 1;
+    }
+
+    // Calculate size of packed structure of components
+    static std::size_t packed_components_size(const component_meta_set& components_meta) noexcept {
         return std::accumulate(components_meta.begin(),
             components_meta.end(),
             component_meta::of<entity>().type->size,
             [](const auto& res, const auto& meta) { return res + meta.type->size; });
     }
 
-    std::size_t calculate_netto_element_size(const std::byte* begin,
-        const component_meta_set& components_meta) const noexcept {
+    // Calculate size of properly aligned structure of components
+    static std::size_t aligned_components_size(const component_meta_set& components_meta) noexcept {
+        auto begin = alloc_alignment;
         auto end = begin;
-        for (const auto& meta : components_meta) {
-            end += asl::mod_2n(std::bit_cast<std::size_t>(begin), meta.type->align);
-            end += meta.type->size;
-        }
-        auto meta = component_meta::of<entity>();
-        end += asl::mod_2n(std::bit_cast<std::size_t>(begin), meta.type->align);
-        end += meta.type->size;
-        return end - begin;
-    }
 
-    inline void destroy_at(std::size_t index) noexcept {
-        for (const auto& [id, block] : _blocks) {
-            block.meta.type->dtor(block.begin + index * block.meta.type->size);
+        // Add single component element size accounting for its alignment
+        auto add_elements = [&end](const component_meta& meta) {
+            end += asl::mod_2n(std::bit_cast<std::size_t>(end), meta.type->align);
+            end += meta.type->size;
+        };
+
+        add_elements(component_meta::of<entity>());
+        for (const auto& meta : components_meta) {
+            add_elements(meta);
         }
+
+        return end - begin;
     }
 
     std::byte* _buffer;
