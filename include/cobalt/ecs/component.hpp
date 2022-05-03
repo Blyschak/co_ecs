@@ -42,7 +42,7 @@ concept component_reference = std::is_reference_v<T> && component<std::remove_cv
 ///
 /// @tparam T Type
 template<component_reference T>
-using decay_component_t = std::remove_cvref_t<T>;
+using decay_component_t = std::decay_t<std::remove_pointer_t<T>>;
 
 /// @brief Struct to determine const-ness of component reference type
 ///

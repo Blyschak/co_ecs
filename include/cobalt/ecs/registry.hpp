@@ -116,12 +116,13 @@ public:
     void destroy(entity ent) {
         ensure_alive(ent);
         auto location = get_location(ent.id());
-        // returns the entity ID that has been moved to a new location
-        auto moved_id = location.arch->swap_erase(location).id();
+
+        // returns the entity that has been moved to a new location
+        auto moved = location.archetype->swap_erase(location);
         remove_location(ent.id());
 
-        if (moved_id != entity::invalid_id) {
-            set_location(moved_id, location);
+        if (moved) {
+            set_location(moved->id(), location);
         }
 
         _entity_pool.recycle(ent);
@@ -263,7 +264,7 @@ public:
         ensure_alive(ent);
         auto id = ent.id();
         auto& location = get_location(id);
-        return location.arch->template contains<C>();
+        return location.archetype->template contains<C>();
     }
 
     /// @brief Check if entity has component attached or not
@@ -276,7 +277,7 @@ public:
         ensure_alive(ent);
         auto id = ent.id();
         auto& location = get_location(id);
-        return location.arch->contains(c_id);
+        return location.archetype->contains(c_id);
     }
 
     /// @brief Register resource
@@ -381,7 +382,7 @@ private:
     void set_impl(component_id c_id, entity ent, Args&&... args) {
         ensure_alive(ent);
         auto& location = get_location(ent.id());
-        auto*& archetype = location.arch;
+        auto*& archetype = location.archetype;
 
         if (archetype->contains(c_id)) {
             archetype->template get<C&>(c_id, location) = C{ std::forward<Args>(args)... };
@@ -394,8 +395,8 @@ private:
             auto ptr = std::addressof(new_archetype->template get<C&>(c_id, new_location));
             std::construct_at(ptr, std::forward<Args>(args)...);
 
-            if (moved.id() != entity::invalid_id) {
-                set_location(moved.id(), location);
+            if (moved) {
+                set_location(moved->id(), location);
             }
 
             archetype = new_archetype;
@@ -407,7 +408,7 @@ private:
         ensure_alive(ent);
         auto id = ent.id();
         auto& location = get_location(id);
-        auto*& archetype = location.arch;
+        auto*& archetype = location.archetype;
 
         if (!archetype->contains(c_id)) {
             return;
@@ -417,8 +418,8 @@ private:
         components.erase(c_id);
         auto new_archetype = _archetypes.ensure_archetype(std::move(components));
         auto [new_location, moved] = archetype->move(location, *new_archetype);
-        if (moved.id() != entity::invalid_id) {
-            set_location(moved.id(), location);
+        if (moved) {
+            set_location(moved->id(), location);
         }
 
         archetype = new_archetype;
@@ -432,7 +433,7 @@ private:
         self.ensure_alive(ent);
         auto id = ent.id();
         auto& location = self.get_location(id);
-        auto* archetype = location.arch;
+        auto* archetype = location.archetype;
 
         using tuple_t = std::tuple<Args...>;
 

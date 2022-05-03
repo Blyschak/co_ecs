@@ -12,10 +12,11 @@
 
 namespace cobalt::ecs {
 
-/// @brief Archetype groups entities that share the same components. Archetype has a list of fixed size chunks where
-/// entities and their components are stored in a packed arrays, so called SoA fashion
+/// @brief Archetype groups entities that share the same types of components. Archetype has a list of fixed size chunks
+/// where entities and their components are stored in a packed arrays, in a so called SoA fashion
 class archetype {
 public:
+    /// @brief Chunks storage type
     using chunks_storage_t = asl::vector<chunk>;
 
     /// @brief Construct a new archetype object without components
@@ -24,7 +25,7 @@ public:
     /// @brief Construct a new archetype object
     ///
     /// @param components Components
-    archetype(component_meta_set components) : _components(std::move(components)) {
+    archetype(component_meta_set components) noexcept : _components(std::move(components)) {
     }
 
     /// @brief Return components set
@@ -34,7 +35,21 @@ public:
         return _components;
     }
 
-    /// @brief Emplace new entity and return its location
+    /// @brief Return reference to chunks vector
+    ///
+    /// @return chunks_storage_t&
+    [[nodiscard]] chunks_storage_t& chunks() noexcept {
+        return _chunks;
+    }
+
+    /// @brief Return const reference to chunks vector
+    ///
+    /// @return const chunks_storage_t&
+    [[nodiscard]] const chunks_storage_t& chunks() const noexcept {
+        return _chunks;
+    }
+
+    /// @brief Emplace new entity and assign given components to it, return entities location
     ///
     /// @tparam Components Components types
     /// @param ent Entity
@@ -53,19 +68,42 @@ public:
         };
     }
 
-    /// @brief Swap erase an entity located at location. It returns an ID of a entity that has been moved to this
-    /// location or invalid entity ID is returned when archetype has only a single entity.
+    /// @brief Swap erase an entity at given location, returns an entity that has been moved as a result of this
+    /// operation or std::nullopt if no entities were moved
     ///
     /// @param location Entity location
-    /// @return entity Moved entity
-    entity swap_erase(const entity_location& location) noexcept {
+    /// @return std::optional<entity>
+    std::optional<entity> swap_erase(const entity_location& location) noexcept {
         auto& chunk = get_chunk(location);
         auto& last_chunk = _chunks.back();
-        entity ent = chunk.swap_end(location.entry_index, last_chunk);
+        auto maybe_ent = chunk.swap_erase(location.entry_index, last_chunk);
         if (last_chunk.empty()) {
             _chunks.pop_back();
         }
-        return ent;
+        return maybe_ent;
+    }
+
+    /// @brief Move entity and its components to a different archetype and returns a pair where the first element is
+    /// moved entity location in a new archetype and the second is the entity that has been moved in this archetype or
+    /// std::nullopt if no entities were moved
+    ///
+    /// @param location Entity location
+    /// @param other Archetype to move entity and its components to
+    /// @return std::pair<entity_location, std::optional<entity>>
+    std::pair<entity_location, std::optional<entity>> move(const entity_location& location, archetype& other) {
+        auto& chunk = get_chunk(location);
+        assert(location.entry_index < chunk.size());
+
+        auto& free_chunk = other.ensure_free_chunk();
+        auto entry_index = chunk.move(location.entry_index, free_chunk);
+        auto moved = swap_erase(location);
+        auto new_location = entity_location{
+            &other,
+            other._chunks.size() - 1,
+            entry_index,
+        };
+
+        return std::make_pair(new_location, moved);
     }
 
     /// @brief Get component data
@@ -118,46 +156,17 @@ public:
         }
     }
 
-    /// @brief Move entity to a different archetype togather with its components.
-    ///
-    /// @param location Entity location
-    /// @param archetype Archetype to move to
-    /// @return entity_location Moved entity location in new archetype
-    std::pair<entity_location, entity> move(entity_location location, archetype& archetype) {
-        auto& chunk = get_chunk(location);
-        assert(location.entry_index < chunk.size());
-
-        auto& free_chunk = archetype.ensure_free_chunk();
-        auto entry_index = chunk.move(location.entry_index, free_chunk);
-        auto moved_id = swap_erase(location);
-        auto new_location = entity_location{ &archetype, archetype._chunks.size() - 1, entry_index };
-        return std::make_pair(new_location, moved_id);
-    }
-
-    /// @brief Return reference to chunks vector
-    ///
-    /// @return chunks_storage_t&
-    [[nodiscard]] chunks_storage_t& chunks() noexcept {
-        return _chunks;
-    }
-
-    /// @brief Return const reference to chunks vector
-    ///
-    /// @return const chunks_storage_t&
-    [[nodiscard]] const chunks_storage_t& chunks() const noexcept {
-        return _chunks;
-    }
 
 private:
-    template<component_reference Component>
-    inline static Component read_impl(auto&& self, component_id id, entity_location location) {
+    template<component_reference ComponentRef>
+    inline static ComponentRef read_impl(auto&& self, component_id id, entity_location location) {
         auto& chunk = self.get_chunk(location);
         assert(location.entry_index < chunk.size());
-        return *chunk.template ptr<Component>(id, location.entry_index);
+        return *chunk.template ptr<decay_component_t<ComponentRef>>(id, location.entry_index);
     }
 
     inline chunk& get_chunk(entity_location location) {
-        assert(location.arch == this);
+        assert(location.archetype == this);
         assert(location.chunk_index < _chunks.size());
         auto& chunk = _chunks[location.chunk_index];
         return chunk;

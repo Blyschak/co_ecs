@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <optional>
 #include <type_traits>
 
 #include <cobalt/asl/algorithm.hpp>
@@ -107,26 +108,26 @@ public:
     }
 
     /// @brief Swap end removes a components in blocks at position index and swaps it with the last element from
-    /// other_chunk chunk. Returns entity that has been moved
+    /// other_chunk chunk. Returns std::optional of entity that has been moved or std::nullopt if no entities were moved
     ///
     /// @param index Index to remove components from
     /// @param other_chunk Other chunk
-    /// @return entity Entity that has been moved from other_chunk
-    entity swap_end(std::size_t index, chunk& other_chunk) {
+    /// @return std::optional<entity>
+    std::optional<entity> swap_erase(std::size_t index, chunk& other) {
         assert(index < _size);
         if (size() == 1 || index == _size - 1) {
             pop_back();
-            return entity::invalid();
+            return std::nullopt;
         }
         assert(!other_chunk.empty());
-        std::size_t other_chunk_index = other_chunk._size - 1;
-        entity ent = *other_chunk.ptr_unchecked<entity>(other_chunk_index);
+        std::size_t other_chunk_index = other._size - 1;
+        entity ent = *other.ptr_unchecked<entity>(other_chunk_index);
         for (const auto& [id, block] : _blocks) {
             auto* type = block.meta.type;
-            auto ptr = other_chunk._blocks[id].begin + other_chunk_index * type->size;
+            auto ptr = other._blocks[id].begin + other_chunk_index * type->size;
             type->move_assign(block.begin + index * type->size, ptr);
         }
-        other_chunk.pop_back();
+        other.pop_back();
         return ent;
     }
 
@@ -149,6 +150,16 @@ public:
         }
         other_chunk._size++;
         return other_chunk_index;
+    }
+
+    template<component_reference cref_t>
+    inline cref_t ref(component_id id, std::size_t index) {
+        if constexpr (mutable_component_reference_v<T>) {
+            static_assert(
+                !std::is_same_v<decay_component_t<T>, entity>, "Cannot give a mutable reference to the entity");
+        }
+        using cptr_t = std::add_pointer_t<std::remove_reference_t<cref_t>>;
+        return ptr<decay_component_t<T>>(id, index);
     }
 
     template<component_reference T>

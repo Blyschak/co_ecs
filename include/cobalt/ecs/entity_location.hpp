@@ -10,7 +10,7 @@ class archetype;
 /// @brief Entity location
 class entity_location {
 public:
-    archetype* arch{};
+    ecs::archetype* archetype{};
     std::size_t chunk_index{};
     std::size_t entry_index{};
 };
