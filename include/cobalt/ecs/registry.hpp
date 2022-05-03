@@ -105,7 +105,7 @@ public:
         auto entity = _entity_pool.create();
         auto components = component_meta_set::create<Args...>();
         auto archetype = _archetypes.ensure_archetype(std::move(components));
-        auto location = archetype->template allocate<Args...>(entity, std::forward<Args>(args)...);
+        auto location = archetype->template emplace_back<Args...>(entity, std::forward<Args>(args)...);
         set_location(entity.id(), location);
         return entity;
     }
@@ -117,7 +117,7 @@ public:
         ensure_alive(ent);
         auto location = get_location(ent.id());
         // returns the entity ID that has been moved to a new location
-        auto moved_id = location.arch->deallocate(location).id();
+        auto moved_id = location.arch->swap_erase(location).id();
         remove_location(ent.id());
 
         if (moved_id != entity::invalid_id) {
@@ -380,25 +380,26 @@ private:
     template<component C, typename... Args>
     void set_impl(component_id c_id, entity ent, Args&&... args) {
         ensure_alive(ent);
-        auto id = ent.id();
-        auto& location = get_location(id);
+        auto& location = get_location(ent.id());
         auto*& archetype = location.arch;
 
         if (archetype->contains(c_id)) {
-            archetype->template write<C>(c_id, location, std::forward<Args>(args)...);
+            archetype->template get<C&>(c_id, location) = C{ std::forward<Args>(args)... };
         } else {
             auto components = archetype->components();
             components.insert(component_meta::of<C>(c_id));
             auto new_archetype = _archetypes.ensure_archetype(std::move(components));
             auto [new_location, moved] = archetype->move(location, *new_archetype);
+
+            auto ptr = std::addressof(new_archetype->template get<C&>(c_id, new_location));
+            std::construct_at(ptr, std::forward<Args>(args)...);
+
             if (moved.id() != entity::invalid_id) {
                 set_location(moved.id(), location);
             }
 
-            new_archetype->template construct<C>(c_id, new_location, std::forward<Args>(args)...);
-
             archetype = new_archetype;
-            set_location(id, new_location);
+            set_location(ent.id(), new_location);
         }
     }
 
@@ -440,7 +441,7 @@ private:
         auto get_ref = [&]<std::size_t N>() {
             auto id = std::get<N>(std::tuple<Ids...>(ids...));
             using type_t = std::tuple_element_t<N, tuple_t>;
-            return std::ref(archetype->template read<type_t>(id, location));
+            return std::ref(archetype->template get<type_t>(id, location));
         };
 
         auto get_ref_tuple = [&]<std::size_t... Is>(std::index_sequence<Is...>) {

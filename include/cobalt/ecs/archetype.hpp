@@ -12,89 +12,82 @@
 
 namespace cobalt::ecs {
 
-/// @brief Archetype is a storage for component data for entities that share the same set of components. Archetype is
-/// derived from node_base since we are going to store archetypes in a graph for fast search, insertion and erasure
-/// operations.
+/// @brief Archetype groups entities that share the same components. Archetype has a list of fixed size chunks where
+/// entities and their components are stored in a packed arrays, so called SoA fashion
 class archetype {
 public:
-    using chunks_storage_type = asl::vector<chunk>;
+    using chunks_storage_t = asl::vector<chunk>;
 
-    /// @brief Construct a new archetype object
+    /// @brief Construct a new archetype object without components
     archetype() = default;
 
-    //// @brief Construct a new archetype object
-    ///
-    /// @param components Components
-    archetype(const component_meta_set& components) : _components(components) {
-    }
-
     /// @brief Construct a new archetype object
     ///
     /// @param components Components
-    archetype(component_meta_set&& components) : _components(std::move(components)) {
+    archetype(component_meta_set components) : _components(std::move(components)) {
     }
 
     /// @brief Return components set
     ///
-    /// @return const component_meta_set& Component set
-    [[nodiscard]] constexpr const component_meta_set& components() const noexcept {
+    /// @return const component_meta_set&
+    [[nodiscard]] const component_meta_set& components() const noexcept {
         return _components;
     }
 
-    /// @brief Allocate memory for a new entity in the storage and return its location
+    /// @brief Emplace new entity and return its location
     ///
-    /// @tparam Args Components
+    /// @tparam Components Components types
     /// @param ent Entity
-    /// @return entity_location Entity location
-    template<component... Args>
-    entity_location allocate(entity ent, Args&&... args) {
-        auto& free_chunk = get_free_chunk();
+    /// @param components Components parameter pack
+    /// @return entity_location
+    template<component... Components>
+    entity_location emplace_back(entity ent, Components&&... components) {
+        auto& free_chunk = ensure_free_chunk();
         auto entry_index = free_chunk.size();
         auto chunk_index = _chunks.size() - 1;
-        free_chunk.emplace_back(std::forward<entity>(ent), std::forward<Args>(args)...);
-        return entity_location{ this, chunk_index, entry_index };
+        free_chunk.emplace_back(ent, std::forward<Components>(components)...);
+        return entity_location{
+            this,
+            chunk_index,
+            entry_index,
+        };
     }
 
-    /// @brief Write component data
+    /// @brief Swap erase an entity located at location. It returns an ID of a entity that has been moved to this
+    /// location or invalid entity ID is returned when archetype has only a single entity.
     ///
-    /// @tparam Component Component type
-    /// @tparam Args Parameter pack to construct component from
     /// @param location Entity location
-    /// @param args Arguments to construct component from
-    template<component Component, typename... Args>
-    void write(component_id id, entity_location location, Args&&... args) {
-        read_impl<Component&>(*this, id, location) = Component{ std::forward<Args>(args)... };
+    /// @return entity Moved entity
+    entity swap_erase(const entity_location& location) noexcept {
+        auto& chunk = get_chunk(location);
+        auto& last_chunk = _chunks.back();
+        entity ent = chunk.swap_end(location.entry_index, last_chunk);
+        if (last_chunk.empty()) {
+            _chunks.pop_back();
+        }
+        return ent;
     }
 
-    /// @brief Construct Component from Args in place
+    /// @brief Get component data
     ///
-    /// @tparam Component Component to construct
-    /// @tparam Args Parameter pack to construct Component
-    /// @param location Location where to construct
-    /// @param args Arguments to pass to Component constructor
-    template<component Component, typename... Args>
-    void construct(component_id id, entity_location location, Args&&... args) {
-        Component& p = read_impl<Component&>(*this, id, location);
-        std::construct_at(std::addressof(p), std::forward<Args>(args)...);
-    }
-
-    /// @brief Read component data
-    ///
-    /// @tparam Component Component type
+    /// @tparam ComponentRef Component reference type
+    /// @param id Component ID
     /// @param location Entity location
     /// @return Component& Component reference
-    template<component_reference Component>
-    Component read(component_id id, entity_location location) {
-        return read_impl<Component>(*this, id, location);
+    template<component_reference ComponentRef>
+    ComponentRef get(component_id id, entity_location location) {
+        return read_impl<ComponentRef>(*this, id, location);
     }
 
-    /// @brief Read component data
+    /// @brief Get component data
     ///
-    /// @tparam Component Component type
+    /// @tparam ComponentRef Component reference type
+    /// @param id Component ID
     /// @param location Entity location
     /// @return const Component& Component reference
     template<component_reference Component>
-    Component read(component_id id, entity_location location) const {
+    Component get(component_id id, entity_location location) const {
+        static_assert(const_component_reference_v<Component>, "Can only get a non-const reference on const archetype");
         return read_impl<Component>(*this, id, location);
     }
 
@@ -125,25 +118,6 @@ public:
         }
     }
 
-    /// @brief Deallocate memory for entity located at location. This method uses swap remove approach for faster
-    /// erasure, so it returns an ID of a entity that has been moved to this location or invalid entity ID is returned
-    /// when archetype has only a single entity.
-    ///
-    /// @param location Entity location
-    /// @return entity Moved entity
-    entity deallocate(entity_location location) noexcept {
-        assert(location.arch == this);
-        assert(location.chunk_index < _chunks.size());
-        auto& chunk = _chunks[location.chunk_index];
-        assert(location.entry_index < chunk.size());
-        auto& free_chunk = _chunks.back();
-        entity ent = chunk.swap_end(location.entry_index, free_chunk);
-        if (free_chunk.empty()) {
-            _chunks.pop_back();
-        }
-        return ent;
-    }
-
     /// @brief Move entity to a different archetype togather with its components.
     ///
     /// @param location Entity location
@@ -153,24 +127,24 @@ public:
         auto& chunk = get_chunk(location);
         assert(location.entry_index < chunk.size());
 
-        auto& free_chunk = archetype.get_free_chunk();
+        auto& free_chunk = archetype.ensure_free_chunk();
         auto entry_index = chunk.move(location.entry_index, free_chunk);
-        auto moved_id = deallocate(location);
+        auto moved_id = swap_erase(location);
         auto new_location = entity_location{ &archetype, archetype._chunks.size() - 1, entry_index };
         return std::make_pair(new_location, moved_id);
     }
 
     /// @brief Return reference to chunks vector
     ///
-    /// @return chunks_storage_type& Reference to vector of chunks
-    [[nodiscard]] chunks_storage_type& chunks() noexcept {
+    /// @return chunks_storage_t&
+    [[nodiscard]] chunks_storage_t& chunks() noexcept {
         return _chunks;
     }
 
     /// @brief Return const reference to chunks vector
     ///
-    /// @return const chunks_storage_type& Const reference to vector of chunks
-    [[nodiscard]] const chunks_storage_type& chunks() const noexcept {
+    /// @return const chunks_storage_t&
+    [[nodiscard]] const chunks_storage_t& chunks() const noexcept {
         return _chunks;
     }
 
@@ -189,7 +163,7 @@ private:
         return chunk;
     }
 
-    chunk& get_free_chunk() {
+    chunk& ensure_free_chunk() {
         if (_chunks.empty()) {
             _chunks.emplace_back(components());
         }
@@ -202,7 +176,7 @@ private:
     }
 
     component_meta_set _components;
-    chunks_storage_type _chunks;
+    chunks_storage_t _chunks;
 };
 
 /// @brief Container for archetypes, holds a map from component set to archetype
