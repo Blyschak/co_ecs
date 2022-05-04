@@ -38,7 +38,7 @@ public:
     ///
     /// NOTE: This kind of iteration might be faster and better optimized by the compiler since the func can operate on
     /// a chunk that yields two tuples of pointers to the actual data whereas an each() variant returns an iterator over
-    /// iterator over iterator to the actual data which is a challange for compiler to optimize. Look at the benchmarks
+    /// iterator over iterator to the actual data which is a challenge for compiler to optimize. Look at the benchmarks
     /// to see the actual difference.
     ///
     /// @param func A callable to run on entity components
@@ -157,20 +157,28 @@ public:
     /// @param args Arguments to construct C from
     template<component C, typename... Args>
     void set(entity ent, Args&&... args) {
-        set_impl<C>(component_family::id<C>, ent, std::forward<Args>(args)...);
-    }
+        ensure_alive(ent);
+        auto& location = get_location(ent.id());
+        auto*& archetype = location.archetype;
 
-    /// @brief Set comopnent to an entity with custom ID. This ID must be unique and generated using
-    /// component_family::next(). This allows users to set different components of the same type. Useful in implementing
-    /// scripting language bindings
-    ///
-    /// @tparam C Component type
-    /// @param id Component ID
-    /// @param ent Entity to assign component to
-    /// @param component Component to set
-    template<component C>
-    void set(component_id id, entity ent, C component) {
-        set_impl<C>(id, ent, component);
+        if (archetype->contains<C>()) {
+            archetype->template get<C&>(location) = C{ std::forward<Args>(args)... };
+        } else {
+            auto components = archetype->components();
+            components.insert(component_meta::of<C>());
+            auto new_archetype = _archetypes.ensure_archetype(std::move(components));
+            auto [new_location, moved] = archetype->move(location, *new_archetype);
+
+            auto ptr = std::addressof(new_archetype->template get<C&>(new_location));
+            std::construct_at(ptr, std::forward<Args>(args)...);
+
+            if (moved) {
+                set_location(moved->id(), location);
+            }
+
+            archetype = new_archetype;
+            set_location(ent.id(), new_location);
+        }
     }
 
     /// @brief Remove component C from an entity. In case entity does not have component attached nothing is done
@@ -181,15 +189,25 @@ public:
     /// @param ent Entity to remove component from
     template<component C>
     void remove(entity ent) {
-        remove_impl(component_family::id<C>, ent);
-    }
+        ensure_alive(ent);
+        auto id = ent.id();
+        auto& location = get_location(id);
+        auto*& archetype = location.archetype;
 
-    /// @brief Remove component by ID
-    ///
-    /// @param id Component ID
-    /// @param ent Entity to remove component from
-    void remove(component_id id, entity ent) {
-        remove_impl(id, ent);
+        if (!archetype->contains<C>()) {
+            return;
+        }
+
+        auto components = archetype->components();
+        components.erase<C>();
+        auto new_archetype = _archetypes.ensure_archetype(std::move(components));
+        auto [new_location, moved] = archetype->move(location, *new_archetype);
+        if (moved) {
+            set_location(moved->id(), location);
+        }
+
+        archetype = new_archetype;
+        set_location(id, new_location);
     }
 
     /// @brief Check if an entity is alive or not
@@ -208,7 +226,7 @@ public:
     /// @return C& Reference to component C
     template<component C>
     [[nodiscard]] C& get(entity ent) {
-        return std::get<0>(get_impl<C&>(*this, ent, component_family::id<C>));
+        return std::get<0>(get_impl<C&>(*this, ent));
     }
 
     /// @brief Get const reference to component C
@@ -218,29 +236,7 @@ public:
     /// @return const C& Const reference to component C
     template<component C>
     [[nodiscard]] const C& get(entity ent) const {
-        return std::get<0>(get_impl<const C&>(*this, ent, component_family::id<C>));
-    }
-
-    /// @brief Get reference to component by ID
-    ///
-    /// @tparam C Type to cast to. Caller must guarantee that ID corresponds to the type C
-    /// @param id Component ID
-    /// @param ent Entity
-    /// @return C& Component reference
-    template<component C>
-    [[nodiscard]] C& get(component_id id, entity ent) {
-        return std::get<0>(get_impl<C&>(*this, ent, id));
-    }
-
-    /// @brief Get const reference to component by ID
-    ///
-    /// @tparam C Type to cast to. Caller must guarantee that ID corresponds to the type C
-    /// @param id Component ID
-    /// @param ent Entity
-    /// @return const C& Component reference
-    template<component C>
-    [[nodiscard]] const C& get(component_id id, entity ent) const {
-        return std::get<0>(get_impl<const C&>(*this, ent, id));
+        return std::get<0>(get_impl<const C&>(*this, ent));
     }
 
     /// @brief Get components for a single entity
@@ -250,7 +246,7 @@ public:
     /// @return value_type Components tuple
     template<component_reference... Args>
     [[nodiscard]] std::tuple<Args...> get(entity ent) {
-        return get_impl<Args...>(*this, ent, component_family::id<decay_component_t<Args>>...);
+        return get_impl<Args...>(*this, ent);
     }
 
     /// @brief Check if entity has component attached or not
@@ -265,19 +261,6 @@ public:
         auto id = ent.id();
         auto& location = get_location(id);
         return location.archetype->template contains<C>();
-    }
-
-    /// @brief Check if entity has component attached or not
-    ///
-    /// @param id Component ID
-    /// @param ent Entity to check
-    /// @return true If entity has component C attached
-    /// @return false Otherwise
-    [[nodiscard]] bool has(component_id c_id, entity ent) const {
-        ensure_alive(ent);
-        auto id = ent.id();
-        auto& location = get_location(id);
-        return location.archetype->contains(c_id);
     }
 
     /// @brief Register resource
@@ -378,78 +361,13 @@ private:
     template<component_reference... Args>
     friend class view;
 
-    template<component C, typename... Args>
-    void set_impl(component_id c_id, entity ent, Args&&... args) {
-        ensure_alive(ent);
-        auto& location = get_location(ent.id());
-        auto*& archetype = location.archetype;
-
-        if (archetype->contains(c_id)) {
-            archetype->template get<C&>(c_id, location) = C{ std::forward<Args>(args)... };
-        } else {
-            auto components = archetype->components();
-            components.insert(component_meta::of<C>(c_id));
-            auto new_archetype = _archetypes.ensure_archetype(std::move(components));
-            auto [new_location, moved] = archetype->move(location, *new_archetype);
-
-            auto ptr = std::addressof(new_archetype->template get<C&>(c_id, new_location));
-            std::construct_at(ptr, std::forward<Args>(args)...);
-
-            if (moved) {
-                set_location(moved->id(), location);
-            }
-
-            archetype = new_archetype;
-            set_location(ent.id(), new_location);
-        }
-    }
-
-    void remove_impl(component_id c_id, entity ent) {
-        ensure_alive(ent);
-        auto id = ent.id();
-        auto& location = get_location(id);
-        auto*& archetype = location.archetype;
-
-        if (!archetype->contains(c_id)) {
-            return;
-        }
-
-        auto components = archetype->components();
-        components.erase(c_id);
-        auto new_archetype = _archetypes.ensure_archetype(std::move(components));
-        auto [new_location, moved] = archetype->move(location, *new_archetype);
-        if (moved) {
-            set_location(moved->id(), location);
-        }
-
-        archetype = new_archetype;
-        set_location(id, new_location);
-    }
-
-    template<component_reference... Args, std::convertible_to<component_id>... Ids>
-    static std::tuple<Args...> get_impl(auto&& self, entity ent, Ids... ids) {
-        static_assert(sizeof...(Args) == sizeof...(Ids),
-            "Number of components in the template must match the number of component IDs passed");
+    template<component_reference... Args>
+    static std::tuple<Args...> get_impl(auto&& self, entity ent) {
         self.ensure_alive(ent);
         auto id = ent.id();
         auto& location = self.get_location(id);
         auto* archetype = location.archetype;
-
-        using tuple_t = std::tuple<Args...>;
-
-        // use two generic lambda's magic to zip Args & Ids
-
-        auto get_ref = [&]<std::size_t N>() {
-            auto id = std::get<N>(std::tuple<Ids...>(ids...));
-            using type_t = std::tuple_element_t<N, tuple_t>;
-            return std::ref(archetype->template get<type_t>(id, location));
-        };
-
-        auto get_ref_tuple = [&]<std::size_t... Is>(std::index_sequence<Is...>) {
-            return std::tuple<Args...>(get_ref.template operator()<Is>()...);
-        };
-
-        return get_ref_tuple(std::make_index_sequence<sizeof...(Args)>{});
+        return std::tuple<Args...>(std::ref(archetype->template get<Args>(location))...);
     }
 
     inline void ensure_alive(const entity& ent) const {

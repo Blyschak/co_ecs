@@ -38,9 +38,9 @@ TEST(chunk, basic_emplace) {
     ecs::chunk chunk(set);
 
     chunk.emplace_back(ecs::entity::invalid(), components::a(15, false), components::b(false));
-    EXPECT_EQ(chunk.ptr<components::a>(ecs::component_family::id<components::a>, 0)->foo, 15);
-    EXPECT_EQ(chunk.ptr<components::a>(ecs::component_family::id<components::a>, 0)->bar, false);
-    EXPECT_EQ(chunk.ptr<components::b>(ecs::component_family::id<components::b>, 0)->c, false);
+    EXPECT_EQ(chunk.ptr<components::a>(0)->foo, 15);
+    EXPECT_EQ(chunk.ptr<components::a>(0)->bar, false);
+    EXPECT_EQ(chunk.ptr<components::b>(0)->c, false);
 }
 
 TEST(chunk, chunk_view) {

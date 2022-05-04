@@ -113,8 +113,8 @@ public:
     /// @param location Entity location
     /// @return Component& Component reference
     template<component_reference ComponentRef>
-    ComponentRef get(component_id id, entity_location location) {
-        return read_impl<ComponentRef>(*this, id, location);
+    ComponentRef get(entity_location location) {
+        return read_impl<ComponentRef>(*this, location);
     }
 
     /// @brief Get component data
@@ -124,9 +124,9 @@ public:
     /// @param location Entity location
     /// @return const Component& Component reference
     template<component_reference Component>
-    Component get(component_id id, entity_location location) const {
+    Component get(entity_location location) const {
         static_assert(const_component_reference_v<Component>, "Can only get a non-const reference on const archetype");
-        return read_impl<Component>(*this, id, location);
+        return read_impl<Component>(*this, location);
     }
 
     /// @brief Check if archetype has component C
@@ -159,10 +159,10 @@ public:
 
 private:
     template<component_reference ComponentRef>
-    inline static ComponentRef read_impl(auto&& self, component_id id, entity_location location) {
+    inline static ComponentRef read_impl(auto&& self, entity_location location) {
         auto& chunk = self.get_chunk(location);
         assert(location.entry_index < chunk.size());
-        return *chunk.template ptr<decay_component_t<ComponentRef>>(id, location.entry_index);
+        return *chunk.template ptr<decay_component_t<ComponentRef>>(location.entry_index);
     }
 
     inline chunk& get_chunk(entity_location location) {
@@ -250,7 +250,7 @@ public:
                | std::views::values                     // for each value, a pointer to archetype
                | std::views::filter(filter_archetypes)  // filter archetype by requested components
                | std::views::transform(into_chunks)     // fetch chunks vector
-               | std::views::join                       // join chunks togather
+               | std::views::join                       // join chunks together
                | std::views::transform(as_typed_chunk); // each chunk casted to a typed chunk view range-like type
     }
 
@@ -277,7 +277,7 @@ public:
                | std::views::values                     // for each value, a pointer to archetype
                | std::views::filter(filter_archetypes)  // filter archetype by requested components
                | std::views::transform(into_chunks)     // fetch chunks vector
-               | std::views::join                       // join chunks togather
+               | std::views::join                       // join chunks together
                | std::views::transform(as_typed_chunk); // each chunk casted to a typed chunk view range-like type
     }
 

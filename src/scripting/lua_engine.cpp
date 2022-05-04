@@ -80,7 +80,7 @@ lua_engine::lua_engine() {
         "create",
         [&](ecs::registry& self, const sol::variadic_args& args) {
             auto ent = self.create<>();
-            // TODO: make lua create method immidiatelly detect the right archetype and write components to it, instead
+            // TODO: make lua create method immediately detect the right archetype and write components to it, instead
             // of emulating C++ create behaviour
             for (const sol::table& table : args) {
                 auto set_func = get_component_callback(table, lua_callbacks::set);
@@ -109,17 +109,6 @@ lua_engine::lua_engine() {
         },
         "view",
         [&](ecs::registry& self, const sol::variadic_args& args) { return lua_runtime_view(*this, self, args); });
-
-    lua["register_component"] = [&](sol::table table) {
-        auto id = ecs::component_family::next();
-
-        table[lua_callbacks::id] = [id]() { return id; };
-        table[lua_callbacks::set] = [id](ecs::registry& r, ecs::entity ent, const sol::table& table) {
-            r.set<sol::table>(id, ent, table);
-        };
-        table[lua_callbacks::get] = [id](ecs::registry& r, ecs::entity ent) { return r.get<sol::table>(id, ent); };
-        table[lua_callbacks::has] = [id](ecs::registry& r, ecs::entity ent) { return r.has(id, ent); };
-    };
 }
 
 sol::function lua_engine::get_component_callback(const sol::table& table, std::string callback_name) const {

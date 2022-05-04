@@ -82,7 +82,7 @@ public:
         }
         for (const auto& [id, block] : _blocks) {
             for (std::size_t i = 0; i < _size; i++) {
-                block.meta.type->dtor(block.begin + i * block.meta.type->size);
+                block.meta.type->destruct(block.begin + i * block.meta.type->size);
             }
         }
         std::free(_buffer);
@@ -95,7 +95,7 @@ public:
     template<component... Args>
     void emplace_back(entity ent, Args&&... args) {
         assert(!full());
-        std::construct_at(ptr<entity>(component_family::id<entity>, size()), ent);
+        std::construct_at(ptr_unchecked<entity>(size()), ent);
         (..., std::construct_at(ptr_unchecked<Args>(size()), std::move(args)));
         _size++;
     }
@@ -146,49 +146,34 @@ public:
                 continue;
             }
             auto ptr = other_chunk._blocks.at(id).begin + other_chunk_index * type->size;
-            type->move_ctor(ptr, block.begin + index * type->size);
+            type->move_construct(ptr, block.begin + index * type->size);
         }
         other_chunk._size++;
         return other_chunk_index;
     }
 
-    template<component_reference cref_t>
-    inline cref_t ref(component_id id, std::size_t index) {
+    template<component_reference T>
+    inline decay_component_t<T>* ptr(std::size_t index) {
         if constexpr (mutable_component_reference_v<T>) {
             static_assert(
                 !std::is_same_v<decay_component_t<T>, entity>, "Cannot give a mutable reference to the entity");
         }
-        using cptr_t = std::add_pointer_t<std::remove_reference_t<cref_t>>;
-        return ptr<decay_component_t<T>>(id, index);
+        return ptr<decay_component_t<T>>(index);
     }
 
     template<component_reference T>
-    inline decay_component_t<T>* ptr(component_id id, std::size_t index) {
-        if constexpr (mutable_component_reference_v<T>) {
-            static_assert(
-                !std::is_same_v<decay_component_t<T>, entity>, "Cannot give a mutable reference to the entity");
-        }
-        return ptr<decay_component_t<T>>(id, index);
-    }
-
-    template<component_reference T>
-    inline const decay_component_t<T>* ptr(component_id id, std::size_t index) const {
-        return ptr<decay_component_t<T>>(id, index);
+    inline const decay_component_t<T>* ptr(std::size_t index) const {
+        return ptr<decay_component_t<T>>(index);
     }
 
     template<component T>
-    inline const T* ptr(component_id id, std::size_t index) const {
-        return ptr_unchecked_impl<const T*>(*this, id, index);
+    inline const T* ptr(std::size_t index) const {
+        return ptr_unchecked_impl<const T*>(*this, index);
     }
 
     template<component T>
-    inline T* ptr(component_id id, std::size_t index) {
-        return ptr_unchecked_impl<T*>(*this, id, index);
-    }
-
-    [[nodiscard]] component_id get_type_id_for_component(component_id id) const {
-        const auto& block = get_block(id);
-        return block.meta.type->type_id;
+    inline T* ptr(std::size_t index) {
+        return ptr_unchecked_impl<T*>(*this, index);
     }
 
     /// @brief Get max size, how many elements can this chunk hold
@@ -224,17 +209,17 @@ public:
 private:
     template<component T>
     inline T* ptr_unchecked(std::size_t index) {
-        return ptr_unchecked_impl<T*>(*this, component_family::id<T>, index);
+        return ptr_unchecked_impl<T*>(*this, index);
     }
 
     template<component T>
     inline const T* ptr_unchecked(std::size_t index) const {
-        return ptr_unchecked_impl<const T*>(*this, component_family::id<T>, index);
+        return ptr_unchecked_impl<const T*>(*this, index);
     }
 
     template<typename P>
-    static inline P ptr_unchecked_impl(auto&& self, component_id id, std::size_t index) {
-        const auto& block = self.get_block(id);
+    static inline P ptr_unchecked_impl(auto&& self, std::size_t index) {
+        const auto& block = self.get_block(component_family::id<std::remove_pointer_t<std::remove_const_t<P>>>);
         return (reinterpret_cast<P>(block.begin) + index);
     }
 
@@ -256,7 +241,7 @@ private:
 
     inline void destroy_at(std::size_t index) noexcept {
         for (const auto& [id, block] : _blocks) {
-            block.meta.type->dtor(block.begin + index * block.meta.type->size);
+            block.meta.type->destruct(block.begin + index * block.meta.type->size);
         }
     }
 
@@ -354,8 +339,7 @@ public:
         ///
         /// @param c Chunk reference
         /// @param index Index this iterator is pointing to
-        constexpr iterator(chunk& c, std::size_t index = 0) :
-            _ptrs(std::make_tuple(c.ptr<Args>(component_family::id<decay_component_t<Args>>, index)...)) {
+        constexpr iterator(chunk& c, std::size_t index = 0) : _ptrs(std::make_tuple(c.ptr<Args>(index)...)) {
         }
 
         /// @brief Default copy constructor

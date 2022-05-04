@@ -69,13 +69,13 @@ TEST(component, meta) {
     EXPECT_EQ(meta.id, ecs::component_family::id<component_a>);
     EXPECT_EQ(meta.type->size, sizeof(component_a));
     EXPECT_EQ(meta.type->align, alignof(component_a));
-    EXPECT_TRUE(meta.type->dtor);
+    EXPECT_TRUE(meta.type->destruct);
 
     meta = ecs::component_meta::of<component_d>();
     EXPECT_EQ(meta.id, ecs::component_family::id<component_d>);
     EXPECT_EQ(meta.type->size, sizeof(component_d));
     EXPECT_EQ(meta.type->align, alignof(component_d));
-    EXPECT_TRUE(meta.type->dtor);
+    EXPECT_TRUE(meta.type->destruct);
 }
 
 TEST(component, sorted) {

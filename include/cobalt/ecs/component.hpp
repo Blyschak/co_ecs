@@ -21,15 +21,15 @@ using component_id = std::uint32_t;
 constexpr auto invalid_component_id = std::numeric_limits<component_id>::max();
 
 /// @brief Type for family used to generated component IDs.
-using component_family = cobalt::asl::family<struct _component_family_t, component_id>;
+using component_family = asl::family<struct _component_family_t, component_id>;
 
-/// @brief Component concept. The component must be a struct/class that can be default constructed and safely move
+/// @brief Component concept. The component must be a struct/class that can be move constructed and move
 /// assignable
 ///
 /// @tparam T Component type
 template<typename T>
 concept component =
-    std::is_class_v<T> && std::is_nothrow_move_assignable_v<T> && std::is_nothrow_move_constructible_v<T>;
+    std::is_class_v<T> && std::is_nothrow_move_constructible_v<T> && std::is_nothrow_move_assignable_v<T>;
 
 /// @brief Component reference concept. It should be a reference or const reference to C, where C satisfies component
 /// concept
@@ -126,9 +126,9 @@ public:
         component_id type_id;
         std::size_t size;
         std::size_t align;
-        std::function<void(void*, void*)> move_ctor;
-        std::function<void(void*, void*)> move_assign;
-        std::function<void(void*)> dtor;
+        void (*move_construct)(void*, void*);
+        void (*move_assign)(void*, void*);
+        void (*destruct)(void*);
     };
 
     /// @brief Constructs component_meta for type T
@@ -139,18 +139,6 @@ public:
     static component_meta of() noexcept {
         return component_meta{
             component_family::id<T>,
-            type_meta::of<T>(),
-        };
-    }
-
-    /// @brief Constructs component_meta for type T with ID
-    ///
-    /// @tparam T Component type
-    /// @return component_meta Component metadata
-    template<component T>
-    static component_meta of(component_id id) noexcept {
-        return component_meta{
-            id,
             type_meta::of<T>(),
         };
     }
@@ -180,14 +168,6 @@ public:
 class component_set {
 public:
     using storage_type = std::bitset<64>;
-
-    /// @brief Default constructor
-    component_set() = default;
-
-    component_set(const component_set& rhs) = default;
-    component_set(component_set&& rhs) = default;
-    component_set& operator=(const component_set& rhs) = default;
-    component_set& operator=(component_set&& rhs) = default;
 
     /// @brief Construct component set from given component types
     ///
@@ -263,8 +243,13 @@ private:
     storage_type _component_bitset{};
 };
 
+/// @brief Component set hasher
 class component_set_hasher {
 public:
+    /// @brief Hash component set
+    ///
+    /// @param set Component set
+    /// @return std::size_t Hash value
     std::size_t operator()(const component_set& set) const {
         return std::hash<typename component_set::storage_type>()(set._component_bitset);
     }
@@ -278,14 +263,6 @@ public:
     using value_type = typename storage_type::value_type;
     using const_iterator = typename storage_type::const_iterator;
 
-    /// @brief Default constructor
-    component_meta_set() = default;
-
-    component_meta_set(const component_meta_set& rhs) = default;
-    component_meta_set(component_meta_set&& rhs) = default;
-    component_meta_set& operator=(const component_meta_set& rhs) = default;
-    component_meta_set& operator=(component_meta_set&& rhs) = default;
-
     /// @brief Construct component set from given component types
     ///
     /// @tparam Args Components type parameter pack
@@ -293,6 +270,7 @@ public:
     template<component... Args>
     static component_meta_set create() {
         component_meta_set s;
+        s._components.reserve(sizeof...(Args));
         (..., s.insert<Args>());
         return s;
     }
@@ -342,8 +320,6 @@ public:
             return;
         }
         _bitset.erase(id);
-        // auto iter = std::ranges::find_if(_components, [id](const auto& meta) { return meta.id == id; });
-        // _components.erase(iter);
         std::erase_if(_components, [id](const auto& meta) { return meta.id == id; });
     }
 
