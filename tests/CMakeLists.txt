@@ -12,7 +12,6 @@ FetchContent_MakeAvailable(googletest)
 add_executable(
   tests
   asl/test_algorithm.cpp
-  asl/test_vector.cpp
   asl/test_hash_map.cpp
   asl/test_hash_set.cpp
   asl/test_sparse_set.cpp
@@ -22,7 +21,6 @@ add_executable(
   asl/test_defer.cpp
   asl/test_zip.cpp
   ecs/test_component.cpp
-  ecs/test_archetype.cpp
   ecs/test_registry.cpp
   ecs/test_system.cpp
   scripting/test_lua_engine.cpp

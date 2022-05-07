@@ -13,6 +13,14 @@
 
 namespace cobalt::ecs {
 
+/// @brief Block metadata holds pointers where it begins, ends and a component metadata it holds
+struct block_metadata {
+    std::size_t offset{};
+    component_meta meta{};
+};
+
+using blocks_type = asl::sparse_map<component_id, block_metadata>;
+
 /// @brief Chunk holds a 16 Kb block of memory that holds components in blocks:
 /// |A1|A2|A3|...padding|B1|B2|B3|...padding|C1|C2|C3...padding where A, B, C are component types and A1, B1, C1 and
 /// others are components instances.
@@ -24,19 +32,11 @@ public:
     /// @brief Block allocation alignment
     static constexpr std::size_t alloc_alignment = alignof(entity);
 
-    /// @brief Block metadata holds pointers where it begins, ends and a component metadata it holds
-    struct block_metadata {
-        std::byte* begin{};
-        component_meta meta{};
-    };
-
     /// @brief Construct a new chunk object
     ///
     /// @param set Component metadata set
-    chunk(const component_meta_set& components_meta) {
+    chunk(const blocks_type& blocks, std::size_t max_size) : _blocks(&blocks), _max_size(max_size) {
         _buffer = reinterpret_cast<std::byte*>(std::aligned_alloc(alloc_alignment, chunk_bytes));
-        _max_size = get_max_size(components_meta);
-        init_blocks(components_meta);
     }
 
     /// @brief Deleted copy constructor
@@ -52,12 +52,8 @@ public:
     /// @brief Move constructor
     ///
     /// @param rhs Another chunk
-    chunk(chunk&& rhs) noexcept {
-        _buffer = rhs._buffer;
-        _size = rhs._size;
-        _max_size = rhs._max_size;
-        _blocks = rhs._blocks;
-
+    chunk(chunk&& rhs) noexcept :
+        _buffer(rhs._buffer), _size(rhs._size), _max_size(rhs._max_size), _blocks(rhs._blocks) {
         rhs._buffer = nullptr;
     }
 
@@ -80,9 +76,9 @@ public:
         if (!_buffer) {
             return;
         }
-        for (const auto& [id, block] : _blocks) {
+        for (const auto& [id, block] : *_blocks) {
             for (std::size_t i = 0; i < _size; i++) {
-                block.meta.type->destruct(block.begin + i * block.meta.type->size);
+                block.meta.type->destruct(_buffer + block.offset + i * block.meta.type->size);
             }
         }
         std::free(_buffer);
@@ -108,7 +104,8 @@ public:
     }
 
     /// @brief Swap end removes a components in blocks at position index and swaps it with the last element from
-    /// other_chunk chunk. Returns std::optional of entity that has been moved or std::nullopt if no entities were moved
+    /// other_chunk chunk. Returns std::optional of entity that has been moved or std::nullopt if no entities were
+    /// moved
     ///
     /// @param index Index to remove components from
     /// @param other_chunk Other chunk
@@ -119,13 +116,13 @@ public:
             pop_back();
             return std::nullopt;
         }
-        assert(!other_chunk.empty());
+        assert(!other.empty());
         std::size_t other_chunk_index = other._size - 1;
         entity ent = *other.ptr_unchecked<entity>(other_chunk_index);
-        for (const auto& [id, block] : _blocks) {
+        for (const auto& [id, block] : *_blocks) {
             auto* type = block.meta.type;
-            auto ptr = other._blocks[id].begin + other_chunk_index * type->size;
-            type->move_assign(block.begin + index * type->size, ptr);
+            auto ptr = other._buffer + other._blocks->at(id).offset + other_chunk_index * type->size;
+            type->move_assign(_buffer + block.offset + index * type->size, ptr);
         }
         other.pop_back();
         return ent;
@@ -140,13 +137,13 @@ public:
         assert(index < _size);
         assert(!other_chunk.full());
         std::size_t other_chunk_index = other_chunk._size;
-        for (const auto& [id, block] : _blocks) {
+        for (const auto& [id, block] : *_blocks) {
             auto* type = block.meta.type;
-            if (!other_chunk._blocks.contains(id)) {
+            if (!other_chunk._blocks->contains(id)) {
                 continue;
             }
-            auto ptr = other_chunk._blocks.at(id).begin + other_chunk_index * type->size;
-            type->move_construct(ptr, block.begin + index * type->size);
+            auto ptr = other_chunk._buffer + other_chunk._blocks->at(id).offset + other_chunk_index * type->size;
+            type->move_construct(ptr, _buffer + block.offset + index * type->size);
         }
         other_chunk._size++;
         return other_chunk_index;
@@ -220,100 +217,27 @@ private:
     template<typename P>
     static inline P ptr_unchecked_impl(auto&& self, std::size_t index) {
         const auto& block = self.get_block(component_family::id<std::remove_pointer_t<std::remove_const_t<P>>>);
-        return (reinterpret_cast<P>(block.begin) + index);
-    }
-
-    block_metadata& get_block(component_id id) {
-        try {
-            return _blocks.at(id);
-        } catch (std::out_of_range) {
-            throw component_not_found{ id };
-        }
+        return (reinterpret_cast<P>(self._buffer + block.offset) + index);
     }
 
     const block_metadata& get_block(component_id id) const {
         try {
-            return _blocks.at(id);
+            return _blocks->at(id);
         } catch (std::out_of_range) {
             throw component_not_found{ id };
         }
     }
 
     inline void destroy_at(std::size_t index) noexcept {
-        for (const auto& [id, block] : _blocks) {
-            block.meta.type->destruct(block.begin + index * block.meta.type->size);
+        for (const auto& [id, block] : *_blocks) {
+            block.meta.type->destruct(_buffer + block.offset + index * block.meta.type->size);
         }
     }
 
-    void init_blocks(const component_meta_set& components_meta) {
-        std::byte* ptr = _buffer;
-
-        // make space for entity
-        ptr = add_block(ptr, component_meta::of<entity>());
-
-        // space for all components
-        for (const auto& meta : components_meta) {
-            ptr = add_block(ptr, meta);
-        }
-
-        // sanity assertion
-        assert(ptr <= _buffer + chunk_bytes);
-    }
-
-    std::byte* add_block(std::byte* ptr, const component_meta& meta) {
-        std::size_t size_in_bytes = _max_size * meta.type->size;
-        std::size_t align = meta.type->align;
-
-        _blocks.emplace(meta.id, ptr, meta);
-
-        ptr += asl::mod_2n(std::bit_cast<std::size_t>(ptr), align) + size_in_bytes;
-
-        return ptr;
-    }
-
-    // Calculates the maxium size of individual components this chunk buffer can hold
-    static std::size_t get_max_size(const component_meta_set& components_meta) {
-        // Calculate packed structure size
-        auto netto_size = aligned_components_size(components_meta);
-        // Remaining size for packed components
-        auto remaining_space = chunk_bytes - netto_size;
-        // Calculate how much components we can pack into remaining space
-        auto remaining_elements_count = remaining_space / packed_components_size(components_meta);
-        //
-        return remaining_elements_count + 1;
-    }
-
-    // Calculate size of packed structure of components
-    static std::size_t packed_components_size(const component_meta_set& components_meta) noexcept {
-        return std::accumulate(components_meta.begin(),
-            components_meta.end(),
-            component_meta::of<entity>().type->size,
-            [](const auto& res, const auto& meta) { return res + meta.type->size; });
-    }
-
-    // Calculate size of properly aligned structure of components
-    static std::size_t aligned_components_size(const component_meta_set& components_meta) noexcept {
-        auto begin = alloc_alignment;
-        auto end = begin;
-
-        // Add single component element size accounting for its alignment
-        auto add_elements = [&end](const component_meta& meta) {
-            end += asl::mod_2n(std::bit_cast<std::size_t>(end), meta.type->align);
-            end += meta.type->size;
-        };
-
-        add_elements(component_meta::of<entity>());
-        for (const auto& meta : components_meta) {
-            add_elements(meta);
-        }
-
-        return end - begin;
-    }
-
-    std::byte* _buffer;
+    std::byte* _buffer{};
     std::size_t _size{};
     std::size_t _max_size{};
-    asl::sparse_map<component_id, block_metadata> _blocks;
+    const blocks_type* _blocks;
 };
 
 /// @brief A type aware view into a chunk components

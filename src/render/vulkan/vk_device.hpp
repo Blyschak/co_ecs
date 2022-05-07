@@ -2,16 +2,17 @@
 
 #include <vulkan/vulkan.h>
 
-#include <cobalt/asl/vector.hpp>
 #include <cobalt/core/logging.hpp>
 #include <cobalt/platform/window.hpp>
+
+#include <vector>
 
 namespace cobalt::render {
 
 struct swap_chain_support_details {
     VkSurfaceCapabilitiesKHR capabilities;
-    asl::vector<VkSurfaceFormatKHR> formats;
-    asl::vector<VkPresentModeKHR> present_modes;
+    std::vector<VkSurfaceFormatKHR> formats;
+    std::vector<VkPresentModeKHR> present_modes;
 };
 
 struct queue_family_indices {
@@ -59,11 +60,11 @@ private:
         return _enable_validation_layers;
     }
 
-    asl::vector<VkLayerProperties> _validation_layers;
-    asl::vector<VkExtensionProperties> _instance_extensions;
+    std::vector<VkLayerProperties> _validation_layers;
+    std::vector<VkExtensionProperties> _instance_extensions;
 
-    asl::vector<const char*> _required_validation_layers;
-    asl::vector<const char*> _required_extensions;
+    std::vector<const char*> _required_validation_layers;
+    std::vector<const char*> _required_extensions;
 
     VkInstance _instance;
     VkDebugUtilsMessengerEXT _debug_messenger;

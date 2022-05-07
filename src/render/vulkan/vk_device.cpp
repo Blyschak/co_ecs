@@ -103,7 +103,7 @@ void vk_device::choose_physical_device() {
 
     core::log_info("vulkan found {} physical devices", device_count);
 
-    asl::vector<VkPhysicalDevice> devices(device_count);
+    std::vector<VkPhysicalDevice> devices(device_count);
     vkEnumeratePhysicalDevices(_instance, &device_count, devices.data());
 
     for (const auto& device : devices) {
@@ -123,7 +123,7 @@ void vk_device::choose_physical_device() {
 void vk_device::create_logical_device() {
     queue_family_indices indices = find_queue_families(_physical_device);
 
-    asl::vector<VkDeviceQueueCreateInfo> queue_create_infos;
+    std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
     asl::hash_set<uint32_t> unique_queue_families = { indices.graphics_family, indices.present_family };
 
     float queue_priority = 1.0f;
@@ -267,7 +267,7 @@ queue_family_indices vk_device::find_queue_families(VkPhysicalDevice device) con
     uint32_t queue_family_count = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
 
-    asl::vector<VkQueueFamilyProperties> queue_families(queue_family_count);
+    std::vector<VkQueueFamilyProperties> queue_families(queue_family_count);
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.data());
 
     int i = 0;
@@ -296,7 +296,7 @@ bool vk_device::are_extensions_supported_by_device(VkPhysicalDevice device) cons
     uint32_t extension_count;
     vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, nullptr);
 
-    asl::vector<VkExtensionProperties> available_extensions(extension_count);
+    std::vector<VkExtensionProperties> available_extensions(extension_count);
     vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, available_extensions.data());
 
     auto iter = std::ranges::find_if(available_extensions,

@@ -4,7 +4,6 @@
 #include <ranges>
 
 #include <cobalt/asl/hash_map.hpp>
-#include <cobalt/asl/vector.hpp>
 #include <cobalt/ecs/chunk.hpp>
 #include <cobalt/ecs/component.hpp>
 #include <cobalt/ecs/entity.hpp>
@@ -17,7 +16,7 @@ namespace cobalt::ecs {
 class archetype {
 public:
     /// @brief Chunks storage type
-    using chunks_storage_t = asl::vector<chunk>;
+    using chunks_storage_t = std::vector<chunk>;
 
     /// @brief Construct a new archetype object without components
     archetype() = default;
@@ -26,6 +25,9 @@ public:
     ///
     /// @param components Components
     archetype(component_meta_set components) noexcept : _components(std::move(components)) {
+        _max_size = get_max_size(_components);
+        init_blocks(_components);
+        _chunks.emplace_back(_blocks, _max_size);
     }
 
     /// @brief Return components set
@@ -77,7 +79,7 @@ public:
         auto& chunk = get_chunk(location);
         auto& last_chunk = _chunks.back();
         auto maybe_ent = chunk.swap_erase(location.entry_index, last_chunk);
-        if (last_chunk.empty()) {
+        if (last_chunk.empty() && _chunks.size() > 1) {
             _chunks.pop_back();
         }
         return maybe_ent;
@@ -158,6 +160,66 @@ public:
 
 
 private:
+    void init_blocks(const component_meta_set& components_meta) {
+        // make space for entity
+        auto offset = add_block(0, component_meta::of<entity>());
+
+        // space for all components
+        for (const auto& meta : components_meta) {
+            offset = add_block(offset, meta);
+        }
+    }
+
+    std::size_t add_block(std::size_t offset, const component_meta& meta) {
+        std::size_t size_in_bytes = _max_size * meta.type->size;
+        std::size_t align = meta.type->align;
+
+        _blocks.emplace(meta.id, offset, meta);
+
+        offset += asl::mod_2n(offset, align) + size_in_bytes;
+
+        return offset;
+    }
+
+    // Calculates the maxium size of individual components this chunk buffer can hold
+    static std::size_t get_max_size(const component_meta_set& components_meta) {
+        // Calculate packed structure size
+        auto netto_size = aligned_components_size(components_meta);
+        // Remaining size for packed components
+        auto remaining_space = chunk::chunk_bytes - netto_size;
+        // Calculate how much components we can pack into remaining space
+        auto remaining_elements_count = remaining_space / packed_components_size(components_meta);
+        //
+        return remaining_elements_count + 1;
+    }
+
+    // Calculate size of packed structure of components
+    static std::size_t packed_components_size(const component_meta_set& components_meta) noexcept {
+        return std::accumulate(components_meta.begin(),
+            components_meta.end(),
+            component_meta::of<entity>().type->size,
+            [](const auto& res, const auto& meta) { return res + meta.type->size; });
+    }
+
+    // Calculate size of properly aligned structure of components
+    static std::size_t aligned_components_size(const component_meta_set& components_meta) noexcept {
+        auto begin = chunk::alloc_alignment;
+        auto end = begin;
+
+        // Add single component element size accounting for its alignment
+        auto add_elements = [&end](const component_meta& meta) {
+            end += asl::mod_2n(std::bit_cast<std::size_t>(end), meta.type->align);
+            end += meta.type->size;
+        };
+
+        add_elements(component_meta::of<entity>());
+        for (const auto& meta : components_meta) {
+            add_elements(meta);
+        }
+
+        return end - begin;
+    }
+
     template<component_reference ComponentRef>
     inline static ComponentRef read_impl(auto&& self, entity_location location) {
         auto& chunk = self.get_chunk(location);
@@ -173,17 +235,16 @@ private:
     }
 
     chunk& ensure_free_chunk() {
-        if (_chunks.empty()) {
-            _chunks.emplace_back(components());
-        }
         auto& chunk = _chunks.back();
         if (!chunk.full()) {
             return chunk;
         }
-        _chunks.emplace_back(components());
+        _chunks.emplace_back(_blocks, _max_size);
         return _chunks.back();
     }
 
+    std::size_t _max_size{};
+    blocks_type _blocks;
     component_meta_set _components;
     chunks_storage_t _chunks;
 };

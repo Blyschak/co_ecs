@@ -9,7 +9,6 @@
 
 #include <cobalt/asl/family.hpp>
 #include <cobalt/asl/type_traits.hpp>
-#include <cobalt/asl/vector.hpp>
 #include <cobalt/ecs/entity.hpp>
 
 namespace cobalt::ecs {
@@ -259,7 +258,7 @@ public:
 class component_meta_set {
 public:
     using size_type = std::size_t;
-    using storage_type = asl::vector<component_meta>;
+    using storage_type = std::vector<component_meta>;
     using value_type = typename storage_type::value_type;
     using const_iterator = typename storage_type::const_iterator;
 
