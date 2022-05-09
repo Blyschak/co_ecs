@@ -105,26 +105,6 @@ public:
     explicit system_state(registry& registry) :
         _state(typename system_argument_state_trait<Args>::state_type(registry)...){};
 
-    /// @brief Default copy constructor
-    ///
-    /// @param rhs Right hand side system_state
-    system_state(const system_state& rhs) = default;
-
-    /// @brief Default copy assignment operator
-    ///
-    /// @param rhs Right hand side system_state
-    system_state& operator=(const system_state& rhs) = default;
-
-    /// @brief Default move constructor
-    ///
-    /// @param rhs Right hand side system_state
-    system_state(system_state&& rhs) = default;
-
-    /// @brief Default move assignment operator
-    ///
-    /// @param rhs Right hand side system_state
-    system_state& operator=(system_state&& rhs) = default;
-
     /// @brief Get the tuple of states per argument
     ///
     /// @return system_state_tuple&
@@ -165,26 +145,6 @@ public:
     /// @param func Function object
     explicit system(registry& registry, F func) : _registry(registry), _func(std::move(func)), _state(_registry) {
     }
-
-    /// @brief Default copy constructor
-    ///
-    /// @param rhs Right hand side system_state
-    system(const system& rhs) = default;
-
-    /// @brief Default copy assignment operator
-    ///
-    /// @param rhs Right hand side system_state
-    system& operator=(const system& rhs) = default;
-
-    /// @brief Default move constructor
-    ///
-    /// @param rhs Right hand side system_state
-    system(system&& rhs) = default;
-
-    /// @brief Default move assignment operator
-    ///
-    /// @param rhs Right hand side system_state
-    system& operator=(system&& rhs) = default;
 
     /// @brief Execute system
     void run() override {

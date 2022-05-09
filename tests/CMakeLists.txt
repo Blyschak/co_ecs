@@ -23,6 +23,7 @@ add_executable(
   ecs/test_component.cpp
   ecs/test_registry.cpp
   ecs/test_system.cpp
+  ecs/test_scheduler.cpp
   scripting/test_lua_engine.cpp
   core/test_config.cpp)
 
