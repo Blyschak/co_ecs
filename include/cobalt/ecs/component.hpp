@@ -378,7 +378,7 @@ public:
     /// @brief Return a bitset of components
     ///
     /// @return const component_set& Component bitset
-    const component_set& bitset() const noexcept {
+    const component_set& ids() const noexcept {
         return _bitset;
     }
 

@@ -103,8 +103,7 @@ public:
     template<component... Args>
     entity create(Args&&... args) {
         auto entity = _entity_pool.create();
-        auto components = component_meta_set::create<Args...>();
-        auto archetype = _archetypes.ensure_archetype(std::move(components));
+        auto archetype = _archetypes.ensure_archetype<Args...>();
         auto location = archetype->template emplace_back<Args...>(entity, std::forward<Args>(args)...);
         set_location(entity.id(), location);
         return entity;
@@ -164,9 +163,7 @@ public:
         if (archetype->contains<C>()) {
             archetype->template get<C&>(location) = C{ std::forward<Args>(args)... };
         } else {
-            auto components = archetype->components();
-            components.insert(component_meta::of<C>());
-            auto new_archetype = _archetypes.ensure_archetype(std::move(components));
+            auto new_archetype = _archetypes.ensure_archetype_added<C>(archetype);
             auto [new_location, moved] = archetype->move(location, *new_archetype);
 
             auto ptr = std::addressof(new_archetype->template get<C&>(new_location));
@@ -197,10 +194,7 @@ public:
         if (!archetype->contains<C>()) {
             return;
         }
-
-        auto components = archetype->components();
-        components.erase<C>();
-        auto new_archetype = _archetypes.ensure_archetype(std::move(components));
+        auto new_archetype = _archetypes.ensure_archetype_removed<C>(archetype);
         auto [new_location, moved] = archetype->move(location, *new_archetype);
         if (moved) {
             set_location(moved->id(), location);

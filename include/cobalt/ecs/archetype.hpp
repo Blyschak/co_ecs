@@ -182,7 +182,7 @@ private:
     }
 
     // Calculates the maxium size of individual components this chunk buffer can hold
-    static std::size_t get_max_size(const component_meta_set& components_meta) {
+    static std::size_t get_max_size(auto&& components_meta) {
         // Calculate packed structure size
         auto netto_size = aligned_components_size(components_meta);
         // Remaining size for packed components
@@ -194,7 +194,7 @@ private:
     }
 
     // Calculate size of packed structure of components
-    static std::size_t packed_components_size(const component_meta_set& components_meta) noexcept {
+    static std::size_t packed_components_size(auto&& components_meta) noexcept {
         return std::accumulate(components_meta.begin(),
             components_meta.end(),
             component_meta::of<entity>().type->size,
@@ -202,7 +202,7 @@ private:
     }
 
     // Calculate size of properly aligned structure of components
-    static std::size_t aligned_components_size(const component_meta_set& components_meta) noexcept {
+    static std::size_t aligned_components_size(auto&& components_meta) noexcept {
         auto begin = chunk::alloc_alignment;
         auto end = begin;
 
@@ -255,14 +255,48 @@ public:
     /// @brief Underlaying container storage type
     using storage_type = asl::hash_map<component_set, std::unique_ptr<archetype>, component_set_hasher>;
 
-    /// @brief Get or create and return an archetype for given component set
+    /// @brief Get or create an archetype matching the passed Components types
     ///
-    /// @param components Component set
-    /// @return archetype* Archetype pointer
-    archetype* ensure_archetype(component_meta_set components) {
-        auto& archetype = _archetypes[components.bitset()];
+    /// @tparam Components Component types
+    /// @return archetype*
+    template<component... Components>
+    archetype* ensure_archetype() {
+        const auto ids = component_set::create<Components...>();
+        auto& archetype = _archetypes[ids];
         if (!archetype) {
-            archetype = std::make_unique<ecs::archetype>(std::move(components));
+            archetype = create_archetype(component_meta_set::create<Components...>());
+        }
+        return archetype.get();
+    }
+
+    /// @brief Get or create an archetype by adding new Components to an anchor archetype
+    ///
+    /// @tparam Components Components to add
+    /// @param anchor_archetype Anchor archetype
+    /// @return archetype*
+    template<component... Components>
+    archetype* ensure_archetype_added(const archetype* anchor_archetype) {
+        auto ids = anchor_archetype->components().ids();
+        (..., ids.insert<Components>());
+        auto& archetype = _archetypes[ids];
+        if (!archetype) {
+            archetype = create_archetype_added<Components...>(anchor_archetype);
+        }
+        return archetype.get();
+    }
+
+    /// @brief Get or create an archetype by removing Components from an anchor archetype
+    ///
+    /// @tparam Components Components to remove
+    /// @param anchor_archetype Anchor archetype
+    /// @return archetype*
+    template<component... Components>
+    archetype* ensure_archetype_removed(const archetype* anchor_archetype) {
+        auto ids = anchor_archetype->components().ids();
+        (..., ids.erase<Components>());
+        auto& archetype = _archetypes[ids];
+        if (!archetype) {
+            archetype = create_archetype_removed<Components...>(anchor_archetype);
         }
         return archetype.get();
     }
@@ -343,6 +377,24 @@ public:
     }
 
 private:
+    static decltype(auto) create_archetype(auto&& components_meta) {
+        return std::make_unique<ecs::archetype>(std::move(components_meta));
+    }
+
+    template<component... Components>
+    static decltype(auto) create_archetype_added(const archetype* anchor_archetype) {
+        auto components_meta = anchor_archetype->components();
+        (..., components_meta.insert<Components>());
+        return std::make_unique<ecs::archetype>(std::move(components_meta));
+    }
+
+    template<component... Components>
+    static decltype(auto) create_archetype_removed(const archetype* anchor_archetype) {
+        auto components_meta = anchor_archetype->components();
+        (..., components_meta.erase<Components>());
+        return std::make_unique<ecs::archetype>(std::move(components_meta));
+    }
+
     storage_type _archetypes;
 };
 
