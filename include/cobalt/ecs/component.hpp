@@ -11,6 +11,7 @@
 #include <cobalt/asl/family.hpp>
 #include <cobalt/asl/type_traits.hpp>
 #include <cobalt/ecs/entity.hpp>
+#include <cobalt/ecs/type_meta.hpp>
 
 namespace cobalt::ecs {
 
@@ -75,62 +76,6 @@ constexpr bool mutable_component_reference_v = mutable_component_reference<T>::v
 /// @brief Component metadata. Stores an ID, size, alignment, destructor, etc.
 struct component_meta {
 public:
-    /// @brief Component actual data type meta information
-    struct type_meta {
-        /// @brief Move constructor callback for type T
-        ///
-        /// @tparam T Target type
-        /// @param ptr Place to construct at
-        /// @param rhs Pointer to an object to construct from
-        template<component T>
-        static void move_constructor(void* ptr, void* rhs) {
-            std::construct_at(static_cast<T*>(ptr), std::move(*static_cast<T*>(rhs)));
-        }
-
-        /// @brief Move assignment callback for type T
-        ///
-        /// @tparam T Target type
-        /// @param lhs Pointer to an object to assign to
-        /// @param rhs Pointer to an object to assign from
-        template<component T>
-        static void move_assignment(void* lhs, void* rhs) {
-            *static_cast<T*>(lhs) = std::move(*static_cast<T*>(rhs));
-        }
-
-        /// @brief Destructor callback for type T
-        ///
-        /// @tparam T Target type
-        /// @param ptr Pointer to an object to delete
-        template<component T>
-        static void destructor(void* ptr) {
-            static_cast<T*>(ptr)->~T();
-        }
-
-        /// @brief Constructs type_meta for type T
-        ///
-        /// @tparam T Component type
-        /// @return const type_meta* Component type meta
-        template<component T>
-        static const type_meta* of() noexcept {
-            static const type_meta meta{
-                component_family::id<T>,
-                sizeof(T),
-                alignof(T),
-                &move_constructor<T>,
-                &move_assignment<T>,
-                &destructor<T>,
-            };
-            return &meta;
-        }
-
-        component_id type_id;
-        std::size_t size;
-        std::size_t align;
-        void (*move_construct)(void*, void*);
-        void (*move_assign)(void*, void*);
-        void (*destruct)(void*);
-    };
-
     /// @brief Constructs component_meta for type T
     ///
     /// @tparam T Component type
