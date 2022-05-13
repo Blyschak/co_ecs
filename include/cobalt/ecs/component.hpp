@@ -7,6 +7,7 @@
 #include <numeric>
 #include <stdexcept>
 
+#include <cobalt/asl/dynamic_bitset.hpp>
 #include <cobalt/asl/family.hpp>
 #include <cobalt/asl/type_traits.hpp>
 #include <cobalt/ecs/entity.hpp>
@@ -166,7 +167,7 @@ public:
 /// @brief Component set holds a set of component IDs
 class component_set {
 public:
-    using storage_type = std::bitset<64>;
+    using storage_type = asl::dynamic_bitset;
 
     /// @brief Construct component set from given component types
     ///

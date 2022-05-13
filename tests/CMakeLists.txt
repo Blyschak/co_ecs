@@ -20,6 +20,7 @@ add_executable(
   asl/test_family.cpp
   asl/test_defer.cpp
   asl/test_zip.cpp
+  asl/test_dynamic_bitset.cpp
   ecs/test_component.cpp
   ecs/test_registry.cpp
   ecs/test_system.cpp
