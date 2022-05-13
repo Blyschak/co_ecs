@@ -7,11 +7,21 @@
 
 namespace cobalt::ecs {
 
-/// @brief System interface, a system is a type that implements run() method
-class system_interface {
+/// @brief System executor interface, a system is a type that implements run() method
+class system_executor_interface {
 public:
     /// @brief Execute system logic
     virtual void run() = 0;
+};
+
+/// @brief System interface
+class system_interface {
+public:
+    /// @brief Create a system executor object
+    ///
+    /// @param registry Registry
+    /// @return std::unique_ptr<system_executor_interface>
+    virtual std::unique_ptr<system_executor_interface> create_executor(registry& registry) = 0;
 };
 
 /// @brief System view state, pre-creates a view object needed for components iteration
@@ -130,11 +140,11 @@ struct system_state_trait<std::tuple<Ts...>> {
     using type = system_state<Ts...>;
 };
 
-/// @brief System implementation class for generic F function-like type
+/// @brief System executor implementation class for generic F function-like type
 ///
 /// @tparam F Callable type
 template<typename F>
-class system : public system_interface {
+class system_executor : public system_executor_interface {
 public:
     /// @brief System function arguments
     using system_arguments = typename asl::function_traits<F>::arguments_tuple_type;
@@ -143,7 +153,8 @@ public:
     ///
     /// @param registry Registry reference
     /// @param func Function object
-    explicit system(registry& registry, F func) : _registry(registry), _func(std::move(func)), _state(_registry) {
+    explicit system_executor(registry& registry, F func) :
+        _registry(registry), _func(std::move(func)), _state(_registry) {
     }
 
     /// @brief Execute system
@@ -155,6 +166,30 @@ private:
     registry& _registry;
     F _func;
     system_state_trait<system_arguments>::type _state;
+};
+
+/// @brief System implementation class for generic F function-like type
+///
+/// @tparam F Callable type
+template<typename F>
+class system : public system_interface {
+public:
+    /// @brief Construct a new system object
+    ///
+    /// @param func Function object
+    explicit system(F func) : _func(std::move(func)) {
+    }
+
+    /// @brief Create an executor object
+    ///
+    /// @param registry Registry reference
+    /// @return std::unique_ptr<system_executor_interface>
+    std::unique_ptr<system_executor_interface> create_executor(registry& registry) override {
+        return std::make_unique<system_executor<F>>(registry, std::move(_func));
+    }
+
+private:
+    F _func;
 };
 
 } // namespace cobalt::ecs

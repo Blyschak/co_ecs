@@ -100,12 +100,12 @@ static void bm_entity_iterate_component_with_system(benchmark::State& state) {
     setup_registry_for_iteration(registry, N);
 
     int sum = 0;
-    cobalt::ecs::system system(registry, [&sum](cobalt::ecs::view<const position&, const rotation&> view) {
+    cobalt::ecs::system system([&sum](cobalt::ecs::view<const position&, const rotation&> view) {
         view.each([&sum](const auto& pos, const auto& rot) { sum += pos.x; });
     });
-
+    auto executor = system.create_executor(registry);
     for (auto _ : state) {
-        system.run();
+        executor->run();
     }
 
     benchmark::DoNotOptimize(sum);

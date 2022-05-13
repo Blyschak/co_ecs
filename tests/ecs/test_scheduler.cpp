@@ -32,13 +32,12 @@ TEST(simple_scheduler, basic) {
 
     bool run = false;
 
-    scheduler
+    scheduler.add_init_system([&]() { run = true; })
         .add_system([](ecs::view<pos&> view, const my_resource& resource, counter& count) {
             view.each([&](const auto& p) { count.x += p.x; });
-        })
-        .add_system([&run]() { run = true; });
+        });
 
-    scheduler.run();
+    scheduler.init();
 
     EXPECT_EQ(count.x, 3);
     EXPECT_TRUE(run);
