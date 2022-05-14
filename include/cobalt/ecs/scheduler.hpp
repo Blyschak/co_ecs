@@ -38,12 +38,16 @@ public:
     /// @brief Run init systems and execute update once
     void init() {
         // clear previous executors if any
+        _init_executors.clear();
         _executors.clear();
 
         // run init systems
         for (const auto& system : _init_systems) {
             auto executor = system->create_executor(_registry);
             executor->run();
+            // run deferred task from init system right away since next init system may be dependent on the result of
+            // deferred tasks
+            executor->run_deferred();
             _init_executors.emplace_back(std::move(executor));
         }
 
@@ -54,9 +58,6 @@ public:
             _executors.emplace_back(std::move(executor));
         }
 
-        for (auto& executor : _init_executors) {
-            executor->run_deferred();
-        }
         for (auto& executor : _executors) {
             executor->run_deferred();
         }

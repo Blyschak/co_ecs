@@ -262,7 +262,7 @@ TEST(registry, resources) {
     auto& pres = registry.get_resource<my_resource>();
     EXPECT_EQ(pres.name, "my_name");
     registry.remove_resource<my_resource>();
-    EXPECT_THROW(registry.get_resource<my_resource>(), std::out_of_range);
+    EXPECT_THROW(registry.get_resource<my_resource>(), ecs::resource_not_found);
 }
 
 TEST(registry, exceptions) {

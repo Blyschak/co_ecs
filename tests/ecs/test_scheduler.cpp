@@ -64,3 +64,26 @@ TEST(simple_scheduler, commands) {
     EXPECT_EQ(viewed_pos.x, 1);
     EXPECT_EQ(viewed_pos.y, 2);
 }
+
+TEST(simple_scheduler, commands_resources) {
+    ecs::registry registry;
+    ecs::simple_scheduler scheduler{ registry };
+
+    struct my_resource {
+        int counter{};
+
+        void increment() noexcept {
+            counter++;
+        }
+    };
+
+    scheduler //
+        .add_init_system([](ecs::command_queue& commands) { commands.set_resource<my_resource>(); })
+        .add_init_system([](my_resource& res) { res.increment(); })
+        .add_system([](my_resource& res) { res.increment(); });
+
+    // first init frame buffers the command
+    scheduler.init();
+
+    EXPECT_EQ(registry.get_resource<my_resource>().counter, 2);
+}
