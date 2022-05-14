@@ -258,11 +258,10 @@ TEST(registry, resources) {
 
     ecs::registry registry;
 
-    registry.register_resource(res);
+    registry.set_resource<my_resource>("my_name");
     auto& pres = registry.get_resource<my_resource>();
-    EXPECT_EQ(&pres, &res);
-    EXPECT_THROW(registry.register_resource(other_res), std::invalid_argument);
-    registry.unregister_resource<my_resource>();
+    EXPECT_EQ(pres.name, "my_name");
+    registry.remove_resource<my_resource>();
     EXPECT_THROW(registry.get_resource<my_resource>(), std::out_of_range);
 }
 

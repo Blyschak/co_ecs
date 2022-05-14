@@ -262,7 +262,7 @@ public:
     /// @return Number of elements erased
     constexpr std::size_t erase(key_type key) noexcept {
         if (contains(key)) {
-            _dense[_sparse[key]] = _dense.back();
+            _dense[_sparse[key]] = std::move(_dense.back());
             _sparse[get_key(_dense[_size - 1])] = _sparse[key];
             _dense.pop_back();
             _size--;

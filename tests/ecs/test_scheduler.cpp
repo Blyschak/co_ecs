@@ -22,8 +22,8 @@ TEST(simple_scheduler, basic) {
     counter count{ 0, 0 };
 
     ecs::registry registry;
-    registry.register_resource(resource);
-    registry.register_resource(count);
+    registry.set_resource<my_resource>(resource);
+    registry.set_resource<counter>(count);
 
     registry.create<pos>({ 1, 2 });
     registry.create<pos>({ 2, 5 });
@@ -39,7 +39,7 @@ TEST(simple_scheduler, basic) {
 
     scheduler.init();
 
-    EXPECT_EQ(count.x, 3);
+    EXPECT_EQ(registry.get_resource<counter>().x, 3);
     EXPECT_TRUE(run);
 }
 

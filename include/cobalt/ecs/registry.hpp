@@ -257,33 +257,17 @@ public:
         return location.archetype->template contains<C>();
     }
 
-    /// @brief Register resource
-    ///
-    /// @tparam R Resource type
-    /// @param resource Reference to the resource
-    template<resource R>
-    void register_resource(R& resource) {
-        if (_resource_map.contains(resource_family::id<R>)) {
-            throw std::invalid_argument{ "resource already registered" };
-        }
-        _resource_map.emplace(resource_family::id<R>, &resource);
-    }
-
-    /// @brief Unregister resource
-    ///
-    /// @tparam R Resource type
-    template<resource R>
-    void unregister_resource() {
-        _resource_map.erase(resource_family::id<R>);
-    }
-
     /// @brief Get the resource object
     ///
     /// @tparam R Resource type
     /// @return R& Reference to the resource
     template<resource R>
     R& get_resource() {
-        return *reinterpret_cast<R*>(_resource_map.at(resource_family::id<R>));
+        try {
+            return _resources.at(resource_family::id<R>).template get<R>();
+        } catch (std::out_of_range) {
+            throw resource_not_found{ type_meta::of<R>() };
+        }
     }
 
     /// @brief Get the resource object
@@ -292,7 +276,29 @@ public:
     /// @return R& Reference to the resource
     template<resource R>
     const R& get_resource() const {
-        return *reinterpret_cast<const R*>(_resource_map.at(resource_family::id<R>));
+        try {
+            return _resources.at(resource_family::id<R>).template get<R>();
+        } catch (std::out_of_range) {
+            throw resource_not_found{ type_meta::of<R>() };
+        }
+    }
+
+    /// @brief Set the resource object
+    ///
+    /// @tparam R Resource type
+    /// @tparam Args Arguments type pack
+    /// @param args Arguments to construct resource from
+    template<resource R, typename... Args>
+    void set_resource(Args&&... args) {
+        _resources[resource_family::id<R>] = resource_wrapper::create<R>(std::forward<Args>(args)...);
+    }
+
+    /// @brief Remove resource from the registry
+    ///
+    /// @tparam R Resource type
+    template<resource R>
+    void remove_resource() {
+        _resources.erase(resource_family::id<R>);
     }
 
     /// @brief Iterate every entity that has <Args...> components attached
@@ -301,7 +307,7 @@ public:
     /// @return decltype(auto) Range-like type that yields references to requested components
     template<component_reference... Args>
     decltype(auto) each() {
-        return _archetypes.chunks<Args...>() | std::views::join; // join all chunks togather
+        return _archetypes.chunks<Args...>() | std::views::join; // join all chunks together
     }
 
     /// @brief Iterate every entity that matches given IDs
@@ -390,6 +396,7 @@ private:
     archetypes _archetypes;
     asl::sparse_map<entity_id, entity_location> _entity_archetype_map;
     asl::sparse_map<resource_id, void*> _resource_map;
+    asl::sparse_map<resource_id, resource_wrapper> _resources;
 };
 
 
