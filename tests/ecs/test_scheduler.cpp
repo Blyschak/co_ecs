@@ -42,3 +42,25 @@ TEST(simple_scheduler, basic) {
     EXPECT_EQ(count.x, 3);
     EXPECT_TRUE(run);
 }
+
+TEST(simple_scheduler, commands) {
+    ecs::registry registry;
+    ecs::simple_scheduler scheduler{ registry };
+
+    pos viewed_pos{ 0, 0 };
+
+    scheduler //
+        .add_init_system([](ecs::command_queue& commands) {
+            commands.create<pos>({ 1, 2 });
+        })
+        .add_system([&](ecs::view<pos&> view) { view.each([&](const auto& p) { viewed_pos = p; }); });
+
+    // first init frame buffers the command
+    scheduler.init();
+
+    // second time the regular system will see the buffered command result
+    scheduler.init();
+
+    EXPECT_EQ(viewed_pos.x, 1);
+    EXPECT_EQ(viewed_pos.y, 2);
+}

@@ -29,6 +29,9 @@ public:
             for (auto& executor : _executors) {
                 executor->run();
             }
+            for (auto& executor : _executors) {
+                executor->run_deferred();
+            }
         }
     }
 
@@ -41,6 +44,7 @@ public:
         for (const auto& system : _init_systems) {
             auto executor = system->create_executor(_registry);
             executor->run();
+            _init_executors.emplace_back(std::move(executor));
         }
 
         // run update systems once first time and cache executors
@@ -48,6 +52,13 @@ public:
             auto executor = system->create_executor(_registry);
             executor->run();
             _executors.emplace_back(std::move(executor));
+        }
+
+        for (auto& executor : _init_executors) {
+            executor->run_deferred();
+        }
+        for (auto& executor : _executors) {
+            executor->run_deferred();
         }
     }
 
@@ -77,6 +88,7 @@ private:
     registry& _registry;
     bool _is_running{ false };
     std::vector<std::unique_ptr<system_interface>> _init_systems;
+    std::vector<std::unique_ptr<system_executor_interface>> _init_executors;
     std::vector<std::unique_ptr<system_interface>> _systems;
     std::vector<std::unique_ptr<system_executor_interface>> _executors;
 };

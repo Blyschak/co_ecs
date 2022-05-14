@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cobalt/asl/type_traits.hpp>
+#include <cobalt/ecs/commands.hpp>
 #include <cobalt/ecs/registry.hpp>
 
 #include <tuple>
@@ -12,6 +13,9 @@ class system_executor_interface {
 public:
     /// @brief Execute system logic
     virtual void run() = 0;
+
+    /// @brief Run deferred system logic
+    virtual void run_deferred() = 0;
 };
 
 /// @brief System interface
@@ -43,6 +47,10 @@ public:
         return _view;
     }
 
+    /// @brief Run deferred logic
+    void run_deferred() const noexcept {
+    }
+
 private:
     view_t _view;
 };
@@ -69,8 +77,38 @@ public:
         return _resource;
     }
 
+    /// @brief Run deferred logic
+    void run_deferred() const noexcept {
+    }
+
 private:
     resource_type& _resource;
+};
+
+/// @brief System commands state, creates a command queue to be passed to the system
+class system_commands_state {
+public:
+    /// @brief Construct a new system commands state object
+    ///
+    /// @param registry Registry reference
+    system_commands_state(registry& registry) : _registry(registry) {
+    }
+
+    /// @brief Returns the command queue
+    ///
+    /// @return commands&
+    [[nodiscard]] command_queue& get() noexcept {
+        return _commands;
+    }
+
+    /// @brief Run deferred logic, flushes commands from command queue
+    void run_deferred() {
+        _commands.execute(_registry);
+    }
+
+private:
+    registry& _registry;
+    command_queue _commands;
 };
 
 /// @brief System argument state trait primary template trait. Helps to get corresponding state class type based on the
@@ -98,6 +136,14 @@ class system_argument_state_trait<view<Args...>> {
 public:
     /// @brief Actual state type for T
     using state_type = system_view_state<view<Args...>>;
+};
+
+/// @brief Specialization for command_queue&
+template<>
+class system_argument_state_trait<command_queue&> {
+public:
+    /// @brief Actual state type for T
+    using state_type = system_commands_state;
 };
 
 /// @brief System state for Args...
@@ -160,6 +206,11 @@ public:
     /// @brief Execute system
     void run() override {
         std::apply([this](auto&&... args) { _func(args.get()...); }, _state.get());
+    }
+
+    /// @brief Run deferred logic
+    void run_deferred() override {
+        std::apply([this](auto&&... args) { (..., args.run_deferred()); }, _state.get());
     }
 
 private:
