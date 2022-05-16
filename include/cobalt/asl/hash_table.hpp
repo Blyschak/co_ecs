@@ -78,7 +78,7 @@ private:
         /// @brief Move constructor
         ///
         /// @param rhs Another buckets
-        constexpr buckets(buckets&& rhs) {
+        constexpr buckets(buckets&& rhs) noexcept {
             swap(std::move(rhs));
         }
 
@@ -92,7 +92,7 @@ private:
         ///
         /// @param rhs Another buckets
         /// @return Buckets
-        constexpr buckets& operator=(buckets&& rhs) {
+        constexpr buckets& operator=(buckets&& rhs) noexcept {
             swap(std::move(rhs));
             return *this;
         }
@@ -105,7 +105,7 @@ private:
         /// @brief Swap two buckets
         ///
         /// @param rhs
-        void swap(buckets&& rhs) {
+        void swap(buckets&& rhs) noexcept {
             std::swap(a, rhs.a);
             std::swap(b, rhs.b);
             std::swap(e, rhs.e);
@@ -413,14 +413,14 @@ public:
     /// @brief Move copy constructor
     ///
     /// @param rhs Right hand side
-    constexpr hash_table(hash_table&& rhs) {
+    constexpr hash_table(hash_table&& rhs) noexcept {
         swap(std::move(rhs));
     }
 
     /// @brief Move assignment operator
     ///
     /// @param rhs Right hand side
-    constexpr hash_table& operator=(hash_table&& rhs) {
+    constexpr hash_table& operator=(hash_table&& rhs) noexcept {
         swap(std::move(rhs));
         return *this;
     }

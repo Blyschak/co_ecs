@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cobalt/core/config.hpp>
+#include <cobalt/ecs/registry.hpp>
+#include <cobalt/ecs/scheduler.hpp>
 #include <cobalt/platform/window.hpp>
 #include <cobalt/render/renderer.hpp>
 
@@ -41,9 +43,8 @@ public:
     void run();
 
 private:
-    config _config;
-    std::unique_ptr<platform::window> _window{};
-    std::unique_ptr<render::renderer> _renderer{};
+    ecs::registry _registry;
+    ecs::simple_scheduler _scheduler{ _registry };
 };
 
 } // namespace cobalt::core

@@ -14,6 +14,14 @@ public:
     /// @brief Construct a new config object
     config() = default;
 
+    /// @brief Construct a new config object
+    config(config&&) = default;
+
+    /// @brief Move assignment operator
+    ///
+    /// @return config&
+    config& operator=(config&&) = default;
+
     /// @brief Create config from input stream
     ///
     /// @param input Input stream
