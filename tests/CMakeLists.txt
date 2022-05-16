@@ -21,12 +21,13 @@ add_executable(
   asl/test_defer.cpp
   asl/test_zip.cpp
   asl/test_dynamic_bitset.cpp
+  asl/test_toposort.cpp
+  asl/test_graph.cpp
   ecs/test_component.cpp
   ecs/test_registry.cpp
   ecs/test_system.cpp
   ecs/test_scheduler.cpp
   ecs/test_command.cpp
-  asl/test_toposort.cpp
   scripting/test_lua_engine.cpp
   core/test_config.cpp)
 
