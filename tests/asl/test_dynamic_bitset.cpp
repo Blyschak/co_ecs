@@ -28,6 +28,6 @@ TEST(dynamic_bitset, hash) {
     asl::dynamic_bitset bitset;
     bitset.set(5).set(3).set(100);
 
-    std::hash<asl::dynamic_bitset> hasher{};
+    std::hash<asl::dynamic_bitset<>> hasher{};
     hasher(bitset);
 }

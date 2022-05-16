@@ -112,7 +112,7 @@ public:
 /// @brief Component set holds a set of component IDs
 class component_set {
 public:
-    using storage_type = asl::dynamic_bitset;
+    using storage_type = asl::dynamic_bitset<>;
 
     /// @brief Construct component set from given component types
     ///

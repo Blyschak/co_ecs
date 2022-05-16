@@ -7,10 +7,13 @@
 namespace cobalt::asl {
 
 /// @brief Dynamically growing bitset
+///
+/// @tparam A Allocator type
+template<typename T = std::uint64_t, typename A = std::allocator<T>>
 class dynamic_bitset {
 public:
-    using block_type = std::uint64_t;
-    using allocator_type = std::allocator<block_type>;
+    using block_type = T;
+    using allocator_type = A;
     using storage_type = std::vector<block_type, allocator_type>;
 
     /// @brief Construct a new dynamic bitset object
@@ -82,9 +85,9 @@ private:
 namespace std {
 
 /// @brief Hash implementation for dynamic_bitset
-template<>
-struct hash<cobalt::asl::dynamic_bitset> {
-    std::size_t operator()(const cobalt::asl::dynamic_bitset& bitset) const {
+template<typename A>
+struct hash<cobalt::asl::dynamic_bitset<A>> {
+    std::size_t operator()(const cobalt::asl::dynamic_bitset<A>& bitset) const {
         std::size_t hash = 0;
         for (auto block : bitset.blocks()) {
             hash ^= block;
