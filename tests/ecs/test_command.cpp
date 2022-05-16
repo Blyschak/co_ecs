@@ -4,10 +4,10 @@
 
 using namespace cobalt;
 
-struct component_a {
+struct sa {
     int a;
 };
-struct component_b {
+struct sb {
     int b;
 };
 
@@ -15,15 +15,15 @@ TEST(commands, basic) {
     ecs::registry registry;
     ecs::command_queue commands;
 
-    commands.create(component_a{ 2 }, component_b{ 3 });
-    commands.create(component_a{ 6 }, component_b{ 5 });
-    commands.create(component_a{ 6 });
-    commands.create(component_a{ 10 });
-    commands.create(component_b{ 12 });
+    commands.create(sa{ 2 }, sb{ 3 });
+    commands.create(sa{ 6 }, sb{ 5 });
+    commands.create(sa{ 6 });
+    commands.create(sa{ 10 });
+    commands.create(sb{ 12 });
 
     commands.execute(registry);
 
-    auto view = registry.view<const ecs::entity&, const component_a&, const component_b&>();
+    auto view = registry.view<const ecs::entity&, const sa&, const sb&>();
 
     int sum_a = 0;
     int sum_b = 0;
@@ -51,7 +51,7 @@ TEST(commands, basic) {
     EXPECT_EQ(sum_a, 6);
     EXPECT_EQ(sum_b, 5);
 
-    commands.remove<component_a>(ent);
+    commands.remove<sa>(ent);
     commands.execute(registry);
 
     sum_a = 0;
@@ -65,7 +65,7 @@ TEST(commands, basic) {
     EXPECT_EQ(sum_a, 0);
     EXPECT_EQ(sum_b, 0);
 
-    commands.set<component_a>(ent, 1);
+    commands.set<sa>(ent, 1);
     commands.execute(registry);
 
     sum_a = 0;
