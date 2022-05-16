@@ -26,6 +26,7 @@ add_executable(
   ecs/test_system.cpp
   ecs/test_scheduler.cpp
   ecs/test_command.cpp
+  asl/test_toposort.cpp
   scripting/test_lua_engine.cpp
   core/test_config.cpp)
 

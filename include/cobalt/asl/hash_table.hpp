@@ -8,7 +8,7 @@
 
 namespace cobalt::asl {
 
-/// @brief Approximatelly calculate 85% of passed value. 85% is used as a reserve threshold.
+/// @brief Approximately calculate 85% of passed value. 85% is used as a reserve threshold.
 ///
 /// @param value Value
 /// @return decltype(auto) Result
@@ -16,7 +16,7 @@ constexpr decltype(auto) approx_85_percent(auto value) noexcept {
     return (value * 870) >> 10;
 }
 
-/// @brief Approximatelly calculate 40% of passed value. 40% is used as a reserve threshold.
+/// @brief Approximately calculate 40% of passed value. 40% is used as a reserve threshold.
 ///
 /// @param value Value
 /// @return decltype(auto) Result
@@ -493,7 +493,25 @@ public:
     /// @return std::pair<iterator, bool> Pair of iterator to the inserted/found value and a boolean indicating whether
     /// insertion happened
     std::pair<iterator, bool> insert(const value_type& value) {
-        return emplace_impl(std::move(value));
+        return emplace_impl(value);
+    }
+
+    /// @brief Insert value into the hash table if it does not exist yet. Hint is ignored in the implementation.
+    ///
+    /// @param hint Hint to where insert
+    /// @param value Value to insert
+    /// @return iterator Iterator to the inserted/found value
+    iterator insert(iterator hint, value_type&& value) {
+        return emplace_impl(std::move(value)).first;
+    }
+
+    /// @brief Insert value into the hash table if it does not exist yet. Hint is ignored in the implementation.
+    ///
+    /// @param hint Hint to where insert
+    /// @param value Value to insert
+    /// @return iterator Iterator to the inserted/found value
+    iterator insert(iterator hint, const value_type& value) {
+        return emplace_impl(value).first;
     }
 
     /// @brief Insert value into the hash table or assign to existing one
@@ -502,7 +520,7 @@ public:
     /// @return std::pair<iterator, bool> Pair of iterator to the inserted/found value and a boolean indicating whether
     /// insertion happened
     std::pair<iterator, bool> insert_or_assign(const value_type& value) {
-        return emplace_or_assign_impl(std::move(value));
+        return emplace_or_assign_impl(value);
     }
 
     /// @brief Inserts a new element into the container constructed in-place with the given args if there is no element
@@ -695,17 +713,17 @@ private:
 
             i = mod_2n(i + 1, bs);
             auto nptr = _buckets.begin() + i;
-            auto ninfo = _info.begin() + i;
+            auto n_info = _info.begin() + i;
 
-            if (!ninfo->occupied || ninfo->psl == 0) {
+            if (!n_info->occupied || n_info->psl == 0) {
                 break;
             }
 
-            ninfo->psl--;
+            n_info->psl--;
             *ptr = std::move(*nptr);
             ptr = nptr;
-            *info = std::move(*ninfo);
-            info = ninfo;
+            *info = std::move(*n_info);
+            info = n_info;
         }
 
         const size_type threshold = approx_40_percent(bs);
@@ -744,7 +762,7 @@ private:
         value_type n(std::forward<Args>(args)...);
         size_type hash = _hash(get_key(n));
         size_type psl = 0;
-        bucket_info ninfo = { true, hash, psl };
+        bucket_info n_info = { true, hash, psl };
         size_type i = mod_2n(hash, buckets_size);
 
         while (true) {
@@ -756,16 +774,16 @@ private:
                     return std::make_pair(iterator(ptr, _buckets.end(), info), false);
                 }
 
-                if (ninfo.psl > info->psl) {
+                if (n_info.psl > info->psl) {
                     std::swap(n, *ptr);
-                    std::swap(ninfo, *info);
+                    std::swap(n_info, *info);
                 }
-                ninfo.psl++;
+                n_info.psl++;
                 i = mod_2n(i + 1, buckets_size);
                 continue;
             }
             allocator_traits::construct(_buckets.allocator(), ptr, std::move(n));
-            *info = ninfo;
+            *info = n_info;
             _size++;
             return std::make_pair(iterator(ptr, _buckets.end(), info), true);
         }
@@ -777,7 +795,7 @@ private:
         value_type n(std::forward<Args>(args)...);
         size_type hash = _hash(get_key(n));
         size_type psl = 0;
-        bucket_info ninfo = { true, hash, psl };
+        bucket_info n_info = { true, hash, psl };
         size_type i = mod_2n(hash, buckets_size);
 
         while (true) {
@@ -788,16 +806,16 @@ private:
                     return std::make_pair(iterator(ptr, _buckets.end(), info), false);
                 }
 
-                if (ninfo.psl > info->psl) {
+                if (n_info.psl > info->psl) {
                     std::swap(n, *ptr);
-                    std::swap(ninfo, *info);
+                    std::swap(n_info, *info);
                 }
-                ninfo.psl++;
+                n_info.psl++;
                 i = mod_2n(i + 1, buckets_size);
                 continue;
             }
             allocator_traits::construct(_buckets.allocator(), ptr, std::move(n));
-            *info = ninfo;
+            *info = n_info;
             _size++;
             return std::make_pair(iterator(ptr, _buckets.end(), info), true);
         }
