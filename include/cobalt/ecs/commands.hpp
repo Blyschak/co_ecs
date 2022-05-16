@@ -10,6 +10,10 @@ namespace cobalt::ecs {
 /// @brief Command abstract interface class
 class command {
 public:
+    /// @brief Destroy the command object
+    virtual ~command() {
+    }
+
     /// @brief Execute command interface method
     ///
     /// @param registry Registry reference

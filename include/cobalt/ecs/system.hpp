@@ -11,6 +11,10 @@ namespace cobalt::ecs {
 /// @brief System executor interface, a system is a type that implements run() method
 class system_executor_interface {
 public:
+    /// @brief Destroy the system executor interface object
+    virtual ~system_executor_interface() {
+    }
+
     /// @brief Execute system logic
     virtual void run() = 0;
 
@@ -21,6 +25,10 @@ public:
 /// @brief System interface
 class system_interface {
 public:
+    /// @brief Destroy the system interface object
+    virtual ~system_interface() {
+    }
+
     /// @brief Create a system executor object
     ///
     /// @param registry Registry
