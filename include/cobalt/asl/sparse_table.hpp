@@ -280,19 +280,19 @@ private:
         return self.end();
     }
 
-    constexpr static auto& get_key(auto& v) {
+    constexpr static auto& get_key(auto& entry) {
         if constexpr (is_map) {
-            return v.first;
+            return entry.first;
         } else {
-            return v;
+            return entry;
         }
     }
 
-    constexpr static auto& get_value(auto& v) {
+    constexpr static auto& get_value(auto& entry) {
         if constexpr (is_map) {
-            return v.second;
+            return entry.second;
         } else {
-            return v;
+            return entry;
         }
     }
 

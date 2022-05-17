@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <numeric>
 
-#ifdef CO_STD_HAS_FORMAT
+#ifdef __cpp_lib_format
 #include <format>
 #endif
 
@@ -76,7 +76,7 @@ private:
 
 } // namespace cobalt::asl
 
-#ifdef CO_STD_HAS_FORMAT
+#ifdef __cpp_lib_format
 template<typename T, typename U>
 struct std::formatter<cobalt::handle<T, U>> : std::formatter<std::string> {
     auto format(cobalt::handle<T, U> h, format_context& ctx) {

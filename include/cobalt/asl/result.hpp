@@ -7,17 +7,19 @@ namespace cobalt::asl {
 template<typename T, typename E>
 class result {
 public:
-    constexpr result(T t) : _result(std::move(t)) {
+    constexpr result(T value) : _result(std::move(value)) { // NOLINT(hicpp-explicit-conversions)
     }
 
-    constexpr result(E e) : _result(std::move(e)) {
+    constexpr result(E error) : _result(std::move(error)) { // NOLINT(hicpp-explicit-conversions)
     }
+
+    constexpr ~result() = default;
 
     constexpr result(const result& rhs) = default;
     constexpr result& operator=(const result& rhs) = default;
 
-    constexpr result(result&& rhs) = default;
-    constexpr result& operator=(result&& rhs) = default;
+    constexpr result(result&& rhs) noexcept = default;
+    constexpr result& operator=(result&& rhs) noexcept = default;
 
     [[nodiscard]] constexpr bool is_ok() const noexcept {
         return std::holds_alternative<T>(_result);

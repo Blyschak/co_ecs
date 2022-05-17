@@ -1,14 +1,17 @@
 #pragma once
 
-#include <concepts>
 #include <string>
+
+/// @brief This module implements converting functions, siblings to std::to_string. This functions are simple utilities
+/// and aren't designed to fulfill all the needs of complex configuration for parsing, like parsing integers in hex
+/// format, etc.
 
 namespace cobalt::asl {
 
 /// @brief Parse string into T
 ///
 /// @tparam T Target type
-/// @param str String to parse
+/// @param from String to parse
 /// @return T Result
 template<typename T>
 static inline T from_string(std::string_view from);

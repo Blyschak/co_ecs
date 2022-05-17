@@ -200,3 +200,18 @@ inline cobalt::core::log_level from_string<cobalt::core::log_level>(std::string_
 }
 
 } // namespace cobalt::asl
+
+namespace std {
+
+inline std::string to_string(cobalt::core::log_level level) {
+    static const cobalt::asl::hash_map<cobalt::core::log_level, std::string> _map = {
+        { cobalt::core::log_level::trace, "trace" },
+        { cobalt::core::log_level::debug, "debug" },
+        { cobalt::core::log_level::info, "info" },
+        { cobalt::core::log_level::warn, "warn" },
+        { cobalt::core::log_level::err, "err" },
+        { cobalt::core::log_level::critical, "critical" },
+    };
+    return _map.at(level);
+}
+} // namespace std

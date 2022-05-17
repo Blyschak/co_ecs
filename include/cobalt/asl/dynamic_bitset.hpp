@@ -19,7 +19,7 @@ public:
     /// @brief Construct a new dynamic bitset object
     ///
     /// @param initial_bits Initial size of the bitset
-    dynamic_bitset(std::size_t initial_blocks = 1) {
+    explicit dynamic_bitset(std::size_t initial_blocks = 1) {
         _blocks.resize(initial_blocks);
     }
 
@@ -28,7 +28,7 @@ public:
     /// @param pos Position of the bit
     /// @return true If bit is set
     /// @return false If bit is unset
-    inline bool test(std::size_t pos) const noexcept {
+    [[nodiscard]] inline bool test(std::size_t pos) const noexcept {
         auto [block_index, bit_pos] = block_and_bit(pos);
         if (block_index < _blocks.size()) {
             return _blocks[block_index] & (block_type(1) << bit_pos);
@@ -72,8 +72,8 @@ public:
 
 private:
     static inline std::pair<std::size_t, std::size_t> block_and_bit(std::size_t pos) {
-        auto block_index = pos / (sizeof(block_type) * CHAR_BIT);
-        auto bit_pos = pos % (sizeof(block_type) * CHAR_BIT);
+        auto bit_pos = pos & ((sizeof(block_type) * CHAR_BIT) - 1U);
+        auto block_index = pos >> bit_pos;
         return std::make_pair(block_index, bit_pos);
     }
 

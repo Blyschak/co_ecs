@@ -1,8 +1,9 @@
 #pragma once
 
-#include <cobalt/asl/algorithm.hpp>
+#include <cobalt/asl/bits.hpp>
 #include <cobalt/asl/convert.hpp>
 #include <cobalt/asl/hash_map.hpp>
+#include <cobalt/asl/string_utils.hpp>
 
 #include <istream>
 
@@ -54,10 +55,16 @@ public:
 
     /// @brief Set the default value into settings map, does not override if already present
     ///
+    /// @tparam T Value type
     /// @param key Key to insert
     /// @param value Value
-    void set_default(std::string key, std::string value) {
-        _setting_map.emplace(key, value);
+    template<typename T>
+    void set_default(std::string key, T value) {
+        if constexpr (std::is_convertible_v<T, std::string>) {
+            _setting_map.emplace(key, value);
+        } else {
+            set_default(key, std::to_string(value));
+        }
     }
 
 private:

@@ -10,6 +10,9 @@ public:
     /// @brief Construct a new ref count object
     constexpr ref_count() = default;
 
+    /// @brief Destruct ref count
+    constexpr ~ref_count() = default;
+
     /// @brief Default copy constructor
     ///
     /// @param rhs Other object
@@ -20,6 +23,17 @@ public:
     /// @param rhs Other object
     /// @return constexpr ref_count& New object
     constexpr ref_count& operator=(const ref_count& rhs) = default;
+
+    /// @brief Default move constructor
+    ///
+    /// @param rhs Other object
+    constexpr ref_count(ref_count&& rhs) = default;
+
+    /// @brief Default move assignment operator
+    ///
+    /// @param rhs Other object
+    /// @return constexpr ref_count& New object
+    constexpr ref_count& operator=(ref_count&& rhs) = default;
 
     /// @brief Increment reference count
     ///
@@ -38,7 +52,7 @@ public:
     /// @brief Return reference count
     ///
     /// @return std::size_t Reference count
-    constexpr std::size_t reference_count() const {
+    [[nodiscard]] constexpr std::size_t reference_count() const {
         return _rc;
     }
 

@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include <cobalt/asl/algorithm.hpp>
+#include <cobalt/asl/bits.hpp>
 
 namespace cobalt::asl {
 
@@ -13,7 +13,7 @@ namespace cobalt::asl {
 /// @param value Value
 /// @return decltype(auto) Result
 constexpr decltype(auto) approx_85_percent(auto value) noexcept {
-    return (value * 870) >> 10U;
+    return (value * 870) >> 10U; // NOLINT(readability-magic-numbers)
 }
 
 /// @brief Approximately calculate 40% of passed value. 40% is used as a reserve threshold.
@@ -21,7 +21,7 @@ constexpr decltype(auto) approx_85_percent(auto value) noexcept {
 /// @param value Value
 /// @return decltype(auto) Result
 constexpr decltype(auto) approx_40_percent(auto value) noexcept {
-    return (value * 409) >> 10U;
+    return (value * 409) >> 10U; // NOLINT(readability-magic-numbers)
 }
 
 /// @brief Hash Table implementation. This implementation uses open addressing hash table implementation using robin
@@ -56,8 +56,8 @@ private:
     };
 
     using info_storage = std::vector<bucket_info>;
-    using info_storage_iterator = typename info_storage::iterator;
-    using info_storage_const_iterator = typename info_storage::const_iterator;
+    using info_iterator = typename info_storage::iterator;
+    using info_const_iterator = typename info_storage::const_iterator;
 
     /// @brief Buckets storage
     class buckets {
@@ -181,7 +181,7 @@ private:
         using element_type = hash_table::value_type;
         using reference = std::conditional_t<is_const, const value_type&, value_type&>;
         using pointer = std::conditional_t<is_const, const value_type*, value_type*>;
-        using info_iterator = std::conditional_t<is_const, info_storage_const_iterator, info_storage_iterator>;
+        using info_iter = std::conditional_t<is_const, info_const_iterator, info_iterator>;
 
         constexpr iterator_impl() = default;
         constexpr ~iterator_impl() = default;
@@ -191,7 +191,7 @@ private:
         /// @param ptr Pointer in the bucket
         /// @param end End pointer in the bucket
         /// @param info Info in the bucket
-        constexpr explicit iterator_impl(pointer ptr, pointer end, info_iterator info) noexcept :
+        constexpr explicit iterator_impl(pointer ptr, pointer end, info_iter info) noexcept :
             _ptr(ptr), _end(end), _info(info) {
             // fast forward to the next occupied entry in the buckets array
             // if not occupied already or it is not the end.
@@ -254,7 +254,7 @@ private:
 
         pointer _ptr;
         pointer _end;
-        info_iterator _info;
+        info_iter _info;
     };
 
 public:
@@ -385,21 +385,15 @@ public:
     /// @brief Copy constructor
     ///
     /// @param rhs Right hand side
-    constexpr hash_table(const hash_table& rhs) : hash_table() {
-        size_type idx{};
-        _buckets = buckets(_buckets.allocator(), _buckets.size());
-
-        for (const auto& info : rhs._info) {
+    constexpr hash_table(const hash_table& rhs) :
+        _info(rhs._info), _size(rhs._size), _hash(rhs._hash), _equal(rhs._equal),
+        _buckets(rhs._buckets.allocator(), rhs._buckets.size()) {
+        for (std::size_t idx{}; const auto& info : _info) {
             if (info.occupied) {
                 std::uninitialized_copy_n(rhs._buckets.begin() + idx, 1, _buckets.begin() + idx);
             }
             idx++;
         }
-
-        _info = rhs._info;
-        _size = rhs._size;
-        _hash = rhs._hash;
-        _equal = rhs._equal;
     }
 
     /// @brief Copy assignment operator
@@ -546,10 +540,10 @@ public:
     /// @brief Erase key that compares to c
     ///
     /// @tparam C Type
-    /// @param c Value key compares to
+    /// @param comparable_key Value key compares to
     template<typename C>
-    void erase(C&& c) {
-        return erase_impl(std::forward<C>(c));
+    void erase(C&& comparable_key) {
+        return erase_impl(std::forward<C>(comparable_key));
     }
 
     /// @brief Erase entry at position
@@ -608,17 +602,17 @@ public:
             return;
         }
 
-        hash_table ht(new_size, _hash, _equal, _buckets.allocator());
+        hash_table h_table(new_size, _hash, _equal, _buckets.allocator());
 
         for (auto& value : *this) {
-            ht._emplace_impl(std::move(value));
+            h_table._emplace_impl(std::move(value));
         }
 
-        std::swap(_buckets, ht._buckets);
-        std::swap(_info, ht._info);
-        std::swap(_size, ht._size);
-        std::swap(_equal, ht._equal);
-        std::swap(_hash, ht._hash);
+        std::swap(_buckets, h_table._buckets);
+        std::swap(_info, h_table._info);
+        std::swap(_size, h_table._size);
+        std::swap(_equal, h_table._equal);
+        std::swap(_hash, h_table._hash);
     }
 
     /// @brief Get iterator to the begin of the container
@@ -681,24 +675,24 @@ public:
 private:
     template<typename C>
     void erase_impl(C&& key) {
-        size_type bs = _buckets.size();
+        size_type bucket_size = _buckets.size();
 
         size_type hash = _hash(key);
         size_type psl = 0;
-        size_type i = mod_2n(hash, bs);
+        size_type index = mod_2n(hash, bucket_size);
 
         value_type* ptr{};
         auto info = _info.begin();
         while (true) {
-            ptr = _buckets.begin() + i;
-            info = _info.begin() + i;
+            ptr = _buckets.begin() + index;
+            info = _info.begin() + index;
 
             if (!info->occupied || psl > info->psl) {
                 return;
             }
 
             if (info->hash != hash || !_equal(get_key(*ptr), key)) {
-                i = mod_2n(i + 1, bs);
+                index = mod_2n(index + 1, bucket_size);
                 psl++;
                 continue;
             }
@@ -712,9 +706,9 @@ private:
         while (true) {
             info->occupied = false;
 
-            i = mod_2n(i + 1, bs);
-            auto nptr = _buckets.begin() + i;
-            auto n_info = _info.begin() + i;
+            index = mod_2n(index + 1, bucket_size);
+            auto nptr = _buckets.begin() + index;
+            auto n_info = _info.begin() + index;
 
             if (!n_info->occupied || n_info->psl == 0) {
                 break;
@@ -727,9 +721,9 @@ private:
             info = n_info;
         }
 
-        const size_type threshold = approx_40_percent(bs);
+        const size_type threshold = approx_40_percent(bucket_size);
         if (_size > default_bucket_count && _size < threshold) {
-            const auto new_size = bs >> size_type{ 1 };
+            const auto new_size = bucket_size >> size_type{ 1 };
             reserve(new_size);
         }
     }
@@ -760,30 +754,30 @@ private:
     template<typename... Args>
     constexpr std::pair<iterator, bool> _emplace_or_assign_impl(Args&&... args) {
         size_type buckets_size = _buckets.size();
-        value_type n(std::forward<Args>(args)...);
-        size_type hash = _hash(get_key(n));
+        value_type temp(std::forward<Args>(args)...);
+        size_type hash = _hash(get_key(temp));
         size_type psl = 0;
         bucket_info n_info = { true, hash, psl };
-        size_type i = mod_2n(hash, buckets_size);
+        size_type index = mod_2n(hash, buckets_size);
 
         while (true) {
-            value_type* ptr = _buckets.begin() + i;
-            auto info = _info.begin() + i;
+            value_type* ptr = _buckets.begin() + index;
+            auto info = _info.begin() + index;
             if (info->occupied) {
-                if (info->hash == hash && _equal(get_key(*ptr), get_key(n))) {
-                    get_value(*ptr) = std::move(get_value(n));
+                if (info->hash == hash && _equal(get_key(*ptr), get_key(temp))) {
+                    get_value(*ptr) = std::move(get_value(temp));
                     return std::make_pair(iterator(ptr, _buckets.end(), info), false);
                 }
 
                 if (n_info.psl > info->psl) {
-                    std::swap(n, *ptr);
+                    std::swap(temp, *ptr);
                     std::swap(n_info, *info);
                 }
                 n_info.psl++;
-                i = mod_2n(i + 1, buckets_size);
+                index = mod_2n(index + 1, buckets_size);
                 continue;
             }
-            allocator_traits::construct(_buckets.allocator(), ptr, std::move(n));
+            allocator_traits::construct(_buckets.allocator(), ptr, std::move(temp));
             *info = n_info;
             _size++;
             return std::make_pair(iterator(ptr, _buckets.end(), info), true);
@@ -793,29 +787,29 @@ private:
     template<typename... Args>
     constexpr decltype(auto) _emplace_impl(Args&&... args) {
         size_type buckets_size = _buckets.size();
-        value_type n(std::forward<Args>(args)...);
-        size_type hash = _hash(get_key(n));
+        value_type temp(std::forward<Args>(args)...);
+        size_type hash = _hash(get_key(temp));
         size_type psl = 0;
         bucket_info n_info = { true, hash, psl };
-        size_type i = mod_2n(hash, buckets_size);
+        size_type index = mod_2n(hash, buckets_size);
 
         while (true) {
-            value_type* ptr = _buckets.begin() + i;
-            auto info = _info.begin() + i;
+            value_type* ptr = _buckets.begin() + index;
+            auto info = _info.begin() + index;
             if (info->occupied) {
-                if (info->hash == hash && _equal(get_key(*ptr), get_key(n))) {
+                if (info->hash == hash && _equal(get_key(*ptr), get_key(temp))) {
                     return std::make_pair(iterator(ptr, _buckets.end(), info), false);
                 }
 
                 if (n_info.psl > info->psl) {
-                    std::swap(n, *ptr);
+                    std::swap(temp, *ptr);
                     std::swap(n_info, *info);
                 }
                 n_info.psl++;
-                i = mod_2n(i + 1, buckets_size);
+                index = mod_2n(index + 1, buckets_size);
                 continue;
             }
-            allocator_traits::construct(_buckets.allocator(), ptr, std::move(n));
+            allocator_traits::construct(_buckets.allocator(), ptr, std::move(temp));
             *info = n_info;
             _size++;
             return std::make_pair(iterator(ptr, _buckets.end(), info), true);
@@ -828,53 +822,50 @@ private:
             return self.end();
         }
         size_type hash = self._hash(key);
-        size_type i = mod_2n(hash, buckets_size);
+        size_type index = mod_2n(hash, buckets_size);
 
         size_type probes = 0;
         while (true) {
-            auto ptr = self._buckets.begin() + i;
-            auto info = self._info.begin() + i;
+            auto ptr = self._buckets.begin() + index;
+            auto info = self._info.begin() + index;
             if (info->occupied && info->hash == hash && self._equal(get_key(*ptr), key)) {
-                return self.get_iterator_to(ptr, info);
+                return self.create_iterator(ptr, info);
             }
             if (!info->occupied || probes > info->psl) {
                 return self.end();
             }
             probes++;
-            i = mod_2n(i + 1, buckets_size);
+            index = mod_2n(index + 1, buckets_size);
         }
     }
 
-    using buckets_iterator = typename std::vector<bucket_info>::iterator;
-    using buckets_const_iterator = typename std::vector<bucket_info>::const_iterator;
-
-    constexpr iterator get_iterator_to(value_type* ptr, buckets_iterator info) noexcept {
+    constexpr iterator create_iterator(value_type* ptr, info_iterator info) noexcept {
         return iterator{ ptr, _buckets.end(), info };
     }
 
-    constexpr const_iterator get_iterator_to(const value_type* ptr, buckets_const_iterator info) const noexcept {
+    constexpr const_iterator create_iterator(const value_type* ptr, info_const_iterator info) const noexcept {
         return const_iterator{ ptr, _buckets.end(), info };
     }
 
-    constexpr static auto& get_key(auto& v) {
+    constexpr static auto& get_key(auto& entry) {
         if constexpr (is_map) {
-            return v.first;
+            return entry.first;
         } else {
-            return v;
+            return entry;
         }
     }
 
-    constexpr static auto& get_value(auto& v) {
+    constexpr static auto& get_value(auto& entry) {
         if constexpr (is_map) {
-            return v.second;
+            return entry.second;
         } else {
-            return v;
+            return entry;
         }
     }
 
     size_t _size{};
     buckets _buckets{ allocator_type(), default_bucket_count };
-    std::vector<bucket_info> _info{ default_bucket_count };
+    info_storage _info{ default_bucket_count };
     key_equal _equal{};
     hasher _hash{};
 };

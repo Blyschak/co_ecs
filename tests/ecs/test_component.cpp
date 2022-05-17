@@ -1,6 +1,6 @@
 #include <set>
 
-#include <cobalt/asl/algorithm.hpp>
+#include <cobalt/asl/bits.hpp>
 #include <cobalt/ecs/component.hpp>
 
 #include <gtest/gtest.h>

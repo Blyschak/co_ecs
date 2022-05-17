@@ -81,7 +81,7 @@ public:
 
         /// @brief Post-increment zip_view iterator
         /// @return New iterator that points to location prior to increment
-        iterator operator++(int) { // NOLINT(cert-dcl21-cpp)
+        iterator operator++(int) {
             iterator tmp(*this);
             operator++();
             return tmp;
@@ -89,7 +89,7 @@ public:
 
         /// @brief Post-decrement zip_view iterator
         /// @return New iterator that points to location prior to decrement
-        iterator operator--(int) { // NOLINT(cert-dcl21-cpp)
+        iterator operator--(int) {
             iterator tmp(*this);
             operator--();
             return tmp;
