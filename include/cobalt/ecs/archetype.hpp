@@ -23,7 +23,7 @@ public:
     /// @brief Construct a new archetype object
     ///
     /// @param components Components
-    archetype(component_meta_set components) noexcept : _components(std::move(components)) {
+    explicit archetype(component_meta_set components) noexcept : _components(std::move(components)) {
         _max_size = get_max_size(_components);
         init_blocks(_components);
         _chunks.emplace_back(_blocks, _max_size);
@@ -136,7 +136,7 @@ public:
     /// @return true If this archetype has component C
     /// @return false If this archetype does not have component C
     template<component C>
-    bool contains() const noexcept {
+    [[nodiscard]] bool contains() const noexcept {
         if constexpr (std::is_same_v<C, entity>) {
             return true;
         } else {
@@ -149,11 +149,11 @@ public:
     /// @param id Component ID
     /// @return true If this archetype has component C
     /// @return false If this archetype does not have component C
-    bool contains(component_id id) const noexcept {
-        if (id == component_family::id<entity>) {
+    [[nodiscard]] bool contains(component_id component_id) const noexcept {
+        if (component_id == component_family::id<entity>) {
             return true;
         } else {
-            return components().contains(id);
+            return components().contains(component_id);
         }
     }
 
@@ -226,7 +226,7 @@ private:
         return *chunk.template ptr<decay_component_t<ComponentRef>>(location.entry_index);
     }
 
-    inline chunk& get_chunk(entity_location location) {
+    inline chunk& get_chunk(entity_location location) noexcept {
         assert(location.archetype == this);
         assert(location.chunk_index < _chunks.size());
         auto& chunk = _chunks[location.chunk_index];
@@ -253,6 +253,11 @@ class archetypes {
 public:
     /// @brief Underlaying container storage type
     using storage_type = asl::hash_map<component_set, std::unique_ptr<archetype>, component_set_hasher>;
+    using iterator = storage_type::iterator;
+    using const_iterator = storage_type::const_iterator;
+    using value_type = storage_type::value_type;
+    using key_type = storage_type::key_type;
+    using mapped_type = storage_type::mapped_type;
 
     /// @brief Get or create an archetype matching the passed Components types
     ///
@@ -303,28 +308,28 @@ public:
     /// @brief Returns iterator to the beginning of archetypes container
     ///
     /// @return decltype(auto)
-    decltype(auto) begin() noexcept {
+    iterator begin() noexcept {
         return _archetypes.begin();
     }
 
     /// @brief Returns an iterator to the end of archetypes container
     ///
     /// @return decltype(auto)
-    decltype(auto) end() noexcept {
+    iterator end() noexcept {
         return _archetypes.end();
     }
 
     /// @brief Returns iterator to the beginning of archetypes container
     ///
     /// @return decltype(auto)
-    decltype(auto) begin() const noexcept {
+    [[nodiscard]] const_iterator begin() const noexcept {
         return _archetypes.begin();
     }
 
     /// @brief Returns an iterator to the end of archetypes container
     ///
     /// @return decltype(auto)
-    decltype(auto) end() const noexcept {
+    [[nodiscard]] const_iterator end() const noexcept {
         return _archetypes.end();
     }
 
@@ -377,7 +382,7 @@ public:
 
 private:
     static decltype(auto) create_archetype(auto&& components_meta) {
-        return std::make_unique<ecs::archetype>(std::move(components_meta));
+        return std::make_unique<ecs::archetype>(std::forward<decltype(components_meta)>(components_meta));
     }
 
     template<component... Components>

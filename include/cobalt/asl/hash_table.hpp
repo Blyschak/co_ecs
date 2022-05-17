@@ -13,7 +13,7 @@ namespace cobalt::asl {
 /// @param value Value
 /// @return decltype(auto) Result
 constexpr decltype(auto) approx_85_percent(auto value) noexcept {
-    return (value * 870) >> 10;
+    return (value * 870) >> 10U;
 }
 
 /// @brief Approximately calculate 40% of passed value. 40% is used as a reserve threshold.
@@ -21,7 +21,7 @@ constexpr decltype(auto) approx_85_percent(auto value) noexcept {
 /// @param value Value
 /// @return decltype(auto) Result
 constexpr decltype(auto) approx_40_percent(auto value) noexcept {
-    return (value * 409) >> 10;
+    return (value * 409) >> 10U;
 }
 
 /// @brief Hash Table implementation. This implementation uses open addressing hash table implementation using robin
@@ -184,6 +184,7 @@ private:
         using info_iterator = std::conditional_t<is_const, info_storage_const_iterator, info_storage_iterator>;
 
         constexpr iterator_impl() = default;
+        constexpr ~iterator_impl() = default;
 
         /// @brief Iterator constructor
         ///
@@ -199,10 +200,10 @@ private:
             }
         }
 
-        constexpr iterator_impl(const iterator_impl& other) = default;
-        constexpr iterator_impl& operator=(const iterator_impl& other) = default;
-        constexpr iterator_impl(iterator_impl&& other) = default;
-        constexpr iterator_impl& operator=(iterator_impl&& other) = default;
+        constexpr iterator_impl(const iterator_impl& other) noexcept = default;
+        constexpr iterator_impl& operator=(const iterator_impl& other) noexcept = default;
+        constexpr iterator_impl(iterator_impl&& other) noexcept = default;
+        constexpr iterator_impl& operator=(iterator_impl&& other) noexcept = default;
 
         /// @brief Pre-increment iterator
         ///
@@ -261,7 +262,7 @@ public:
     using const_iterator = iterator_impl<true>;
 
     /// @brief Default construct hash table
-    constexpr hash_table() : _size(0), _buckets(allocator_type(), default_bucket_count), _info(default_bucket_count) {
+    constexpr hash_table() : _buckets(allocator_type(), default_bucket_count), _info(default_bucket_count) {
     }
 
     /// @brief Hash table destructor
@@ -281,8 +282,8 @@ public:
         const Hash& hash = Hash(),
         const key_equal& equal = key_equal(),
         const Allocator& alloc = Allocator()) :
-        _size(0),
-        _buckets(allocator_type(), bucket_count), _info(bucket_count), _hash(hash), _equal(equal) {
+        _buckets(alloc, bucket_count),
+        _info(bucket_count), _hash(hash), _equal(equal) {
         assert(bucket_count % 2 == 0);
     }
 
@@ -325,8 +326,8 @@ public:
         const Hash& hash = Hash(),
         const key_equal& equal = key_equal(),
         const Allocator& alloc = Allocator()) :
-        _size(0),
-        _buckets(alloc, bucket_count), _info(default_bucket_count), _equal(equal), _hash(hash) {
+        _buckets(alloc, bucket_count),
+        _info(default_bucket_count), _equal(equal), _hash(hash) {
         assert(bucket_count % 2 == 0);
         for (; first != last; ++first) {
             emplace_or_assign_impl(std::move(*first));
@@ -384,7 +385,7 @@ public:
     /// @brief Copy constructor
     ///
     /// @param rhs Right hand side
-    constexpr hash_table(const hash_table& rhs) {
+    constexpr hash_table(const hash_table& rhs) : hash_table() {
         size_type idx{};
         _buckets = buckets(_buckets.allocator(), _buckets.size());
 
@@ -501,7 +502,7 @@ public:
     /// @param hint Hint to where insert
     /// @param value Value to insert
     /// @return iterator Iterator to the inserted/found value
-    iterator insert(iterator hint, value_type&& value) {
+    iterator insert([[maybe_unused]] iterator hint, value_type&& value) {
         return emplace_impl(std::move(value)).first;
     }
 
@@ -510,7 +511,7 @@ public:
     /// @param hint Hint to where insert
     /// @param value Value to insert
     /// @return iterator Iterator to the inserted/found value
-    iterator insert(iterator hint, const value_type& value) {
+    iterator insert([[maybe_unused]] iterator hint, const value_type& value) {
         return emplace_impl(value).first;
     }
 
@@ -686,7 +687,7 @@ private:
         size_type psl = 0;
         size_type i = mod_2n(hash, bs);
 
-        value_type* ptr;
+        value_type* ptr{};
         auto info = _info.begin();
         while (true) {
             ptr = _buckets.begin() + i;
@@ -728,7 +729,7 @@ private:
 
         const size_type threshold = approx_40_percent(bs);
         if (_size > default_bucket_count && _size < threshold) {
-            const auto new_size = bs >> 1;
+            const auto new_size = bs >> size_type{ 1 };
             reserve(new_size);
         }
     }
@@ -738,7 +739,7 @@ private:
         size_type buckets_size = _buckets.size();
         const size_type threshold = approx_85_percent(buckets_size);
         if (_size > threshold) {
-            const auto new_size = buckets_size << 1;
+            const auto new_size = buckets_size << size_type{ 1 };
             reserve(new_size);
         }
 
@@ -750,7 +751,7 @@ private:
         size_type buckets_size = _buckets.size();
         const size_type threshold = approx_85_percent(buckets_size);
         if (_size > threshold) {
-            const auto new_size = buckets_size << 1;
+            const auto new_size = buckets_size << size_type{ 1 };
             reserve(new_size);
         }
         return _emplace_or_assign_impl(std::forward<Args>(args)...);
@@ -844,12 +845,14 @@ private:
         }
     }
 
-    constexpr iterator get_iterator_to(value_type* ptr, std::vector<bucket_info>::iterator info) noexcept {
+    using buckets_iterator = typename std::vector<bucket_info>::iterator;
+    using buckets_const_iterator = typename std::vector<bucket_info>::const_iterator;
+
+    constexpr iterator get_iterator_to(value_type* ptr, buckets_iterator info) noexcept {
         return iterator{ ptr, _buckets.end(), info };
     }
 
-    constexpr const_iterator get_iterator_to(const value_type* ptr,
-        std::vector<bucket_info>::const_iterator info) const noexcept {
+    constexpr const_iterator get_iterator_to(const value_type* ptr, buckets_const_iterator info) const noexcept {
         return const_iterator{ ptr, _buckets.end(), info };
     }
 

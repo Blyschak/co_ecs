@@ -26,7 +26,7 @@ public:
     /// @brief Construct a new view object
     ///
     /// @param registry Reference to the registry
-    view(registry& registry) noexcept : _registry(registry) {
+    explicit view(registry& registry) noexcept : _registry(registry) {
     }
 
     /// @brief Returns an iterator that yields a std::tuple<Args...>
@@ -187,8 +187,8 @@ public:
     template<component C>
     void remove(entity ent) {
         ensure_alive(ent);
-        auto id = ent.id();
-        auto& location = get_location(id);
+        auto entity_id = ent.id();
+        auto& location = get_location(entity_id);
         auto*& archetype = location.archetype;
 
         if (!archetype->contains<C>()) {
@@ -201,7 +201,7 @@ public:
         }
 
         archetype = new_archetype;
-        set_location(id, new_location);
+        set_location(entity_id, new_location);
     }
 
     /// @brief Check if an entity is alive or not
@@ -252,8 +252,8 @@ public:
     template<component C>
     [[nodiscard]] bool has(entity ent) const {
         ensure_alive(ent);
-        auto id = ent.id();
-        auto& location = get_location(id);
+        auto entity_id = ent.id();
+        const auto& location = get_location(entity_id);
         return location.archetype->template contains<C>();
     }
 
@@ -265,7 +265,7 @@ public:
     R& get_resource() {
         try {
             return _resources.at(resource_family::id<R>).template get<R>();
-        } catch (std::out_of_range) {
+        } catch (const std::out_of_range&) {
             throw resource_not_found{ type_meta::of<R>() };
         }
     }
@@ -278,7 +278,7 @@ public:
     const R& get_resource() const {
         try {
             return _resources.at(resource_family::id<R>).template get<R>();
-        } catch (std::out_of_range) {
+        } catch (const std::out_of_range&) {
             throw resource_not_found{ type_meta::of<R>() };
         }
     }
@@ -364,8 +364,7 @@ private:
     template<component_reference... Args>
     static std::tuple<Args...> get_impl(auto&& self, entity ent) {
         self.ensure_alive(ent);
-        auto id = ent.id();
-        auto& location = self.get_location(id);
+        auto& location = self.get_location(ent.id());
         auto* archetype = location.archetype;
         return std::tuple<Args...>(std::ref(archetype->template get<Args>(location))...);
     }
@@ -376,20 +375,20 @@ private:
         }
     }
 
-    [[nodiscard]] const entity_location& get_location(entity_id id) const {
-        return _entity_archetype_map.at(id);
+    [[nodiscard]] const entity_location& get_location(entity_id entity_id) const {
+        return _entity_archetype_map.at(entity_id);
     }
 
     [[nodiscard]] entity_location& get_location(entity_id id) {
         return _entity_archetype_map.at(id);
     }
 
-    void set_location(entity_id id, const entity_location& location) {
-        _entity_archetype_map[id] = location;
+    void set_location(entity_id entity_id, const entity_location& location) {
+        _entity_archetype_map[entity_id] = location;
     }
 
-    void remove_location(entity_id id) {
-        _entity_archetype_map.erase(id);
+    void remove_location(entity_id entity_id) {
+        _entity_archetype_map.erase(entity_id);
     }
 
     entity_pool _entity_pool;
@@ -407,7 +406,7 @@ decltype(auto) view<Args...>::each() {
 
 template<component_reference... Args>
 void view<Args...>::each(auto&& func) {
-    _registry.each<Args...>(std::move(func));
+    _registry.each<Args...>(std::forward<decltype(func)>(func));
 }
 
 
@@ -417,7 +416,7 @@ std::tuple<Args...> view<Args...>::get(entity ent) {
 }
 
 void runtime_view::each(auto&& func) {
-    _registry.runtime_each(_ids, std::move(func));
+    _registry.runtime_each(_ids, std::forward<decltype(func)>(func));
 }
 
 } // namespace cobalt::ecs

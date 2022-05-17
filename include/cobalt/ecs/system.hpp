@@ -12,8 +12,7 @@ namespace cobalt::ecs {
 class system_executor_interface {
 public:
     /// @brief Destroy the system executor interface object
-    virtual ~system_executor_interface() {
-    }
+    virtual ~system_executor_interface() = default;
 
     /// @brief Execute system logic
     virtual void run() = 0;
@@ -26,8 +25,7 @@ public:
 class system_interface {
 public:
     /// @brief Destroy the system interface object
-    virtual ~system_interface() {
-    }
+    virtual ~system_interface() = default;
 
     /// @brief Create a system executor object
     ///
@@ -99,7 +97,7 @@ public:
     /// @brief Construct a new system commands state object
     ///
     /// @param registry Registry reference
-    system_commands_state(registry& registry) : _registry(registry) {
+    explicit system_commands_state(registry& registry) : _registry(registry) {
     }
 
     /// @brief Returns the command queue
@@ -224,7 +222,7 @@ public:
 private:
     registry& _registry;
     F _func;
-    system_state_trait<system_arguments>::type _state;
+    typename system_state_trait<system_arguments>::type _state;
 };
 
 /// @brief System implementation class for generic F function-like type

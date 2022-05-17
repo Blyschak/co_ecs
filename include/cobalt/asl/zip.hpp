@@ -122,18 +122,18 @@ public:
 
         /// @brief Plus operator for iterators
         /// @param rhs By how much advance
-        /// @param it Iterator to advance
+        /// @param iter Iterator to advance
         /// @return New advanced iterator
-        friend iterator operator+(const difference_type rhs, const iterator& it) {
-            return it + rhs;
+        friend iterator operator+(const difference_type rhs, const iterator& iter) {
+            return iter + rhs;
         }
 
         /// @brief Minus operator for iterators
         /// @param rhs By how much retreat
-        /// @param it Iterator to retreat
+        /// @param iter Iterator to retreat
         /// @return New retreated iterator
-        friend iterator operator-(const difference_type rhs, const iterator& it) {
-            return it - rhs;
+        friend iterator operator-(const difference_type rhs, const iterator& iter) {
+            return iter - rhs;
         }
 
         /// @brief Equality operator for iterators

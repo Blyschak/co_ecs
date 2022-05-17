@@ -45,7 +45,7 @@ public:
     }
 
 private:
-    H::id_t _next_id{};
+    typename H::id_t _next_id{};
     std::vector<typename H::generation_t> _generations;
     std::vector<typename H::id_t> _free_ids;
 };

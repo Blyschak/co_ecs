@@ -27,7 +27,7 @@ using blocks_type = asl::sparse_map<component_id, block_metadata>;
 class chunk {
 public:
     /// @brief Chunk size in bytes
-    static constexpr std::size_t chunk_bytes = 16 * 1024; // 16 KB
+    static constexpr std::size_t chunk_bytes = static_cast<const std::size_t>(16U * 1024); // 16 KB
 
     /// @brief Block allocation alignment
     static constexpr std::size_t alloc_alignment = alignof(entity);
@@ -35,8 +35,9 @@ public:
     /// @brief Construct a new chunk object
     ///
     /// @param set Component metadata set
-    chunk(const blocks_type& blocks, std::size_t max_size) : _blocks(&blocks), _max_size(max_size) {
-        _buffer = reinterpret_cast<std::byte*>(std::aligned_alloc(alloc_alignment, chunk_bytes));
+    chunk(const blocks_type& blocks, std::size_t max_size) :
+        _blocks(&blocks), _max_size(max_size),
+        _buffer(reinterpret_cast<std::byte*>(std::aligned_alloc(alloc_alignment, chunk_bytes))) {
     }
 
     /// @brief Deleted copy constructor
@@ -73,7 +74,7 @@ public:
 
     /// @brief Destroy the chunk object
     ~chunk() {
-        if (!_buffer) {
+        if (_buffer == nullptr) {
             return;
         }
         for (const auto& [id, block] : *_blocks) {
@@ -110,7 +111,7 @@ public:
     /// @param index Index to remove components from
     /// @param other_chunk Other chunk
     /// @return std::optional<entity>
-    std::optional<entity> swap_erase(std::size_t index, chunk& other) {
+    std::optional<entity> swap_erase(std::size_t index, chunk& other) noexcept {
         assert(index < _size);
         if (size() == 1 || index == _size - 1) {
             pop_back();
@@ -120,8 +121,8 @@ public:
         std::size_t other_chunk_index = other._size - 1;
         entity ent = *other.ptr_unchecked<entity>(other_chunk_index);
         for (const auto& [id, block] : *_blocks) {
-            auto* type = block.meta.type;
-            auto ptr = other._buffer + other._blocks->at(id).offset + other_chunk_index * type->size;
+            const auto* type = block.meta.type;
+            auto* ptr = other._buffer + other._blocks->at(id).offset + other_chunk_index * type->size;
             type->move_assign(_buffer + block.offset + index * type->size, ptr);
         }
         other.pop_back();
@@ -138,11 +139,11 @@ public:
         assert(!other_chunk.full());
         std::size_t other_chunk_index = other_chunk._size;
         for (const auto& [id, block] : *_blocks) {
-            auto* type = block.meta.type;
+            const auto* type = block.meta.type;
             if (!other_chunk._blocks->contains(id)) {
                 continue;
             }
-            auto ptr = other_chunk._buffer + other_chunk._blocks->at(id).offset + other_chunk_index * type->size;
+            auto* ptr = other_chunk._buffer + other_chunk._blocks->at(id).offset + other_chunk_index * type->size;
             type->move_construct(ptr, _buffer + block.offset + index * type->size);
         }
         other_chunk._size++;
@@ -205,12 +206,12 @@ public:
 
 private:
     template<component T>
-    inline T* ptr_unchecked(std::size_t index) {
+    inline T* ptr_unchecked(std::size_t index) noexcept {
         return ptr_unchecked_impl<T*>(*this, index);
     }
 
     template<component T>
-    inline const T* ptr_unchecked(std::size_t index) const {
+    [[nodiscard]] inline const T* ptr_unchecked(std::size_t index) const noexcept {
         return ptr_unchecked_impl<const T*>(*this, index);
     }
 
@@ -220,10 +221,10 @@ private:
         return (reinterpret_cast<P>(self._buffer + block.offset) + index);
     }
 
-    const block_metadata& get_block(component_id id) const {
+    [[nodiscard]] const block_metadata& get_block(component_id id) const {
         try {
             return _blocks->at(id);
-        } catch (std::out_of_range) {
+        } catch (const std::out_of_range&) {
             throw component_not_found{ id };
         }
     }
@@ -259,34 +260,37 @@ public:
         /// @brief Default constructor
         constexpr iterator() = default;
 
+        /// @brief Default destructor
+        constexpr ~iterator() = default;
+
         /// @brief Create iterator out of chunk pointing to the index
         ///
         /// @param c Chunk reference
         /// @param index Index this iterator is pointing to
-        constexpr iterator(chunk& c, std::size_t index = 0) : _ptrs(std::make_tuple(c.ptr<Args>(index)...)) {
+        explicit constexpr iterator(chunk& c, std::size_t index = 0) : _ptrs(std::make_tuple(c.ptr<Args>(index)...)) {
         }
 
         /// @brief Default copy constructor
         ///
         /// @param rhs Right hand side iterator
-        constexpr iterator(const iterator& rhs) = default;
+        constexpr iterator(const iterator& rhs) noexcept = default;
 
         /// @brief Default copy assignment operator
         ///
         /// @param rhs Right hand side iterator
         /// @return iterator& this iterator
-        constexpr iterator& operator=(const iterator& rhs) = default;
+        constexpr iterator& operator=(const iterator& rhs) noexcept = default;
 
         /// @brief Default move constructor
         ///
         /// @param rhs Right hand side iterator
-        constexpr iterator(iterator&& rhs) = default;
+        constexpr iterator(iterator&& rhs) noexcept = default;
 
         /// @brief Default move assignment operator
         ///
         /// @param rhs Right hand side iterator
         /// @return iterator& this iterator
-        constexpr iterator& operator=(iterator&& rhs) = default;
+        constexpr iterator& operator=(iterator&& rhs) noexcept = default;
 
         /// @brief Pre-increment iterator
         ///
@@ -325,7 +329,7 @@ public:
     /// @brief Construct a new chunk view object
     ///
     /// @param c Chunk reference
-    chunk_view(chunk& c) : _chunk(c) {
+    explicit chunk_view(chunk& c) : _chunk(c) {
     }
 
     /// @brief Return iterator to the beginning of a chunk

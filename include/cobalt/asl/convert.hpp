@@ -11,36 +11,37 @@ namespace cobalt::asl {
 /// @param str String to parse
 /// @return T Result
 template<typename T>
-static inline T from_string(std::string_view str);
+static inline T from_string(std::string_view from);
 
-/// @brief Parse string as T and return the result
-///
-/// @tparam T Type
-/// @param str String to parse
-/// @return T Result
-template<std::signed_integral T>
-static inline T from_string(std::string str) {
-    return static_cast<T>(std::stoll(str));
-}
-
-/// @brief Parse string as T and return the result
-///
-/// @tparam T Type
-/// @param str String to parse
-/// @return T Result
-template<std::unsigned_integral T>
-static inline T from_string(std::string str) {
-    return static_cast<T>(std::stoull(str));
-}
-
-/// @brief Parse string as T and return the result. Specialization for convertiable types
-///
-/// @tparam T Type
-/// @param str String to parse
-/// @return T Result
 template<>
-inline std::string from_string<std::string>(std::string_view str) {
-    return std::string(str);
+inline int from_string(std::string_view from) {
+    return std::stoi(std::string(from));
 }
+
+template<>
+inline long from_string(std::string_view from) {
+    return std::stol(std::string(from));
+}
+
+template<>
+inline long long from_string(std::string_view from) {
+    return std::stoll(std::string(from));
+}
+
+template<>
+inline unsigned from_string(std::string_view from) {
+    return std::stoul(std::string(from));
+}
+
+template<>
+inline unsigned long from_string(std::string_view from) {
+    return std::stoul(std::string(from));
+}
+
+template<>
+inline unsigned long long from_string(std::string_view from) {
+    return std::stoull(std::string(from));
+}
+
 
 } // namespace cobalt::asl

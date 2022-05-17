@@ -23,6 +23,7 @@ add_executable(
   asl/test_dynamic_bitset.cpp
   asl/test_toposort.cpp
   asl/test_graph.cpp
+  asl/test_convert.cpp
   ecs/test_component.cpp
   ecs/test_registry.cpp
   ecs/test_system.cpp

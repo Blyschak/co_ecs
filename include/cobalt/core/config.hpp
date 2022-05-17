@@ -45,7 +45,11 @@ public:
     /// @return T Result
     template<typename T = std::string>
     T get(std::string key) const {
-        return asl::from_string<T>(_setting_map.at(key));
+        if constexpr (std::is_same_v<T, std::string>) {
+            return _setting_map.at(key);
+        } else {
+            return asl::from_string<T>(get(key));
+        }
     }
 
     /// @brief Set the default value into settings map, does not override if already present

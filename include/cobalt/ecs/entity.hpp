@@ -5,6 +5,8 @@
 #include <cobalt/asl/handle.hpp>
 #include <cobalt/asl/handle_pool.hpp>
 
+#include <iostream>
+
 namespace cobalt::ecs {
 
 /// @brief Entity ID type, 32 bit value should be sufficient for all use cases
@@ -20,11 +22,11 @@ using entity_pool = cobalt::asl::handle_pool<entity>;
 
 /// @brief Serialize an entity to a stream
 ///
-/// @param os Stream to write to
+/// @param output Stream to write to
 /// @param ent Entity to serialize
 /// @return std::ostream&
-inline std::ostream& operator<<(std::ostream& os, const entity& ent) {
-    return os << "[id=" << ent.id() << ", generation=" << ent.generation() << "]";
+inline std::ostream& operator<<(std::ostream& output, const entity& ent) {
+    return output << "[id=" << ent.id() << ", generation=" << ent.generation() << "]";
 }
 
 } // namespace cobalt::ecs
