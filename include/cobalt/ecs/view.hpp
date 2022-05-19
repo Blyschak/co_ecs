@@ -14,6 +14,7 @@ namespace cobalt::ecs {
 template<component_reference... Args>
 class view {
 public:
+    /// @brief Const when all component references are const
     static constexpr bool is_const = const_component_references_v<Args...>;
 
     using value_type = std::tuple<Args...>;
@@ -28,7 +29,14 @@ public:
     /// @brief Returns an iterator that yields a std::tuple<Args...>
     ///
     /// @return decltype(auto) Iterator
-    decltype(auto) each() {
+    decltype(auto) each() requires(!is_const) {
+        return _registry.template each<Args...>();
+    }
+
+    /// @brief Returns an iterator that yields a std::tuple<Args...>
+    ///
+    /// @return decltype(auto) Iterator
+    decltype(auto) each() const requires(is_const) {
         return _registry.template each<Args...>();
     }
 
@@ -40,7 +48,19 @@ public:
     /// to see the actual difference.
     ///
     /// @param func A callable to run on entity components
-    void each(auto&& func) {
+    void each(auto&& func) requires(!is_const) {
+        _registry.template each<Args...>(std::forward<decltype(func)>(func));
+    }
+
+    /// @brief Run func on every entity that matches the Args requirement. Constant version
+    ///
+    /// NOTE: This kind of iteration might be faster and better optimized by the compiler since the func can operate on
+    /// a chunk that yields two tuples of pointers to the actual data whereas an each() variant returns an iterator over
+    /// iterator over iterator to the actual data which is a challenge for compiler to optimize. Look at the benchmarks
+    /// to see the actual difference.
+    ///
+    /// @param func A callable to run on entity components
+    void each(auto&& func) const requires(is_const) {
         _registry.template each<Args...>(std::forward<decltype(func)>(func));
     }
 
@@ -48,7 +68,15 @@ public:
     ///
     /// @param ent Entity to query
     /// @return value_type Components tuple
-    value_type get(entity ent) {
+    value_type get(entity ent) requires(!is_const) {
+        return _registry.template get<Args...>(ent);
+    }
+
+    /// @brief Get components for a single entity
+    ///
+    /// @param ent Entity to query
+    /// @return value_type Components tuple
+    value_type get(entity ent) const requires(is_const) {
         return _registry.template get<Args...>(ent);
     }
 

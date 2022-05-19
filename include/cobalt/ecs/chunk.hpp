@@ -150,27 +150,24 @@ public:
         return other_chunk_index;
     }
 
-    template<component_reference T>
-    inline decay_component_t<T>* ptr(std::size_t index) {
-        if constexpr (mutable_component_reference_v<T>) {
-            static_assert(
-                !std::is_same_v<decay_component_t<T>, entity>, "Cannot give a mutable reference to the entity");
-        }
-        return ptr<decay_component_t<T>>(index);
-    }
-
-    template<component_reference T>
-    inline const decay_component_t<T>* ptr(std::size_t index) const {
-        return ptr<decay_component_t<T>>(index);
-    }
-
+    /// @brief Give a const pointer to a component T at index
+    ///
+    /// @tparam T Component type
+    /// @param index Index
+    /// @return const T* Resulting pointer
     template<component T>
-    inline const T* ptr(std::size_t index) const {
+    inline const T* ptr_const(std::size_t index) const {
         return ptr_unchecked_impl<const T*>(*this, index);
     }
 
+    /// @brief Give a pointer to a component T at index
+    ///
+    /// @tparam T Component type
+    /// @param index Index
+    /// @return const T* Resulting pointer
     template<component T>
-    inline T* ptr(std::size_t index) {
+    inline T* ptr_mut(std::size_t index) {
+        static_assert(!std::is_same_v<T, entity>, "Cannot give a mutable pointer/reference to the entity");
         return ptr_unchecked_impl<T*>(*this, index);
     }
 
@@ -217,16 +214,13 @@ private:
 
     template<typename P>
     static inline P ptr_unchecked_impl(auto&& self, std::size_t index) {
-        const auto& block = self.get_block(component_family::id<std::remove_pointer_t<std::remove_const_t<P>>>);
+        using component_type = std::remove_const_t<std::remove_pointer_t<P>>;
+        const auto& block = self.get_block(component_family::id<component_type>);
         return (reinterpret_cast<P>(self._buffer + block.offset) + index);
     }
 
     [[nodiscard]] const block_metadata& get_block(component_id id) const {
-        try {
-            return _blocks->at(id);
-        } catch (const std::out_of_range&) {
-            throw component_not_found{ id };
-        }
+        return _blocks->at(id);
     }
 
     inline void destroy_at(std::size_t index) noexcept {
@@ -241,12 +235,47 @@ private:
     const blocks_type* _blocks;
 };
 
+/// @brief Component fetch is a namespace for routines that figure out based on input component_reference how to fetch
+/// the component from the chunk
+struct component_fetch {
+    /// @brief Fetches pointer for const component reference
+    ///
+    /// @tparam C Component reference
+    template<component_reference C>
+    static const decay_component_t<C>* fetch_pointer(auto&& chunk, std::size_t index) requires(
+        const_component_reference_v<C>) {
+        try {
+            return chunk.template ptr_const<decay_component_t<C>>(index);
+        } catch (const std::out_of_range&) {
+            throw component_not_found{ type_meta::of<decay_component_t<C>>() };
+        }
+    }
+
+    /// @brief Fetches pointer for mutable component reference
+    ///
+    /// @tparam C Component reference
+    template<component_reference C>
+    static decay_component_t<C>* fetch_pointer(auto&& chunk, std::size_t index) requires(
+        mutable_component_reference_v<C>) {
+        try {
+            return chunk.template ptr_mut<decay_component_t<C>>(index);
+        } catch (const std::out_of_range&) {
+            throw component_not_found{ type_meta::of<decay_component_t<C>>() };
+        }
+    }
+};
+
 /// @brief A type aware view into a chunk components
 ///
 /// @tparam Args Components
 template<component_reference... Args>
 class chunk_view {
 public:
+    /// @brief Const when all component references are const
+    static constexpr bool is_const = const_component_references_v<Args...>;
+
+    using chunk_type = std::conditional_t<is_const, const chunk&, chunk&>;
+
     /// @brief Chunk view iterator
     class iterator {
     public:
@@ -255,7 +284,7 @@ public:
         using difference_type = int;
         using value_type = std::tuple<Args...>;
         using reference = std::tuple<Args...>;
-        using element_type = value_type;
+        using element_type = reference;
 
         /// @brief Default constructor
         constexpr iterator() = default;
@@ -267,7 +296,8 @@ public:
         ///
         /// @param c Chunk reference
         /// @param index Index this iterator is pointing to
-        explicit constexpr iterator(chunk& c, std::size_t index = 0) : _ptrs(std::make_tuple(c.ptr<Args>(index)...)) {
+        explicit constexpr iterator(chunk_type c, std::size_t index = 0) :
+            _ptrs(std::make_tuple(component_fetch::fetch_pointer<Args>(c, index)...)) {
         }
 
         /// @brief Default copy constructor
@@ -323,13 +353,13 @@ public:
         constexpr auto operator<=>(const iterator& rhs) const noexcept = default;
 
     private:
-        std::tuple<std::add_pointer_t<decay_component_t<Args>>...> _ptrs;
+        std::tuple<std::add_pointer_t<std::remove_reference_t<Args>>...> _ptrs;
     };
 
     /// @brief Construct a new chunk view object
     ///
     /// @param c Chunk reference
-    explicit chunk_view(chunk& c) : _chunk(c) {
+    explicit chunk_view(chunk_type c) : _chunk(c) {
     }
 
     /// @brief Return iterator to the beginning of a chunk
@@ -347,7 +377,7 @@ public:
     }
 
 private:
-    chunk& _chunk;
+    chunk_type _chunk;
 };
 
 } // namespace cobalt::ecs

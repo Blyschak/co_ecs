@@ -224,7 +224,7 @@ private:
     inline static ComponentRef read_impl(auto&& self, entity_location location) {
         auto& chunk = self.get_chunk(location);
         assert(location.entry_index < chunk.size());
-        return *chunk.template ptr<decay_component_t<ComponentRef>>(location.entry_index);
+        return *component_fetch::fetch_pointer<ComponentRef>(chunk, location.entry_index);
     }
 
     inline chunk& get_chunk(entity_location location) noexcept {
@@ -333,6 +333,8 @@ public:
     [[nodiscard]] const_iterator end() const noexcept {
         return _archetypes.end();
     }
+
+    /// TODO: Make chunks filtering logic part of view
 
     /// @brief Return a range of chunks that match given component set in Args
     ///

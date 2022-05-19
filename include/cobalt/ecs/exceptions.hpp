@@ -39,10 +39,10 @@ class component_not_found : public std::exception {
 public:
     /// @brief Construct a new component not found exception object
     ///
-    /// @param id Component ID
-    explicit component_not_found(component_id id) {
+    /// @param meta Type metadata
+    explicit component_not_found(const type_meta* meta) {
         std::stringstream ss;
-        ss << "component [id=" << id << "] not found";
+        ss << "component \"" << asl::demangle(meta->name) << "\" not found";
         _msg = ss.str();
     }
 
