@@ -6,6 +6,7 @@
 #include <cobalt/ecs/archetype.hpp>
 #include <cobalt/ecs/entity.hpp>
 #include <cobalt/ecs/entity_location.hpp>
+#include <cobalt/ecs/noncopyable_any.hpp>
 #include <cobalt/ecs/resource.hpp>
 
 namespace cobalt::ecs {
@@ -234,7 +235,7 @@ public:
     /// @param args Arguments to construct resource from
     template<resource R, typename... Args>
     void set_resource(Args&&... args) {
-        _resources[resource_family::id<R>] = resource_wrapper::create<R>(std::forward<Args>(args)...);
+        _resources[resource_family::id<R>] = noncopyable_any::create<R>(std::forward<Args>(args)...);
     }
 
     /// @brief Remove resource from the registry
@@ -347,7 +348,7 @@ private:
     archetypes _archetypes;
     asl::sparse_map<entity_id, entity_location> _entity_archetype_map;
     asl::sparse_map<resource_id, void*> _resource_map;
-    asl::sparse_map<resource_id, resource_wrapper> _resources;
+    asl::sparse_map<resource_id, noncopyable_any> _resources;
 };
 
 } // namespace cobalt::ecs

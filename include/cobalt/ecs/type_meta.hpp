@@ -5,7 +5,7 @@
 
 namespace cobalt::ecs {
 
-/// @brief Component actual data type meta information
+/// @brief Type meta information
 struct type_meta {
     /// @brief Move constructor callback for type T
     ///
@@ -38,8 +38,8 @@ struct type_meta {
 
     /// @brief Constructs type_meta for type T
     ///
-    /// @tparam T Component type
-    /// @return const type_meta* Component type meta
+    /// @tparam T Target type
+    /// @return const type_meta* Target type meta
     template<typename T>
     static const type_meta* of() noexcept {
         static const type_meta meta{
