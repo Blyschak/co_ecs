@@ -3,6 +3,7 @@
 #include <cobalt/asl/type_traits.hpp>
 #include <cobalt/ecs/commands.hpp>
 #include <cobalt/ecs/registry.hpp>
+#include <cobalt/ecs/view.hpp>
 
 #include <tuple>
 

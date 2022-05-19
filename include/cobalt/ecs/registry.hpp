@@ -10,72 +10,6 @@
 
 namespace cobalt::ecs {
 
-// forward declaration
-class registry;
-
-/// @brief A view lets you get a viewable range over components of Args out of a registry
-///
-/// A view isn't invalidated when there are changes made to the registry which lets a create one an re-use over time.
-///
-/// @tparam Args Component references types
-template<component_reference... Args>
-class view {
-public:
-    using value_type = std::tuple<Args...>;
-
-    /// @brief Construct a new view object
-    ///
-    /// @param registry Reference to the registry
-    explicit view(registry& registry) noexcept : _registry(registry) {
-    }
-
-    /// @brief Returns an iterator that yields a std::tuple<Args...>
-    ///
-    /// @return decltype(auto) Iterator
-    decltype(auto) each();
-
-    /// @brief Run func on every entity that matches the Args requirement
-    ///
-    /// NOTE: This kind of iteration might be faster and better optimized by the compiler since the func can operate on
-    /// a chunk that yields two tuples of pointers to the actual data whereas an each() variant returns an iterator over
-    /// iterator over iterator to the actual data which is a challenge for compiler to optimize. Look at the benchmarks
-    /// to see the actual difference.
-    ///
-    /// @param func A callable to run on entity components
-    void each(auto&& func);
-
-    /// @brief Get components for a single entity
-    ///
-    /// @param ent Entity to query
-    /// @return value_type Components tuple
-    value_type get(entity ent);
-
-private:
-    registry& _registry;
-};
-
-/// @brief Runtime view, used for scripting
-class runtime_view {
-public:
-    /// @brief Construct a new runtime view object
-    ///
-    /// @tparam container_t Container type holding component IDs
-    /// @param registry Registry reference
-    /// @param ids IDs to match archetypes
-    template<typename container_t>
-    runtime_view(registry& registry, container_t ids) : _registry(registry), _ids(ids.begin(), ids.end()) {
-    }
-
-    /// @brief Iterate over entities that match given IDs
-    ///
-    /// @param func Function to call on every entity
-    void each(auto&& func);
-
-private:
-    registry& _registry;
-    std::vector<component_id> _ids;
-};
-
 /// @brief Registry is a container for all our entities and components. Components are stored in continuosly in memory
 /// allowing for very fast iterations, a so called SoA approach. A set of unique components form an archetype, where
 /// every entity is mapped to an archetype.
@@ -338,29 +272,7 @@ public:
         }
     }
 
-    /// @brief Construct a view out of the registry
-    ///
-    /// @tparam Args Components types pack
-    /// @return ecs::view<Args...>
-    template<component_reference... Args>
-    ecs::view<Args...> view() {
-        return ecs::view<Args...>(*this);
-    }
-
-    /// @brief Construct a runtime view to match IDs
-    ///
-    /// @tparam container_t Container type holding IDs
-    /// @param ids IDs to match archetype
-    /// @return ecs::runtime_view
-    template<typename container_t>
-    ecs::runtime_view runtime_view(const container_t& ids) {
-        return ecs::runtime_view(*this, ids);
-    }
-
 private:
-    template<component_reference... Args>
-    friend class view;
-
     template<component_reference... Args>
     static std::tuple<Args...> get_impl(auto&& self, entity ent) {
         self.ensure_alive(ent);
@@ -397,26 +309,5 @@ private:
     asl::sparse_map<resource_id, void*> _resource_map;
     asl::sparse_map<resource_id, resource_wrapper> _resources;
 };
-
-
-template<component_reference... Args>
-decltype(auto) view<Args...>::each() {
-    return _registry.each<Args...>();
-}
-
-template<component_reference... Args>
-void view<Args...>::each(auto&& func) {
-    _registry.each<Args...>(std::forward<decltype(func)>(func));
-}
-
-
-template<component_reference... Args>
-std::tuple<Args...> view<Args...>::get(entity ent) {
-    return _registry.get<Args...>(ent);
-}
-
-void runtime_view::each(auto&& func) {
-    _registry.runtime_each(_ids, std::forward<decltype(func)>(func));
-}
 
 } // namespace cobalt::ecs

@@ -87,7 +87,7 @@ static void bm_entity_iterate_component_with_view(benchmark::State& state) {
 
     int sum = 0;
     for (auto _ : state) {
-        auto view = registry.view<const position&, const rotation&>();
+        auto view = cobalt::ecs::view<const position&, const rotation&>(registry);
         view.each([&sum](const auto& pos, const auto& vel) { sum += pos.x; });
     }
 

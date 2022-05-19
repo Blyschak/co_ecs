@@ -1,3 +1,4 @@
+#include <cobalt/ecs/runtime_view.hpp>
 #include <cobalt/scripting/lua_engine.hpp>
 
 #include <sstream>

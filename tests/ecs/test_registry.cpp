@@ -1,4 +1,5 @@
 #include <cobalt/ecs/registry.hpp>
+#include <cobalt/ecs/view.hpp>
 
 #include <gtest/gtest.h>
 
@@ -221,7 +222,7 @@ TEST(registry, view_class) {
     auto entity1 = registry.create<position>({ 1, 1 });
     auto entity2 = registry.create<position, velocity>({ 2, 2 }, { 22, 22 });
 
-    auto view = registry.view<const position&, const velocity&>();
+    auto view = ecs::view<const position&, const velocity&>(registry);
 
     int sum = 0;
     view.each([&sum](const auto& pos, const auto& vel) { sum += pos.x + vel.x; });
@@ -233,7 +234,7 @@ TEST(registry, view_entity) {
     registry.create<position>({ 1, 1 });
     registry.create<position, velocity>({ 2, 2 }, { 22, 22 });
 
-    auto view = registry.view<const ecs::entity&>();
+    auto view = ecs::view<const ecs::entity&>(registry);
     int sum = 0;
     view.each([&sum](auto& ent) { sum += ent.id(); });
     EXPECT_EQ(sum, 1);
@@ -243,7 +244,7 @@ TEST(registry, view_get) {
     ecs::registry registry;
     auto ent = registry.create<position, velocity>({ 2, 2 }, { 22, 22 });
 
-    auto view = registry.view<const position&, velocity&>();
+    auto view = ecs::view<const position&, velocity&>(registry);
     auto components = view.get(ent);
     EXPECT_EQ(std::get<0>(components).x, 2);
     EXPECT_EQ(std::get<0>(components).y, 2);

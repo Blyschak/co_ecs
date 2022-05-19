@@ -1,4 +1,5 @@
 #include <cobalt/ecs/commands.hpp>
+#include <cobalt/ecs/view.hpp>
 
 #include <gtest/gtest.h>
 
@@ -23,7 +24,7 @@ TEST(commands, basic) {
 
     commands.execute(registry);
 
-    auto view = registry.view<const ecs::entity&, const sa&, const sb&>();
+    auto view = ecs::view<const ecs::entity&, const sa&, const sb&>(registry);
 
     int sum_a = 0;
     int sum_b = 0;
