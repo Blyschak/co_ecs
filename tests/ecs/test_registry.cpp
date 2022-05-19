@@ -204,6 +204,41 @@ TEST(registry, ref_view) {
     }
 }
 
+TEST(registry, const_view) {
+    ecs::registry registry;
+    std::vector<ecs::entity> entities;
+
+    for (int i = 0; i < 10000; i++) {
+        ecs::entity entity = ecs::entity::invalid();
+        if (i % 2 == 0) {
+            entity = registry.create<position, velocity, rotation>({ 1, 2 }, { 3, 0 }, { 5, 6 });
+        } else {
+            entity = registry.create<velocity, rotation>({ 3, 0 }, { 5, 6 });
+        }
+        EXPECT_TRUE(registry.alive(entity));
+        entities.emplace_back(entity);
+    }
+
+    int sum_vel{};
+    int sum_pos{};
+    int sum_rot{};
+
+    const auto& const_registry = registry;
+    auto view = ecs::view<const velocity&, const position&, const rotation&>(const_registry);
+    for (auto [vel, pos, rot] : view.each()) {
+        static_assert(std::is_same_v<decltype(vel), const velocity&>);
+        static_assert(std::is_same_v<decltype(pos), const position&>);
+        static_assert(std::is_same_v<decltype(rot), const rotation&>);
+        sum_vel += vel.x;
+        sum_pos += pos.x;
+        sum_rot += rot.x;
+    }
+
+    EXPECT_EQ(sum_vel, 15000);
+    EXPECT_EQ(sum_pos, 5000);
+    EXPECT_EQ(sum_rot, 25000);
+}
+
 TEST(registry, view_part) {
     ecs::registry registry;
     auto entity1 = registry.create<position>({ 1, 1 });

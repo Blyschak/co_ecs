@@ -123,11 +123,12 @@ public:
     /// @tparam ComponentRef Component reference type
     /// @param id Component ID
     /// @param location Entity location
-    /// @return const Component& Component reference
-    template<component_reference Component>
-    Component get(entity_location location) const {
-        static_assert(const_component_reference_v<Component>, "Can only get a non-const reference on const archetype");
-        return read_impl<Component>(*this, location);
+    /// @return ComponentRef Component reference
+    template<component_reference ComponentRef>
+    ComponentRef get(entity_location location) const {
+        static_assert(
+            const_component_reference_v<ComponentRef>, "Can only get a non-const reference on const archetype");
+        return read_impl<ComponentRef>(*this, location);
     }
 
     /// @brief Check if archetype has component C
@@ -338,7 +339,27 @@ public:
     /// @tparam Args
     /// @return decltype(auto)
     template<component_reference... Args>
-    decltype(auto) chunks() {
+    decltype(auto) chunks() requires(!const_component_references_v<Args...>) {
+        auto filter_archetypes = [](auto& archetype) {
+            return (... && archetype->template contains<decay_component_t<Args>>());
+        };
+        auto into_chunks = [](auto& archetype) -> decltype(auto) { return archetype->chunks(); };
+        auto as_typed_chunk = [](auto& chunk) -> decltype(auto) { return chunk_view<Args...>(chunk); };
+
+        return *this                                    // for each archetype entry in archetype map
+               | std::views::values                     // for each value, a pointer to archetype
+               | std::views::filter(filter_archetypes)  // filter archetype by requested components
+               | std::views::transform(into_chunks)     // fetch chunks vector
+               | std::views::join                       // join chunks together
+               | std::views::transform(as_typed_chunk); // each chunk casted to a typed chunk view range-like type
+    }
+
+    /// @brief Return a range of chunks that match given component set in Args
+    ///
+    /// @tparam Args
+    /// @return decltype(auto)
+    template<component_reference... Args>
+    decltype(auto) chunks() const requires(const_component_references_v<Args...>) {
         auto filter_archetypes = [](auto& archetype) {
             return (... && archetype->template contains<decay_component_t<Args>>());
         };

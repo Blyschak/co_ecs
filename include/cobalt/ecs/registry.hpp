@@ -173,7 +173,17 @@ public:
     /// @param ent Entity to query
     /// @return value_type Components tuple
     template<component_reference... Args>
-    [[nodiscard]] std::tuple<Args...> get(entity ent) {
+    [[nodiscard]] std::tuple<Args...> get(entity ent) requires(const_component_references_v<Args...>) {
+        return get_impl<Args...>(*this, ent);
+    }
+
+    /// @brief Get components for a single entity
+    ///
+    /// @tparam Args Component reference
+    /// @param ent Entity to query
+    /// @return value_type Components tuple
+    template<component_reference... Args>
+    [[nodiscard]] std::tuple<Args...> get(entity ent) const requires(!const_component_references_v<Args...>) {
         return get_impl<Args...>(*this, ent);
     }
 
@@ -240,8 +250,17 @@ public:
     /// @tparam Args Components types pack
     /// @return decltype(auto) Range-like type that yields references to requested components
     template<component_reference... Args>
-    decltype(auto) each() {
-        return _archetypes.chunks<Args...>() | std::views::join; // join all chunks together
+    decltype(auto) each() const requires(const_component_references_v<Args...>) {
+        return each_impl<Args...>(*this);
+    }
+
+    /// @brief Iterate every entity that has <Args...> components attached
+    ///
+    /// @tparam Args Components types pack
+    /// @return decltype(auto) Range-like type that yields references to requested components
+    template<component_reference... Args>
+    decltype(auto) each() requires(!const_component_references_v<Args...>) {
+        return each_impl<Args...>(*this);
     }
 
     /// @brief Iterate every entity that matches given IDs
@@ -264,15 +283,36 @@ public:
     /// @tparam Args Components types pack
     /// @param func A callable to run on components
     template<component_reference... Args>
-    void each(auto&& func) {
-        for (auto chunk : _archetypes.chunks<Args...>()) {
+    void each(auto&& func) const requires(const_component_references_v<Args...>) {
+        each_impl<Args...>(*this, std::forward<decltype(func)>(func));
+    }
+
+    /// @brief Iterate every entity that has <Args...> components attached and run a func
+    ///
+    /// @tparam Args Components types pack
+    /// @param func A callable to run on components
+    template<component_reference... Args>
+    void each(auto&& func) requires(!const_component_references_v<Args...>) {
+        each_impl<Args...>(*this, std::forward<decltype(func)>(func));
+    }
+
+private:
+    template<component_reference... Args>
+    static decltype(auto) each_impl(auto&& self) {
+        return self._archetypes.template chunks<Args...>() | std::views::join; // join all chunks together
+    }
+
+    template<component_reference... Args>
+    static decltype(auto) each_impl(auto&& self, auto&& func) {
+        for (auto chunk : self._archetypes.template chunks<Args...>()) {
             for (auto entry : chunk) {
-                std::apply([func](auto&&... args) { func(std::forward<decltype(args)>(args)...); }, entry);
+                std::apply([func = std::forward<decltype(func)>(func)](
+                               auto&&... args) { func(std::forward<decltype(args)>(args)...); },
+                    entry);
             }
         }
     }
 
-private:
     template<component_reference... Args>
     static std::tuple<Args...> get_impl(auto&& self, entity ent) {
         self.ensure_alive(ent);

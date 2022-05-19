@@ -2,6 +2,8 @@
 
 #include <cobalt/ecs/registry.hpp>
 
+#include <type_traits>
+
 namespace cobalt::ecs {
 
 /// @brief A view lets you get a viewable range over components of Args out of a registry
@@ -12,19 +14,22 @@ namespace cobalt::ecs {
 template<component_reference... Args>
 class view {
 public:
+    static constexpr bool is_const = const_component_references_v<Args...>;
+
     using value_type = std::tuple<Args...>;
+    using registry_type = std::conditional_t<is_const, const registry&, registry&>;
 
     /// @brief Construct a new view object
     ///
     /// @param registry Reference to the registry
-    explicit view(registry& registry) noexcept : _registry(registry) {
+    explicit view(registry_type registry) noexcept : _registry(registry) {
     }
 
     /// @brief Returns an iterator that yields a std::tuple<Args...>
     ///
     /// @return decltype(auto) Iterator
     decltype(auto) each() {
-        return _registry.each<Args...>();
+        return _registry.template each<Args...>();
     }
 
     /// @brief Run func on every entity that matches the Args requirement
@@ -36,7 +41,7 @@ public:
     ///
     /// @param func A callable to run on entity components
     void each(auto&& func) {
-        _registry.each<Args...>(std::forward<decltype(func)>(func));
+        _registry.template each<Args...>(std::forward<decltype(func)>(func));
     }
 
     /// @brief Get components for a single entity
@@ -44,11 +49,11 @@ public:
     /// @param ent Entity to query
     /// @return value_type Components tuple
     value_type get(entity ent) {
-        return _registry.get<Args...>(ent);
+        return _registry.template get<Args...>(ent);
     }
 
 private:
-    registry& _registry;
+    registry_type _registry;
 };
 
 } // namespace cobalt::ecs

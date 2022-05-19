@@ -73,6 +73,20 @@ struct mutable_component_reference {
 template<component_reference T>
 constexpr bool mutable_component_reference_v = mutable_component_reference<T>::value;
 
+/// @brief Struct to determine whether all component references are const
+///
+/// @tparam Args Component references
+template<component_reference... Args>
+struct const_component_references {
+    constexpr static bool value = std::conjunction_v<const_component_reference<Args>...>;
+};
+
+/// @brief Returns true when all Args are const references
+///
+/// @tparam Args Component references
+template<component_reference... Args>
+constexpr bool const_component_references_v = const_component_references<Args...>::value;
+
 /// @brief Component metadata. Stores an ID, size, alignment, destructor, etc.
 struct component_meta {
 public:
