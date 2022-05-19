@@ -38,7 +38,7 @@ public:
 /// @brief System view state, pre-creates a view object needed for components iteration
 ///
 /// @tparam view_t View type
-template<typename view_t>
+template<typename view>
 class system_view_state {
 public:
     /// @brief Construct a new system view state object
@@ -50,7 +50,7 @@ public:
     /// @brief Returns the actual state inside to pass to the system
     ///
     /// @return view_t&
-    [[nodiscard]] view_t& get() noexcept {
+    [[nodiscard]] view& get() noexcept {
         return _view;
     }
 
@@ -59,7 +59,7 @@ public:
     }
 
 private:
-    view_t _view;
+    view _view;
 };
 
 /// @brief System resource state, pre-fetches resource to be passed to the system
@@ -90,6 +90,42 @@ public:
 
 private:
     resource_type& _resource;
+};
+
+template<typename event_publisher_ref>
+class system_event_publisher_state {
+public:
+    explicit system_event_publisher_state(registry& registry) noexcept :
+        _publisher(registry.get_event_queue<typename std::decay_t<event_publisher_ref>::event_type>()) {
+    }
+
+    [[nodiscard]] event_publisher_ref get() noexcept {
+        return _publisher;
+    }
+
+    void run_deferred() const noexcept {
+    }
+
+private:
+    std::decay_t<event_publisher_ref> _publisher;
+};
+
+template<typename event_reader_ref>
+class system_event_reader_state {
+public:
+    explicit system_event_reader_state(registry& registry) noexcept :
+        _reader(registry.get_event_queue<typename std::decay_t<event_reader_ref>::event_type>()) {
+    }
+
+    [[nodiscard]] event_reader_ref get() noexcept {
+        return _reader;
+    }
+
+    void run_deferred() const noexcept {
+    }
+
+private:
+    std::decay_t<event_reader_ref> _reader;
 };
 
 /// @brief System commands state, creates a command queue to be passed to the system
@@ -133,6 +169,26 @@ class system_argument_state_trait {
 public:
     /// @brief Actual state type for T
     using state_type = system_resource_state<T>;
+};
+
+/// @brief Specialization for event publisher types
+///
+/// @tparam T Event type
+template<event T>
+class system_argument_state_trait<event_publisher<T>&> {
+public:
+    /// @brief Actual state type for T
+    using state_type = system_event_publisher_state<event_publisher<T>&>;
+};
+
+/// @brief Specialization for event reader types
+///
+/// @tparam T Event type
+template<event T>
+class system_argument_state_trait<const event_reader<T>&> {
+public:
+    /// @brief Actual state type for T
+    using state_type = system_event_publisher_state<const event_reader<T>&>;
 };
 
 /// @brief Specialization for ecs::view<Args...>

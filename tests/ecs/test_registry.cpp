@@ -321,21 +321,25 @@ TEST(registry, events) {
 
     ecs::registry registry;
 
-    registry.publish_event<my_event>(1);
-    registry.publish_event<my_event>(2);
-    registry.publish_event<my_event>(3);
+    ecs::event_publisher<my_event> publisher{ registry.get_event_queue<my_event>() };
+    ecs::event_reader<my_event> reader{ registry.get_event_queue<my_event>() };
+
+    publisher.publish(1);
+    publisher.publish(2);
+    publisher.publish(3);
 
     int sum = 0;
-    for (auto& event : registry.get_events<my_event>()) {
+    for (auto& event : reader) {
         sum += event.data;
     }
 
     EXPECT_EQ(sum, 6);
 
-    registry.flush_event_queue<my_event>();
+    registry.flush_event_queues();
 
     sum = 0;
-    for (auto& event : registry.get_events<my_event>()) {
+    for (auto& event : reader) {
+        std::cout << event.data << std::endl;
         sum += event.data;
     }
 

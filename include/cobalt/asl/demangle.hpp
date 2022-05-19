@@ -42,6 +42,8 @@ inline std::string demangle(const std::string& mangled_name) {
         throw;
     }
 
+    std::free(c_name); // NOLINT(cppcoreguidelines-no-malloc,hicpp-no-malloc,cppcoreguidelines-owning-memory)
+
     return name;
 }
 

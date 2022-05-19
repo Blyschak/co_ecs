@@ -32,6 +32,7 @@ public:
             for (auto& executor : _executors) {
                 executor->run_deferred();
             }
+            _registry.flush_event_queues();
         }
     }
 
@@ -51,6 +52,8 @@ public:
             _init_executors.emplace_back(std::move(executor));
         }
 
+        _registry.flush_event_queues();
+
         // run update systems once first time and cache executors
         for (const auto& system : _systems) {
             auto executor = system->create_executor(_registry);
@@ -61,6 +64,8 @@ public:
         for (auto& executor : _executors) {
             executor->run_deferred();
         }
+
+        _registry.flush_event_queues();
     }
 
     /// @brief Add system to schedule
