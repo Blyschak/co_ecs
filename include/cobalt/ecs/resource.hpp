@@ -16,6 +16,7 @@ template<typename T>
 concept resource = !std::is_reference_v<T> &&                 //
                    !std::is_pointer_v<T> &&                   //
                    !std::is_const_v<T> &&                     //
+                   std::is_class_v<T> &&                      //
                    std::is_nothrow_move_constructible_v<T> && //
                    std::is_nothrow_move_assignable_v<T>;
 

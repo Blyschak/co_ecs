@@ -1,13 +1,14 @@
 #pragma once
 
-#include <cassert>
-
 #include <cobalt/asl/sparse_map.hpp>
 #include <cobalt/ecs/archetype.hpp>
 #include <cobalt/ecs/entity.hpp>
 #include <cobalt/ecs/entity_location.hpp>
-#include <cobalt/ecs/noncopyable_any.hpp>
+#include <cobalt/ecs/event.hpp>
 #include <cobalt/ecs/resource.hpp>
+#include <cobalt/ecs/typeless_box.hpp>
+
+#include <any>
 
 namespace cobalt::ecs {
 
@@ -235,7 +236,7 @@ public:
     /// @param args Arguments to construct resource from
     template<resource R, typename... Args>
     void set_resource(Args&&... args) {
-        _resources[resource_family::id<R>] = noncopyable_any::create<R>(std::forward<Args>(args)...);
+        _resources[resource_family::id<R>] = typeless_box::create<R>(std::forward<Args>(args)...);
     }
 
     /// @brief Remove resource from the registry
@@ -297,6 +298,46 @@ public:
         each_impl<Args...>(*this, std::forward<decltype(func)>(func));
     }
 
+    /// @brief Publish event
+    ///
+    /// @tparam E Event type
+    /// @tparam Args Argument types to construct event
+    /// @param args Arguments to construct event
+    template<event E, typename... Args>
+    void publish_event(Args&&... args) {
+        auto& event_queue = _event_queues[event_family::id<E>];
+        if (!event_queue.has_value()) {
+            event_queue = std::vector<E>{};
+        }
+        auto* vector = std::any_cast<std::vector<E>>(&event_queue);
+        vector->emplace_back(std::forward<Args>(args)...);
+    }
+
+    /// @brief Receive event from the queue
+    ///
+    /// @tparam E Event type
+    /// @return decltype(auto) Events range
+    template<event E>
+    decltype(auto) get_events() const {
+        auto& event_queue = _event_queues[event_family::id<E>];
+        if (!event_queue.has_value()) {
+            event_queue = std::vector<E>{};
+        }
+        return *std::any_cast<std::vector<E>>(&event_queue);
+    }
+
+    /// @brief Flush event queues
+    ///
+    /// @tparam E Event type
+    template<event E>
+    void flush_event_queue() {
+        auto& event_queue = _event_queues[event_family::id<E>];
+        if (!event_queue.has_value()) {
+            event_queue = std::vector<E>{};
+        }
+        return std::any_cast<std::vector<E>>(&event_queue)->clear();
+    }
+
 private:
     template<component_reference... Args>
     static decltype(auto) each_impl(auto&& self) {
@@ -347,8 +388,9 @@ private:
     entity_pool _entity_pool;
     archetypes _archetypes;
     asl::sparse_map<entity_id, entity_location> _entity_archetype_map;
-    asl::sparse_map<resource_id, void*> _resource_map;
-    asl::sparse_map<resource_id, noncopyable_any> _resources;
+    asl::sparse_map<resource_id, typeless_box> _resources;
+    /// TODO: maybe create a dedicated type for typeless event queue.
+    mutable asl::sparse_map<event_id, std::any> _event_queues;
 };
 
 } // namespace cobalt::ecs

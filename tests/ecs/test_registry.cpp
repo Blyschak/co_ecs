@@ -313,3 +313,31 @@ TEST(registry, exceptions) {
     EXPECT_THROW(registry.set<velocity>(ent), ecs::entity_not_found);
     EXPECT_THROW(registry.destroy(ent), ecs::entity_not_found);
 }
+
+TEST(registry, events) {
+    struct my_event {
+        int data;
+    };
+
+    ecs::registry registry;
+
+    registry.publish_event<my_event>(1);
+    registry.publish_event<my_event>(2);
+    registry.publish_event<my_event>(3);
+
+    int sum = 0;
+    for (auto& event : registry.get_events<my_event>()) {
+        sum += event.data;
+    }
+
+    EXPECT_EQ(sum, 6);
+
+    registry.flush_event_queue<my_event>();
+
+    sum = 0;
+    for (auto& event : registry.get_events<my_event>()) {
+        sum += event.data;
+    }
+
+    EXPECT_EQ(sum, 0);
+}
