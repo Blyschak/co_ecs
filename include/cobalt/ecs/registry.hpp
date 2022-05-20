@@ -297,15 +297,23 @@ public:
         each_impl<Args...>(*this, std::forward<decltype(func)>(func));
     }
 
+    /// @brief Get the event queue object
+    ///
+    /// @tparam T Event type
+    /// @return event_vector<T>& Event vector
     template<event T>
-    std::vector<T>& get_event_queue() {
-        auto [iter, _] = _event_queues.emplace(event_family::id<T>, event_queue::create<T>());
+    event_vector<T>& get_event_queue() {
+        auto [iter, _] = _event_queues.emplace(event_family::id<T>, event_storage::create<T>());
         return iter->second.template get<T>();
     }
 
+    /// @brief Get the event queue object
+    ///
+    /// @tparam T Event type
+    /// @return const event_vector& Event vector
     template<event T>
-    const std::vector<T>& get_event_queue() const {
-        auto [iter, _] = _event_queues.emplace(event_family::id<T>, event_queue::create<T>());
+    const event_vector<T>& get_event_queue() const {
+        auto [iter, _] = _event_queues.emplace(event_family::id<T>, event_storage::create<T>());
         return iter->second.template get<T>();
     }
 
@@ -367,7 +375,7 @@ private:
     archetypes _archetypes;
     asl::sparse_map<entity_id, entity_location> _entity_archetype_map;
     asl::sparse_map<resource_id, resource_container> _resources;
-    mutable asl::sparse_map<event_id, event_queue> _event_queues;
+    mutable asl::sparse_map<event_id, event_storage> _event_queues;
 };
 
 } // namespace cobalt::ecs

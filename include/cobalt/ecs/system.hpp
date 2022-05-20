@@ -92,40 +92,70 @@ private:
     resource_type& _resource;
 };
 
+/// @brief System event publisher state, pre-fetches the event queue and constructs an event publisher
+///
+/// @tparam event_publisher_ref Event publisher reference type
 template<typename event_publisher_ref>
 class system_event_publisher_state {
 public:
-    explicit system_event_publisher_state(registry& registry) noexcept :
-        _publisher(registry.get_event_queue<typename std::decay_t<event_publisher_ref>::event_type>()) {
+    /// @brief Event publisher type
+    using event_publisher_type = std::decay_t<event_publisher_ref>;
+
+    /// @brief Event type
+    using event_type = typename event_publisher_type::event_type;
+
+    /// @brief Construct a new system event publisher state object
+    ///
+    /// @param registry Registry reference
+    explicit system_event_publisher_state(registry& registry) : _publisher(registry.get_event_queue<event_type>()) {
     }
 
+    /// @brief Return event publisher
+    ///
+    /// @return event_publisher_ref Event publisher
     [[nodiscard]] event_publisher_ref get() noexcept {
         return _publisher;
     }
 
+    /// @brief Run defferred commands, no-op.
     void run_deferred() const noexcept {
     }
 
 private:
-    std::decay_t<event_publisher_ref> _publisher;
+    event_publisher_type _publisher;
 };
 
+/// @brief System event reader state, pre-fetches the event queue and constructs an event reader
+///
+/// @tparam event_reader_ref Event reader reference type
 template<typename event_reader_ref>
 class system_event_reader_state {
 public:
-    explicit system_event_reader_state(registry& registry) noexcept :
-        _reader(registry.get_event_queue<typename std::decay_t<event_reader_ref>::event_type>()) {
+    /// @brief Event reader type
+    using event_reader_type = std::decay_t<event_reader_ref>;
+
+    /// @brief Event type
+    using event_type = typename event_reader_type::event_type;
+
+    /// @brief Construct a new system event reader state object
+    ///
+    /// @param registry Registry reference
+    explicit system_event_reader_state(registry& registry) : _reader(registry.get_event_queue<event_type>()) {
     }
 
+    /// @brief Return event reader
+    ///
+    /// @return event_reader_ref Event reader
     [[nodiscard]] event_reader_ref get() noexcept {
         return _reader;
     }
 
+    /// @brief Run defferred commands, no-op.
     void run_deferred() const noexcept {
     }
 
 private:
-    std::decay_t<event_reader_ref> _reader;
+    event_reader_type _reader;
 };
 
 /// @brief System commands state, creates a command queue to be passed to the system
