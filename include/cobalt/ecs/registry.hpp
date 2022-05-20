@@ -234,8 +234,15 @@ public:
     /// @tparam Args Arguments type pack
     /// @param args Arguments to construct resource from
     template<resource R, typename... Args>
-    void set_resource(Args&&... args) {
-        _resources[resource_family::id<R>] = resource_container::create<R>(std::forward<Args>(args)...);
+    R& set_resource(Args&&... args) {
+        auto id = resource_family::id<R>;
+        auto iter = _resources.find(id);
+        if (iter == _resources.end()) {
+            auto [emplaced_iter, _] =
+                _resources.emplace(id, resource_container::create<R>(std::forward<Args>(args)...));
+            iter = emplaced_iter;
+        }
+        return iter->second.template get<R>();
     }
 
     /// @brief Remove resource from the registry

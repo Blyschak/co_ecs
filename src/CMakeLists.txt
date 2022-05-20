@@ -52,6 +52,13 @@ else()
   message(STATUS "Using vulkan lib at: ${Vulkan_LIBRARIES}")
 endif()
 
+FetchContent_Declare(
+  glad
+  GIT_REPOSITORY https://github.com/Dav1dde/glad 
+  GIT_TAG        v0.1.36
+)
+FetchContent_MakeAvailable(glad)
+
 add_library(
   engine
   core/logging.cpp
@@ -61,7 +68,11 @@ add_library(
   platform/glfw/glfw_window.cpp
   render/renderer.cpp
   render/vulkan/vk_device.cpp
-  render/vulkan/vk_renderer.cpp)
+  render/vulkan/vk_renderer.cpp
+  render/opengl/gl_buffer.cpp
+  render/opengl/gl_vao.cpp
+  render/opengl/gl_renderer.cpp
+)
 
 target_link_libraries(
   engine
@@ -70,4 +81,5 @@ target_link_libraries(
   PUBLIC sol2
   PUBLIC glm
   PUBLIC glfw
+  PUBLIC glad
   PUBLIC vulkan)

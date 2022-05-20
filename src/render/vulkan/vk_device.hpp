@@ -7,7 +7,7 @@
 
 #include <vector>
 
-namespace cobalt::render {
+namespace cobalt::renderer {
 
 struct swap_chain_support_details {
     VkSurfaceCapabilitiesKHR capabilities;
@@ -82,4 +82,4 @@ private:
     platform::window& _window;
 };
 
-} // namespace cobalt::render
+} // namespace cobalt::renderer

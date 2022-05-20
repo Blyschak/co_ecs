@@ -2,7 +2,7 @@
 
 #include "vk_device.hpp"
 
-namespace cobalt::render {
+namespace cobalt::renderer {
 
 class vk_renderer : public renderer {
 public:
@@ -20,4 +20,4 @@ private:
     vk_device _device;
 };
 
-} // namespace cobalt::render
+} // namespace cobalt::renderer

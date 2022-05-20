@@ -9,7 +9,7 @@
 #include <cobalt/asl/check.hpp>
 #include <cobalt/asl/hash_set.hpp>
 
-namespace cobalt::render {
+namespace cobalt::renderer {
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
@@ -326,4 +326,4 @@ swap_chain_support_details vk_device::query_swap_chain_support(VkPhysicalDevice 
     return details;
 }
 
-} // namespace cobalt::render
+} // namespace cobalt::renderer

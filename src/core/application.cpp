@@ -1,11 +1,17 @@
 #include <cobalt/core/application.hpp>
 #include <cobalt/core/logging.hpp>
 #include <cobalt/core/pointer.hpp>
+#include <cobalt/platform/key_code.hpp>
 #include <fstream>
 
 namespace cobalt::core {
 
 constexpr auto default_config_path = "config.ini";
+
+struct key_event {
+    int key;
+    int action;
+};
 
 application::application(int argc, char** argv) {
     core::log_info("starting...");
@@ -30,25 +36,43 @@ application::application(int argc, char** argv) {
 
             commands.set_resource<config>(std::move(conf));
         })
-        .add_init_system([](const config& conf, ecs::command_queue& commands) {
-            platform::window_spec spec{
-                conf.get<int>("window.width"),
-                conf.get<int>("window.height"),
-                conf.get("window.title"),
-            };
+        .add_init_system(
+            [](const config& conf, ecs::command_queue& commands, ecs::event_publisher<key_event>& key_events) {
+                platform::window_spec spec{
+                    conf.get<int>("window.width"),
+                    conf.get<int>("window.height"),
+                    conf.get("window.title"),
+                };
 
-            auto window = platform::window::create(spec);
+                auto window = platform::window::create(spec);
+                window->set_key_callback([&key_events](int key, int action) { key_events.publish(key, action); });
 
-            commands.set_resource<owned<platform::window>>(std::move(window));
-        })
+                commands.set_resource<owned<platform::window>>(std::move(window));
+            })
         .add_init_system([](const owned<platform::window>& window, ecs::command_queue& commands) {
-            auto renderer = render::renderer::create(*window);
-            commands.set_resource<owned<render::renderer>>(std::move(renderer));
+            auto renderer = renderer::renderer::create(*window);
+            commands.set_resource<owned<renderer::renderer>>(std::move(renderer));
         })
-        .init();
+        .add_system([](const owned<platform::window>& window, ecs::scheduler_control& scheduler_control) {
+            window->poll_events();
+            window->swap_buffers();
+            if (window->should_close()) {
+                core::log_info("window should close");
+                scheduler_control.should_exit = true;
+            }
+        })
+        .add_system([](const ecs::event_reader<key_event>& key_events, ecs::scheduler_control& scheduler_control) {
+            for (const auto& key_event : key_events) {
+                core::log_info("key {} action {}", key_event.key, key_event.action);
+                if (key_event.key == int(platform::key_code::escape) && key_event.action == 1) {
+                    scheduler_control.should_exit = true;
+                }
+            }
+        });
 }
 
 void application::run() {
+    _scheduler.run();
 }
 
 } // namespace cobalt::core

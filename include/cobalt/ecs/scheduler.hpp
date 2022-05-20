@@ -7,6 +7,11 @@
 
 namespace cobalt::ecs {
 
+/// @brief Used as resource to let scheduler exit
+struct scheduler_control {
+    bool should_exit{ false };
+};
+
 /// @brief Simple scheduler for systems. Systems are executed in the order they are added
 class simple_scheduler {
 public:
@@ -15,7 +20,8 @@ public:
     /// @brief Construct a new simple scheduler object
     ///
     /// @param registry Registry reference
-    explicit simple_scheduler(registry& registry) noexcept : _registry(registry) {
+    explicit simple_scheduler(registry& registry) noexcept :
+        _registry(registry), _ctrl(registry.set_resource<scheduler_control>()) {
     }
 
     /// @brief Run systems
@@ -23,9 +29,10 @@ public:
         // run init systems
         init();
 
-        // run forever
-        _is_running = true;
-        while (_is_running) {
+        auto& ctrl = _registry.get_resource<scheduler_control>();
+
+        // run till exit
+        while (!ctrl.should_exit) {
             for (auto& executor : _executors) {
                 executor->run();
             }
@@ -92,7 +99,7 @@ public:
 
 private:
     registry& _registry;
-    bool _is_running{ false };
+    scheduler_control& _ctrl;
     std::vector<std::unique_ptr<system_interface>> _init_systems;
     std::vector<std::unique_ptr<system_executor_interface>> _init_executors;
     std::vector<std::unique_ptr<system_interface>> _systems;
