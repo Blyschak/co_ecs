@@ -14,7 +14,7 @@ public:
     vk_renderer(vk_renderer&& rhs) = delete;
     vk_renderer& operator=(vk_renderer&& rhs) = delete;
 
-    virtual ~vk_renderer() = default;
+    ~vk_renderer() override = default;
 
 private:
     vk_device _device;

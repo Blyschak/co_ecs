@@ -66,6 +66,7 @@ add_library(
   scripting/lua_engine.cpp
   platform/window.cpp
   platform/glfw/glfw_window.cpp
+  platform/glfw/glfw_monitor.cpp
   render/renderer.cpp
   render/vulkan/vk_device.cpp
   render/vulkan/vk_renderer.cpp

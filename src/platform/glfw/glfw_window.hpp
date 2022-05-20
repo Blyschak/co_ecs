@@ -10,6 +10,7 @@
 #include <vector>
 
 namespace cobalt::platform {
+
 class glfw_window : public window {
 public:
     glfw_window(const window_spec&, renderer::render_api api = renderer::render_api::opengl);
@@ -39,7 +40,12 @@ public:
 
     void set_vsync(vsync_mode mode) override;
 
-    void set_key_callback(std::function<void(int key, int action)> callback) override;
+    std::unique_ptr<monitor> get_primary_monitor() override;
+
+    void set_key_callback(key_event_callback callback) override;
+    void set_mouse_callback(mouse_event_callback callback) override;
+    void set_mouse_button_callback(mouse_button_event_callback callback) override;
+    void set_scroll_callback(scroll_event_callback callback) override;
 
 private:
     void query_glfw_required_extensions();
@@ -50,10 +56,15 @@ private:
     GLFWwindow* _window{};
 
     static void glfw_error_callback(int error, const char* description);
-
     static void glfw_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+    static void glfw_mouse_callback(GLFWwindow* window, double x_pos, double y_pos);
+    static void glfw_mouse_button_callback(GLFWwindow* window, int key, int action, int mods);
+    static void glfw_scroll_callback(GLFWwindow* window, double x_offset, double y_offset);
 
-    static std::function<void(int key, int action)> _callback;
+    static key_event_callback _callback;
+    static mouse_event_callback _mouse_callback;
+    static mouse_button_event_callback _mouse_button_callback;
+    static scroll_event_callback _scroll_callback;
 };
 
 } // namespace cobalt::platform

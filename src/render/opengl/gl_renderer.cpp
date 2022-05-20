@@ -15,10 +15,10 @@ gl_renderer::gl_renderer(platform::window& window) : _window(window) {
     int status = gladLoadGLLoader((GLADloadproc)(glfwGetProcAddress));
     asl::check(status, "failed to load GL loader");
 
-    core::log_info("OpenGL Info:");
-    core::log_info("\tVendor: {}", glGetString(GL_VENDOR));
-    core::log_info("\tRenderer: {}", glGetString(GL_RENDERER));
-    core::log_info("\tVersion: {}", glGetString(GL_VERSION));
+    core::log_info("OpenGL info:");
+    core::log_info("\tvendor: {}", glGetString(GL_VENDOR));
+    core::log_info("\trenderer: {}", glGetString(GL_RENDERER));
+    core::log_info("\tversion: {}", glGetString(GL_VERSION));
 
     asl::check(
         GLVersion.major > 3 || (GLVersion.major == 3 && GLVersion.minor >= 3), "OpenGL version >= 4.5 is required!");

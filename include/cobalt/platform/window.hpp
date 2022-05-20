@@ -4,7 +4,16 @@
 #include <memory>
 #include <string>
 
+#include <cobalt/core/key.hpp>
+#include <cobalt/core/mouse.hpp>
+#include <cobalt/platform/monitor.hpp>
+
 namespace cobalt::platform {
+
+using key_event_callback = std::function<void(key_code, key_state)>;
+using mouse_event_callback = std::function<void(mouse_position)>;
+using mouse_button_event_callback = std::function<void(mouse_code, key_state)>;
+using scroll_event_callback = std::function<void(scroll_offset)>;
 
 enum class vsync_mode {
     disable,
@@ -24,7 +33,12 @@ public:
 
     static std::unique_ptr<window> create(const window_spec& spec);
 
-    virtual void set_key_callback(std::function<void(int key, int action)> callback) = 0;
+    virtual void set_key_callback(key_event_callback callback) = 0;
+    virtual void set_mouse_callback(mouse_event_callback callback) = 0;
+    virtual void set_mouse_button_callback(mouse_button_event_callback callback) = 0;
+    virtual void set_scroll_callback(scroll_event_callback callback) = 0;
+
+    virtual std::unique_ptr<monitor> get_primary_monitor() = 0;
 
     virtual bool should_close() const = 0;
     virtual void poll_events() const = 0;

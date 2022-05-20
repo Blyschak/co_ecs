@@ -1,4 +1,5 @@
 #include "glfw_window.hpp"
+#include "glfw_monitor.hpp"
 
 #include <cobalt/core/logging.hpp>
 
@@ -6,14 +7,29 @@
 
 namespace cobalt::platform {
 
-std::function<void(int key, int action)> glfw_window::_callback = nullptr;
+key_event_callback glfw_window::_callback = [](auto&&...) {};
+mouse_event_callback glfw_window::_mouse_callback = [](auto&&...) {};
+mouse_button_event_callback glfw_window::_mouse_button_callback = [](auto&&...) {};
+scroll_event_callback glfw_window::_scroll_callback = [](auto&&...) {};
 
 void glfw_window::glfw_error_callback(int error, const char* description) {
     core::log_err("glfw error ({}): {}", error, description);
 }
 
 void glfw_window::glfw_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    glfw_window::_callback(key, action);
+    glfw_window::_callback(static_cast<key_code>(key), static_cast<key_state>(action));
+}
+
+void glfw_window::glfw_mouse_callback(GLFWwindow* window, double x_pos, double y_pos) {
+    glfw_window::_mouse_callback(mouse_position{ x_pos, y_pos });
+}
+
+void glfw_window::glfw_mouse_button_callback(GLFWwindow* window, int key, int action, int mods) {
+    glfw_window::_mouse_button_callback(static_cast<mouse_code>(key), static_cast<key_state>(action));
+}
+
+void glfw_window::glfw_scroll_callback(GLFWwindow* window, double x_offset, double y_offset) {
+    glfw_window::_scroll_callback(scroll_offset{ x_offset, y_offset });
 }
 
 glfw_window::glfw_window(const window_spec& spec, renderer::render_api api) : _spec(spec) {
@@ -50,12 +66,30 @@ glfw_window::glfw_window(const window_spec& spec, renderer::render_api api) : _s
     set_vsync(spec.vsync);
 
     glfwSetKeyCallback(_window, glfw_key_callback);
+    glfwSetCursorPosCallback(_window, glfw_mouse_callback);
+    glfwSetMouseButtonCallback(_window, glfw_mouse_button_callback);
+    glfwSetScrollCallback(_window, glfw_scroll_callback);
+
+    auto monitor = get_primary_monitor();
+    auto monitor_spec = monitor->get_spec();
+
+    core::log_info("primary monitor {}", monitor_spec.name);
+    core::log_info("\t width {} mm", monitor_spec.width_mm);
+    core::log_info("\t heigh {} mm", monitor_spec.height_mm);
+    core::log_info("\t heigh {}", monitor_spec.height);
+    core::log_info("\t width {}", monitor_spec.width);
+    core::log_info("\t green bits {}", monitor_spec.green_bits);
+    core::log_info("\t blue bits {}", monitor_spec.blue_bits);
+    core::log_info("\t red bits {}", monitor_spec.red_bits);
+    core::log_info("\t refresh rate {}", monitor_spec.refresh_rate);
 }
 
 glfw_window::~glfw_window() {
     if (_window) {
+        core::log_info("destroying window");
         glfwDestroyWindow(_window);
     }
+    core::log_info("terminating platform window");
     glfwTerminate();
 }
 
@@ -86,8 +120,26 @@ void glfw_window::set_vsync(vsync_mode mode) {
     glfwSwapInterval(mode == vsync_mode::full ? 1 : 0);
 }
 
-void glfw_window::set_key_callback(std::function<void(int key, int action)> callback) {
+std::unique_ptr<monitor> glfw_window::get_primary_monitor() {
+    GLFWmonitor* primary = glfwGetPrimaryMonitor();
+    asl::check(primary, "failed to get primary monitor");
+    return std::make_unique<glfw_monitor>(primary);
+}
+
+void glfw_window::set_key_callback(key_event_callback callback) {
     _callback = callback;
+}
+
+void glfw_window::set_mouse_callback(mouse_event_callback callback) {
+    _mouse_callback = callback;
+}
+
+void glfw_window::set_mouse_button_callback(mouse_button_event_callback callback) {
+    _mouse_button_callback = callback;
+}
+
+void glfw_window::set_scroll_callback(scroll_event_callback callback) {
+    _scroll_callback = callback;
 }
 
 } // namespace cobalt::platform

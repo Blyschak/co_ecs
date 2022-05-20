@@ -1,7 +1,6 @@
 #include <cobalt/core/application.hpp>
 #include <cobalt/core/logging.hpp>
 #include <cobalt/core/pointer.hpp>
-#include <cobalt/platform/key_code.hpp>
 #include <fstream>
 
 namespace cobalt::core {
@@ -9,8 +8,13 @@ namespace cobalt::core {
 constexpr auto default_config_path = "config.ini";
 
 struct key_event {
-    int key;
-    int action;
+    key_code key;
+    key_state state;
+};
+
+struct mouse_event {
+    mouse_code button;
+    key_state state;
 };
 
 application::application(int argc, char** argv) {
@@ -36,19 +40,34 @@ application::application(int argc, char** argv) {
 
             commands.set_resource<config>(std::move(conf));
         })
-        .add_init_system(
-            [](const config& conf, ecs::command_queue& commands, ecs::event_publisher<key_event>& key_events) {
-                platform::window_spec spec{
-                    conf.get<int>("window.width"),
-                    conf.get<int>("window.height"),
-                    conf.get("window.title"),
-                };
+        .add_init_system([](const config& conf,
+                             ecs::command_queue& commands,
+                             ecs::event_publisher<key_event>& key_events,
+                             ecs::event_publisher<mouse_event>& mouse_events,
+                             ecs::event_publisher<mouse_position>& mouse_pos_events,
+                             ecs::event_publisher<scroll_offset>& scroll_offset_events) {
+            platform::window_spec spec{
+                conf.get<int>("window.width"),
+                conf.get<int>("window.height"),
+                conf.get("window.title"),
+            };
 
-                auto window = platform::window::create(spec);
-                window->set_key_callback([&key_events](int key, int action) { key_events.publish(key, action); });
+            auto window = platform::window::create(spec);
 
-                commands.set_resource<owned<platform::window>>(std::move(window));
-            })
+            window->set_key_callback(
+                [&key_events](key_code key, key_state action) { key_events.publish(key, action); });
+
+            window->set_mouse_button_callback(
+                [&mouse_events](mouse_code key, key_state action) { mouse_events.publish(key, action); });
+
+            window->set_mouse_callback(
+                [&mouse_pos_events](mouse_position position) { mouse_pos_events.publish(position); });
+
+            window->set_scroll_callback(
+                [&scroll_offset_events](scroll_offset offset) { scroll_offset_events.publish(offset); });
+
+            commands.set_resource<owned<platform::window>>(std::move(window));
+        })
         .add_init_system([](const owned<platform::window>& window, ecs::command_queue& commands) {
             auto renderer = renderer::renderer::create(*window);
             commands.set_resource<owned<renderer::renderer>>(std::move(renderer));
@@ -61,12 +80,25 @@ application::application(int argc, char** argv) {
                 scheduler_control.should_exit = true;
             }
         })
-        .add_system([](const ecs::event_reader<key_event>& key_events, ecs::scheduler_control& scheduler_control) {
+        .add_system([](const ecs::event_reader<key_event>& key_events,
+                        const ecs::event_reader<mouse_event>& mouse_events,
+                        const ecs::event_reader<mouse_position>& mouse_pos_events,
+                        const ecs::event_reader<scroll_offset>& scroll_offset_events,
+                        ecs::scheduler_control& scheduler_control) {
             for (const auto& key_event : key_events) {
-                core::log_info("key {} action {}", key_event.key, key_event.action);
-                if (key_event.key == int(platform::key_code::escape) && key_event.action == 1) {
-                    scheduler_control.should_exit = true;
-                }
+                core::log_trace("key {} action {}", key_event.key, key_event.state);
+            }
+
+            for (const auto& mouse_event : mouse_events) {
+                core::log_trace("mouse button {} action {}", mouse_event.button, mouse_event.state);
+            }
+
+            for (const auto& pos : mouse_pos_events) {
+                core::log_trace("mouse position {} {}", pos.x, pos.y);
+            }
+
+            for (const auto& offset : scroll_offset_events) {
+                core::log_trace("scroll offset {} {}", offset.dx, offset.dy);
             }
         });
 }
