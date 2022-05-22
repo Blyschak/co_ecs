@@ -8,6 +8,8 @@ namespace cobalt::asl {
 
 /// @brief Dynamically growing bitset
 ///
+/// TODO: Small size optimization
+///
 /// @tparam A Allocator type
 template<typename T = std::uint64_t, typename A = std::allocator<T>>
 class dynamic_bitset {

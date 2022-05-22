@@ -1,7 +1,7 @@
 #pragma once
 
+#include <cobalt/asl/type_name.hpp>
 #include <string>
-#include <typeinfo>
 
 namespace cobalt::ecs {
 
@@ -45,7 +45,7 @@ struct type_meta {
         static const type_meta meta{
             sizeof(T),
             alignof(T),
-            typeid(T).name(),
+            asl::type_name<T>(),
             &move_constructor<T>,
             &move_assignment<T>,
             &destructor<T>,
