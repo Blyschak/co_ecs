@@ -1,7 +1,11 @@
 #pragma once
 
+#include <cobalt/asl/platform.hpp>
+
 #include <cstdlib>
+#ifdef COBALT_COMPILER_GCC
 #include <cxxabi.h>
+#endif
 #include <stdexcept>
 #include <string>
 
@@ -13,6 +17,7 @@ namespace cobalt::asl {
 /// @param mangled_name Mangled name string
 /// @return std::string
 inline std::string demangle(const std::string& mangled_name) {
+#ifdef COBALT_COMPILER_GCC
     // errors codes returned by __cxa_demangle
     constexpr auto allocation_error = -1;
     constexpr auto not_a_valid_name_error = -2;
@@ -45,6 +50,9 @@ inline std::string demangle(const std::string& mangled_name) {
     std::free(c_name); // NOLINT(cppcoreguidelines-no-malloc,hicpp-no-malloc,cppcoreguidelines-owning-memory)
 
     return name;
+#else
+#error Unsupported on current compiler
+#endif
 }
 
 } // namespace cobalt::asl

@@ -386,7 +386,7 @@ public:
     decltype(auto) chunks(iter_t first, iter_t last) {
         auto filter_archetypes = [first, last](auto& archetype) mutable {
             for (; first != last; first++) {
-                if (!archetype->template contains(*first)) {
+                if (!archetype->contains(*first)) {
                     return false;
                 }
             }

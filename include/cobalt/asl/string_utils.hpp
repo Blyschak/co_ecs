@@ -1,6 +1,5 @@
 #pragma once
 
-#include <locale>
 #include <string>
 
 namespace cobalt::asl {
@@ -9,8 +8,8 @@ namespace cobalt::asl {
 ///
 /// @param str String to ltrim
 /// @return std::string
-static inline std::string ltrim(auto&& str) {
-    str.erase(str.begin(), std::find_if(str.begin(), str.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+static inline std::string ltrim(std::string str) {
+    str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](auto ch) { return !std::isspace(ch); }));
     return str;
 }
 
@@ -18,9 +17,8 @@ static inline std::string ltrim(auto&& str) {
 ///
 /// @param str String to rtrim
 /// @return std::string
-static inline std::string rtrim(auto&& str) {
-    str.erase(
-        std::find_if(str.rbegin(), str.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), str.end());
+static inline std::string rtrim(std::string str) {
+    str.erase(std::find_if(str.rbegin(), str.rend(), [](auto ch) { return !std::isspace(ch); }).base(), str.end());
     return str;
 }
 
@@ -28,10 +26,9 @@ static inline std::string rtrim(auto&& str) {
 ///
 /// @param str String to trim
 /// @return std::string
-static inline std::string trim(auto&& str) {
-    str.erase(str.begin(), std::find_if(str.begin(), str.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
-    str.erase(
-        std::find_if(str.rbegin(), str.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), str.end());
+static inline std::string trim(std::string str) {
+    str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](auto ch) { return !std::isspace(ch); }));
+    str.erase(std::find_if(str.rbegin(), str.rend(), [](auto ch) { return !std::isspace(ch); }).base(), str.end());
     return str;
 }
 

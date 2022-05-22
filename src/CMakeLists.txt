@@ -13,7 +13,9 @@ FetchContent_Declare(
   GIT_TAG a32ae8de013ebe1feb3c0d22d1028ff5d2617f84)
 FetchContent_MakeAvailable(lua)
 
+if(UNIX)
 target_compile_definitions(lua_lib PUBLIC LUA_USE_POSIX)
+endif(UNIX)
 
 FetchContent_Declare(
   sol2
@@ -83,4 +85,4 @@ target_link_libraries(
   PUBLIC glm
   PUBLIC glfw
   PUBLIC glad
-  PUBLIC vulkan)
+  PUBLIC Vulkan::Vulkan)

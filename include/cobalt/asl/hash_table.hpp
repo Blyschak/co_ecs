@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
 #include <cobalt/asl/bits.hpp>

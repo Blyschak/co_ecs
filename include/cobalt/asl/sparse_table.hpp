@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
 namespace cobalt::asl {

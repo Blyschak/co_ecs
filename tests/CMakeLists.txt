@@ -1,7 +1,9 @@
 include(GoogleTest)
 
+if(MSVC)
 # https://stackoverflow.com/questions/63925255/googletest-compile-with-mt-staticrelease-errors
-option(gtest_force_shared_crt ON)
+set(gtest_force_shared_crt ON)
+endif(MSVC)
 
 FetchContent_Declare(
   googletest
@@ -21,6 +23,7 @@ add_executable(
   asl/test_zip.cpp
   asl/test_dynamic_bitset.cpp
   asl/test_convert.cpp
+  asl/test_string_utils.cpp
   ecs/test_component.cpp
   ecs/test_registry.cpp
   ecs/test_system.cpp

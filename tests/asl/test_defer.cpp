@@ -101,8 +101,3 @@ TEST(defer, different_bindings) {
     { cobalt::asl::defer{ a }; }
     EXPECT_EQ(1, n);
 }
-
-TEST(defer, with_exception) {
-    EXPECT_DEATH(
-        cobalt::asl::defer([] { throw std::runtime_error("dtors should never throw!"); }), "dtors should never throw!");
-}
