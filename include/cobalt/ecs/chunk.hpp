@@ -5,6 +5,7 @@
 #include <optional>
 #include <type_traits>
 
+#include <cobalt/asl/alloc.hpp>
 #include <cobalt/asl/bits.hpp>
 #include <cobalt/asl/sparse_map.hpp>
 #include <cobalt/ecs/component.hpp>
@@ -37,7 +38,7 @@ public:
     /// @param set Component metadata set
     chunk(const blocks_type& blocks, std::size_t max_size) :
         _blocks(&blocks), _max_size(max_size),
-        _buffer(reinterpret_cast<std::byte*>(std::aligned_alloc(alloc_alignment, chunk_bytes))) {
+        _buffer(reinterpret_cast<std::byte*>(asl::aligned_alloc(alloc_alignment, chunk_bytes))) {
     }
 
     /// @brief Deleted copy constructor
@@ -82,7 +83,7 @@ public:
                 block.meta.type->destruct(_buffer + block.offset + i * block.meta.type->size);
             }
         }
-        std::free(_buffer);
+        asl::aligned_free(_buffer);
     }
 
     /// @brief Emplace back components into blocks
