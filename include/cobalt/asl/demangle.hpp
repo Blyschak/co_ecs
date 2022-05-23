@@ -50,6 +50,9 @@ inline std::string demangle(const std::string& mangled_name) {
     std::free(c_name); // NOLINT(cppcoreguidelines-no-malloc,hicpp-no-malloc,cppcoreguidelines-owning-memory)
 
     return name;
+#elif defined COBALT_COMPILER_MSVC
+    // TODO: implement actual support
+    return mangled_name;
 #else
 #error Unsupported on current compiler
 #endif

@@ -3,8 +3,6 @@
 #include <cobalt/ecs/component.hpp>
 #include <cobalt/ecs/entity.hpp>
 
-#include <cobalt/asl/demangle.hpp>
-
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -42,7 +40,7 @@ public:
     /// @param meta Type metadata
     explicit component_not_found(const type_meta* meta) {
         std::stringstream ss;
-        ss << "component \"" << asl::demangle(meta->name) << "\" not found";
+        ss << "component \"" << meta->name << "\" not found";
         _msg = ss.str();
     }
 
@@ -65,7 +63,7 @@ public:
     /// @param meta Type metadata
     explicit resource_not_found(const type_meta* meta) {
         std::stringstream ss;
-        ss << "resource \"" << asl::demangle(meta->name) << "\" not found";
+        ss << "resource \"" << meta->name << "\" not found";
         _msg = ss.str();
     }
 

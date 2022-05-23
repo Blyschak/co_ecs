@@ -78,8 +78,8 @@ private:
 
 #ifdef __cpp_lib_format
 template<typename T, typename U>
-struct std::formatter<cobalt::handle<T, U>> : std::formatter<std::string> {
-    auto format(cobalt::handle<T, U> h, format_context& ctx) {
+struct std::formatter<cobalt::asl::handle<T, U>> : std::formatter<std::string> {
+    auto format(cobalt::asl::handle<T, U> h, format_context& ctx) {
         return formatter<string>::format(std::format("[{}, {}]", h.id(), h.generation()), ctx);
     }
 };

@@ -31,7 +31,7 @@ application::application(int argc, char** argv) {
                 conf = config::from_stream(config_file);
             }
 
-            conf.set_default("core.log_level", core::log_level::info);
+            conf.set_default("core.log_level", "info");
             core::set_log_level(conf.get<core::log_level>("core.log_level"));
 
             conf.set_default("window.width", 1920);

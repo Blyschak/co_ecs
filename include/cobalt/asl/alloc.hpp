@@ -20,7 +20,7 @@ namespace {
     void* aligned_alloc(size_t alignment, size_t size) {
         // MSVC compiler does not support std::aligned_alloc, thus we're using MSVC specific __aligned_malloc
 #ifdef COBALT_COMPILER_MSVC
-        return __aligned_malloc(alignment, size);
+        return _aligned_malloc(alignment, size);
 #else
         return std::aligned_alloc(alignment, size);
 #endif
@@ -32,7 +32,7 @@ namespace {
     void aligned_free(void* ptr) {
         // MSVC compiler does not support std::aligned_alloc, thus we're using MSVC specific __aligned_free
 #ifdef COBALT_COMPILER_MSVC
-        return __aligned_free(ptr);
+        return _aligned_free(ptr);
 #else
         return std::free(ptr);
 #endif
