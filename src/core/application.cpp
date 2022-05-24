@@ -1,5 +1,4 @@
 #include <cobalt/core/application.hpp>
-#include <cobalt/core/assets.hpp>
 #include <cobalt/core/logging.hpp>
 #include <cobalt/core/pointer.hpp>
 #include <fstream>

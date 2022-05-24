@@ -30,9 +30,7 @@ add_executable(
   ecs/test_scheduler.cpp
   ecs/test_command.cpp
   scripting/test_lua_engine.cpp
-  core/test_config.cpp
-  core/test_assets.cpp
-)
+  core/test_config.cpp)
 
 target_link_libraries(tests engine gtest gtest_main)
 
