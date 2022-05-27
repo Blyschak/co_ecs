@@ -3,7 +3,7 @@
 #include <cobalt/core/pointer.hpp>
 #include <fstream>
 
-namespace cobalt::core {
+namespace cobalt {
 
 constexpr auto default_config_path = "config.ini";
 
@@ -18,7 +18,7 @@ struct mouse_event {
 };
 
 application::application(int argc, char** argv) {
-    core::log_info("starting...");
+    log_info("starting...");
 
 
     _scheduler
@@ -26,13 +26,13 @@ application::application(int argc, char** argv) {
             config conf;
 
             if (std::ifstream config_file(default_config_path); !config_file.is_open()) {
-                core::log_info("config file {} does not exists, using defaults", default_config_path);
+                log_info("config file {} does not exists, using defaults", default_config_path);
             } else {
                 conf = config::from_stream(config_file);
             }
 
             conf.set_default("core.log_level", "info");
-            core::set_log_level(conf.get<core::log_level>("core.log_level"));
+            set_log_level(conf.get<log_level>("core.log_level"));
 
             conf.set_default("window.width", 1920);
             conf.set_default("window.height", 1080);
@@ -46,37 +46,35 @@ application::application(int argc, char** argv) {
                              ecs::event_publisher<mouse_event>& mouse_events,
                              ecs::event_publisher<mouse_position>& mouse_pos_events,
                              ecs::event_publisher<scroll_offset>& scroll_offset_events) {
-            platform::window_spec spec{
+            window_spec spec{
                 conf.get<int>("window.width"),
                 conf.get<int>("window.height"),
                 conf.get("window.title"),
             };
 
-            auto window = platform::window::create(spec);
+            auto w = window::create(spec);
 
-            window->set_key_callback(
-                [&key_events](key_code key, key_state action) { key_events.publish(key, action); });
+            w->set_key_callback([&key_events](key_code key, key_state action) { key_events.publish(key, action); });
 
-            window->set_mouse_button_callback(
+            w->set_mouse_button_callback(
                 [&mouse_events](mouse_code key, key_state action) { mouse_events.publish(key, action); });
 
-            window->set_mouse_callback(
-                [&mouse_pos_events](mouse_position position) { mouse_pos_events.publish(position); });
+            w->set_mouse_callback([&mouse_pos_events](mouse_position position) { mouse_pos_events.publish(position); });
 
-            window->set_scroll_callback(
+            w->set_scroll_callback(
                 [&scroll_offset_events](scroll_offset offset) { scroll_offset_events.publish(offset); });
 
-            commands.set_resource<owned<platform::window>>(std::move(window));
+            commands.set_resource<owned<window>>(std::move(w));
         })
-        .add_init_system([](const owned<platform::window>& window, ecs::command_queue& commands) {
-            auto renderer = renderer::renderer::create(*window);
-            commands.set_resource<owned<renderer::renderer>>(std::move(renderer));
+        .add_init_system([](const owned<window>& window, ecs::command_queue& commands) {
+            auto r = renderer::renderer::create(*window);
+            commands.set_resource<owned<renderer>>(std::move(r));
         })
-        .add_system([](const owned<platform::window>& window, ecs::scheduler_control& scheduler_control) {
+        .add_system([](const owned<window>& window, ecs::scheduler_control& scheduler_control) {
             window->poll_events();
             window->swap_buffers();
             if (window->should_close()) {
-                core::log_info("window should close");
+                log_info("window should close");
                 scheduler_control.should_exit = true;
             }
         })
@@ -86,19 +84,19 @@ application::application(int argc, char** argv) {
                         const ecs::event_reader<scroll_offset>& scroll_offset_events,
                         ecs::scheduler_control& scheduler_control) {
             for (const auto& key_event : key_events) {
-                core::log_trace("key {} action {}", key_event.key, key_event.state);
+                log_trace("key {} action {}", key_event.key, key_event.state);
             }
 
             for (const auto& mouse_event : mouse_events) {
-                core::log_trace("mouse button {} action {}", mouse_event.button, mouse_event.state);
+                log_trace("mouse button {} action {}", mouse_event.button, mouse_event.state);
             }
 
             for (const auto& pos : mouse_pos_events) {
-                core::log_trace("mouse position {} {}", pos.x, pos.y);
+                log_trace("mouse position {} {}", pos.x, pos.y);
             }
 
             for (const auto& offset : scroll_offset_events) {
-                core::log_trace("scroll offset {} {}", offset.dx, offset.dy);
+                log_trace("scroll offset {} {}", offset.dx, offset.dy);
             }
         });
 }
@@ -107,4 +105,4 @@ void application::run() {
     _scheduler.run();
 }
 
-} // namespace cobalt::core
+} // namespace cobalt

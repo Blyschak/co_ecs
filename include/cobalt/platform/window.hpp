@@ -8,7 +8,7 @@
 #include <cobalt/core/mouse.hpp>
 #include <cobalt/platform/monitor.hpp>
 
-namespace cobalt::platform {
+namespace cobalt {
 
 using key_event_callback = std::function<void(key_code, key_state)>;
 using mouse_event_callback = std::function<void(mouse_position)>;
@@ -46,4 +46,4 @@ public:
     virtual void set_vsync(vsync_mode mode) = 0;
 };
 
-} // namespace cobalt::platform
+} // namespace cobalt

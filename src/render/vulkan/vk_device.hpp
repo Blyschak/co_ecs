@@ -7,7 +7,7 @@
 
 #include <vector>
 
-namespace cobalt::renderer {
+namespace cobalt {
 
 struct swap_chain_support_details {
     VkSurfaceCapabilitiesKHR capabilities;
@@ -28,7 +28,7 @@ struct queue_family_indices {
 
 class vk_device {
 public:
-    vk_device(platform::window& window);
+    vk_device(window& window);
     ~vk_device();
 
     vk_device(const vk_device&) = delete;
@@ -79,7 +79,7 @@ private:
     VkPhysicalDeviceProperties _properties;
 
     bool _enable_validation_layers{ true };
-    platform::window& _window;
+    window& _window;
 };
 
-} // namespace cobalt::renderer
+} // namespace cobalt

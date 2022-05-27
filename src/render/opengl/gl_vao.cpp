@@ -6,7 +6,7 @@
 #include <glad/glad.h>
 
 
-namespace cobalt::renderer {
+namespace cobalt {
 
 static GLenum to_gl_enum(vertex_format format) {
     switch (format) {
@@ -60,4 +60,4 @@ void gl_vertex_array::push_back(const gl_vertex_buffer& buffer) {
     _size += buffer.size();
 }
 
-} // namespace cobalt::renderer
+} // namespace cobalt

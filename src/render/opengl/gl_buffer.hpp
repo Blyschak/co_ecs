@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <span>
 
-namespace cobalt::renderer {
+namespace cobalt {
 
 class gl_buffer {
 public:
@@ -82,4 +82,4 @@ private:
     vertex_layout _layout;
 };
 
-} // namespace cobalt::renderer
+} // namespace cobalt

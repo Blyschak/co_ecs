@@ -12,11 +12,13 @@
 
 namespace cobalt::asl {
 
+namespace {
+
 /// @brief Demangles the name using CXX ABI
 ///
 /// @param mangled_name Mangled name string
 /// @return std::string
-inline std::string demangle(const std::string& mangled_name) {
+std::string demangle(const std::string& mangled_name) {
 #ifdef COBALT_COMPILER_GCC
     // errors codes returned by __cxa_demangle
     constexpr auto allocation_error = -1;
@@ -50,12 +52,11 @@ inline std::string demangle(const std::string& mangled_name) {
     std::free(c_name); // NOLINT(cppcoreguidelines-no-malloc,hicpp-no-malloc,cppcoreguidelines-owning-memory)
 
     return name;
-#elif defined COBALT_COMPILER_MSVC
-    // TODO: implement actual support
-    return mangled_name;
 #else
 #error Unsupported on current compiler
 #endif
 }
+
+} // namespace
 
 } // namespace cobalt::asl

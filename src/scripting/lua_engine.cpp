@@ -3,7 +3,7 @@
 
 #include <sstream>
 
-namespace cobalt::scripting {
+namespace cobalt {
 
 namespace {} // namespace
 
@@ -54,15 +54,15 @@ lua_engine::lua_engine() {
     lua.create_named_table(
         "log",
         "err",
-        [&](const sol::table& log, const sol::variadic_args& args) { log_callback(core::log_level::err, args); },
+        [&](const sol::table& log, const sol::variadic_args& args) { log_callback(log_level::err, args); },
         "warn",
-        [&](const sol::table& log, const sol::variadic_args& args) { log_callback(core::log_level::warn, args); },
+        [&](const sol::table& log, const sol::variadic_args& args) { log_callback(log_level::warn, args); },
         "info",
-        [&](const sol::table& log, const sol::variadic_args& args) { log_callback(core::log_level::info, args); },
+        [&](const sol::table& log, const sol::variadic_args& args) { log_callback(log_level::info, args); },
         "debug",
-        [&](const sol::table& log, const sol::variadic_args& args) { log_callback(core::log_level::debug, args); },
+        [&](const sol::table& log, const sol::variadic_args& args) { log_callback(log_level::debug, args); },
         "trace",
-        [&](const sol::table& log, const sol::variadic_args& args) { log_callback(core::log_level::trace, args); });
+        [&](const sol::table& log, const sol::variadic_args& args) { log_callback(log_level::trace, args); });
 
 
     // ecs types
@@ -120,14 +120,14 @@ sol::function lua_engine::get_component_callback(const sol::table& table, std::s
     return func;
 }
 
-void lua_engine::log_callback(core::log_level level, const sol::variadic_args& args) const {
+void lua_engine::log_callback(log_level level, const sol::variadic_args& args) const {
     // format output as a space seprated output of args
     std::stringstream ss;
     for (const auto& arg : args) {
         ss << to_string(arg) << " ";
     }
     // log using core logger
-    core::get_logger()->log(level, "{}", ss.str());
+    get_logger()->log(level, "{}", ss.str());
 }
 
 std::string lua_engine::to_string(const sol::object& obj) const {
@@ -142,4 +142,4 @@ void lua_engine::script(const std::string& script) {
     }
 }
 
-} // namespace cobalt::scripting
+} // namespace cobalt

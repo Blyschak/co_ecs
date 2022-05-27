@@ -1,6 +1,6 @@
 #pragma once
 
-namespace cobalt::platform {
+namespace cobalt {
 
 struct monitor_spec {
     std::string name;
@@ -24,4 +24,4 @@ public:
 };
 
 
-} // namespace cobalt::platform
+} // namespace cobalt

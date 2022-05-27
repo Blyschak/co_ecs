@@ -2,11 +2,11 @@
 
 #include "vk_device.hpp"
 
-namespace cobalt::renderer {
+namespace cobalt {
 
 class vk_renderer : public renderer {
 public:
-    vk_renderer(platform::window& window) : _device(window) {
+    vk_renderer(window& window) : _device(window) {
     }
 
     vk_renderer(const vk_renderer& rhs) = delete;
@@ -20,4 +20,4 @@ private:
     vk_device _device;
 };
 
-} // namespace cobalt::renderer
+} // namespace cobalt

@@ -5,7 +5,7 @@
 
 #include <glad/glad.h>
 
-namespace cobalt::renderer {
+namespace cobalt {
 
 static GLenum to_gl_enum(buffer_usage usage) {
     switch (usage) {
@@ -95,4 +95,4 @@ gl_vertex_buffer::gl_vertex_buffer(std::span<const std::uint8_t> data,
     _layout(layout) {
 }
 
-} // namespace cobalt::renderer
+} // namespace cobalt

@@ -70,11 +70,20 @@ add_library(
   platform/glfw/glfw_window.cpp
   platform/glfw/glfw_monitor.cpp
   render/renderer.cpp
+  render/shader_compiler.cpp
   render/vulkan/vk_device.cpp
   render/vulkan/vk_renderer.cpp
+  render/opengl/gl_shader.cpp
   render/opengl/gl_buffer.cpp
   render/opengl/gl_vao.cpp
   render/opengl/gl_renderer.cpp
+  render/opengl/gl_texture.cpp
+  render/opengl/gl_frame_buffer.cpp
+)
+
+target_include_directories(
+  engine
+  PUBLIC vendor/stb_image/
 )
 
 target_link_libraries(
@@ -85,4 +94,9 @@ target_link_libraries(
   PUBLIC glm
   PUBLIC glfw
   PUBLIC glad
-  PUBLIC Vulkan::Vulkan)
+  PUBLIC Vulkan::Vulkan
+  PUBLIC shaderc
+  PUBLIC shaderc_combined
+  PUBLIC spirv-cross-core
+  PUBLIC spirv-cross-cpp
+)

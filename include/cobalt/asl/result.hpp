@@ -13,6 +13,10 @@ public:
     constexpr result(E error) : _result(std::move(error)) { // NOLINT(hicpp-explicit-conversions)
     }
 
+    template<typename TT, typename EE>
+    constexpr result(result<TT, EE> res) : _result(std::move(res.error())) { // NOLINT(hicpp-explicit-conversions)
+    }
+
     constexpr ~result() = default;
 
     constexpr result(const result& rhs) = default;

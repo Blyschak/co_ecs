@@ -5,7 +5,7 @@
 
 #include <cobalt/render/types.hpp>
 
-namespace cobalt::renderer {
+namespace cobalt {
 
 class gl_vertex_array {
 public:
@@ -35,4 +35,4 @@ private:
     std::size_t _size{};
 };
 
-} // namespace cobalt::renderer
+} // namespace cobalt

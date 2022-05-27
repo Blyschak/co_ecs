@@ -4,9 +4,9 @@
 #include "opengl/gl_renderer.hpp"
 #include "vulkan/vk_renderer.hpp"
 
-namespace cobalt::renderer {
+namespace cobalt {
 
-std::unique_ptr<renderer> renderer::create(platform::window& window, render_api api) {
+std::unique_ptr<renderer> renderer::create(window& window, render_api api) {
     switch (api) {
     case render_api::opengl:
         return std::make_unique<gl_renderer>(window);
@@ -17,4 +17,4 @@ std::unique_ptr<renderer> renderer::create(platform::window& window, render_api 
     asl::check_failed("unknown render API");
 }
 
-} // namespace cobalt::renderer
+} // namespace cobalt

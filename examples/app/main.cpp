@@ -1,8 +1,8 @@
 #include <cobalt/core/application.hpp>
 
-class my_app : public cobalt::core::application {
+class my_app : public cobalt::application {
 public:
-    my_app(int argc, char** argv) : cobalt::core::application(argc, argv) {
+    my_app(int argc, char** argv) : cobalt::application(argc, argv) {
     }
 };
 

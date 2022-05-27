@@ -7,7 +7,7 @@
 
 #include <istream>
 
-namespace cobalt::core {
+namespace cobalt {
 
 /// @brief config class that holds a map of keys and values that can be read from .ini file
 class config {
@@ -89,4 +89,4 @@ private:
     asl::hash_map<std::string, std::string> _setting_map;
 };
 
-} // namespace cobalt::core
+} // namespace cobalt

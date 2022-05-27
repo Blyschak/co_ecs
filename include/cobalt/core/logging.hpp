@@ -10,7 +10,7 @@
 #include <cobalt/asl/convert.hpp>
 #include <cobalt/asl/hash_map.hpp>
 
-namespace cobalt::core {
+namespace cobalt {
 
 using log_level = spdlog::level::level_enum;
 
@@ -35,95 +35,31 @@ inline static void set_log_level(log_level lvl) {
     get_logger()->set_level(lvl);
 }
 
-template<typename... Args>
-struct log_critical {
-    inline log_critical(fmt::format_string<Args...> fmt,
-        Args&&... args,
-        const std::source_location& loc = std::source_location::current()) {
-        get_logger()->log(spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() },
-            spdlog::level::level_enum::critical,
-            fmt,
-            std::forward<Args>(args)...);
-    }
-};
+#define log_gen(lvl)                                                                                      \
+    template<typename... Args>                                                                            \
+    struct log_##lvl {                                                                                    \
+        inline log_##lvl(fmt::format_string<Args...> fmt,                                                 \
+            Args&&... args,                                                                               \
+            const std::source_location& loc = std::source_location::current()) {                          \
+            get_logger()->log(                                                                            \
+                spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() }, \
+                spdlog::level::level_enum::lvl,                                                           \
+                fmt,                                                                                      \
+                std::forward<Args>(args)...);                                                             \
+        }                                                                                                 \
+    };                                                                                                    \
+                                                                                                          \
+    template<typename... Args>                                                                            \
+    log_##lvl(fmt::format_string<Args...> fmt, Args&&...)->log_##lvl<Args...>;
 
-template<typename... Args>
-log_critical(fmt::format_string<Args...> fmt, Args&&...) -> log_critical<Args...>;
+log_gen(critical);
+log_gen(err);
+log_gen(warn);
+log_gen(info);
+log_gen(debug);
+log_gen(trace);
 
-template<typename... Args>
-struct log_err {
-    inline log_err(fmt::format_string<Args...> fmt,
-        Args&&... args,
-        const std::source_location& loc = std::source_location::current()) {
-        get_logger()->log(spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() },
-            spdlog::level::level_enum::err,
-            fmt,
-            std::forward<Args>(args)...);
-    }
-};
-
-template<typename... Args>
-log_err(fmt::format_string<Args...> fmt, Args&&...) -> log_err<Args...>;
-
-template<typename... Args>
-struct log_warn {
-    inline log_warn(fmt::format_string<Args...> fmt,
-        Args&&... args,
-        const std::source_location& loc = std::source_location::current()) {
-        get_logger()->log(spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() },
-            spdlog::level::level_enum::warn,
-            fmt,
-            std::forward<Args>(args)...);
-    }
-};
-
-template<typename... Args>
-log_warn(fmt::format_string<Args...> fmt, Args&&...) -> log_warn<Args...>;
-
-template<typename... Args>
-struct log_info {
-    inline log_info(fmt::format_string<Args...> fmt,
-        Args&&... args,
-        const std::source_location& loc = std::source_location::current()) {
-        get_logger()->log(spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() },
-            spdlog::level::level_enum::info,
-            fmt,
-            std::forward<Args>(args)...);
-    }
-};
-
-template<typename... Args>
-log_info(fmt::format_string<Args...> fmt, Args&&...) -> log_info<Args...>;
-
-template<typename... Args>
-struct log_debug {
-    inline log_debug(fmt::format_string<Args...> fmt,
-        Args&&... args,
-        const std::source_location& loc = std::source_location::current()) {
-        get_logger()->log(spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() },
-            spdlog::level::level_enum::debug,
-            fmt,
-            std::forward<Args>(args)...);
-    }
-};
-
-template<typename... Args>
-log_debug(fmt::format_string<Args...> fmt, Args&&...) -> log_debug<Args...>;
-
-template<typename... Args>
-struct log_trace {
-    inline log_trace(fmt::format_string<Args...> fmt,
-        Args&&... args,
-        const std::source_location& loc = std::source_location::current()) {
-        get_logger()->log(spdlog::source_loc{ loc.file_name(), static_cast<int>(loc.line()), loc.function_name() },
-            spdlog::level::level_enum::trace,
-            fmt,
-            std::forward<Args>(args)...);
-    }
-};
-
-template<typename... Args>
-log_trace(fmt::format_string<Args...> fmt, Args&&...) -> log_trace<Args...>;
+#undef log_gen
 
 class scoped_log {
 public:
@@ -182,36 +118,21 @@ private:
     std::chrono::time_point<std::chrono::high_resolution_clock> _start;
 };
 
-} // namespace cobalt::core
+} // namespace cobalt
 
 namespace cobalt::asl {
 
 template<>
-inline cobalt::core::log_level from_string<cobalt::core::log_level>(std::string_view str) {
-    static const cobalt::asl::hash_map<std::string_view, cobalt::core::log_level> _map = {
-        { "trace", cobalt::core::log_level::trace },
-        { "debug", cobalt::core::log_level::debug },
-        { "info", cobalt::core::log_level::info },
-        { "warn", cobalt::core::log_level::warn },
-        { "error", cobalt::core::log_level::err },
-        { "critical", cobalt::core::log_level::critical },
+inline cobalt::log_level from_string<cobalt::log_level>(std::string_view str) {
+    static const cobalt::asl::hash_map<std::string_view, cobalt::log_level> _map = {
+        { "trace", cobalt::log_level::trace },
+        { "debug", cobalt::log_level::debug },
+        { "info", cobalt::log_level::info },
+        { "warn", cobalt::log_level::warn },
+        { "error", cobalt::log_level::err },
+        { "critical", cobalt::log_level::critical },
     };
     return _map.at(str);
 }
 
 } // namespace cobalt::asl
-
-namespace std {
-
-inline std::string to_string(cobalt::core::log_level level) {
-    static const cobalt::asl::hash_map<cobalt::core::log_level, std::string> _map = {
-        { cobalt::core::log_level::trace, "trace" },
-        { cobalt::core::log_level::debug, "debug" },
-        { cobalt::core::log_level::info, "info" },
-        { cobalt::core::log_level::warn, "warn" },
-        { cobalt::core::log_level::err, "err" },
-        { cobalt::core::log_level::critical, "critical" },
-    };
-    return _map.at(level);
-}
-} // namespace std

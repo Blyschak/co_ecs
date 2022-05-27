@@ -7,7 +7,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-namespace cobalt::platform {
+namespace cobalt {
 
 class glfw_monitor : public monitor {
 public:
@@ -23,4 +23,4 @@ private:
     GLFWmonitor* _monitor;
 };
 
-} // namespace cobalt::platform
+} // namespace cobalt

@@ -5,7 +5,7 @@
 
 #include <cobalt/asl/check.hpp>
 
-namespace cobalt::platform {
+namespace cobalt {
 
 key_event_callback glfw_window::_callback = [](auto&&...) {};
 mouse_event_callback glfw_window::_mouse_callback = [](auto&&...) {};
@@ -13,7 +13,7 @@ mouse_button_event_callback glfw_window::_mouse_button_callback = [](auto&&...) 
 scroll_event_callback glfw_window::_scroll_callback = [](auto&&...) {};
 
 void glfw_window::glfw_error_callback(int error, const char* description) {
-    core::log_err("glfw error ({}): {}", error, description);
+    log_err("glfw error ({}): {}", error, description);
 }
 
 void glfw_window::glfw_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -32,13 +32,13 @@ void glfw_window::glfw_scroll_callback(GLFWwindow* window, double x_offset, doub
     glfw_window::_scroll_callback(scroll_offset{ x_offset, y_offset });
 }
 
-glfw_window::glfw_window(const window_spec& spec, renderer::render_api api) : _spec(spec) {
+glfw_window::glfw_window(const window_spec& spec, render_api api) : _spec(spec) {
     glfwSetErrorCallback(glfw_error_callback);
 
     glfwInit();
 
     switch (api) {
-    case renderer::render_api::opengl:
+    case render_api::opengl:
         glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -49,16 +49,16 @@ glfw_window::glfw_window(const window_spec& spec, renderer::render_api api) : _s
 
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-    core::log_info("creating window {} {}x{}", _spec.title, _spec.width, _spec.height);
+    log_info("creating window {} {}x{}", _spec.title, _spec.width, _spec.height);
 
     _window = glfwCreateWindow(_spec.width, _spec.height, _spec.title.c_str(), nullptr, nullptr);
     asl::check(_window, "failed to create GLFW window");
 
     switch (api) {
-    case renderer::render_api::opengl:
+    case render_api::opengl:
         glfwMakeContextCurrent(_window);
         break;
-    case renderer::render_api::vulkan:
+    case render_api::vulkan:
         query_glfw_required_extensions();
         break;
     }
@@ -73,23 +73,23 @@ glfw_window::glfw_window(const window_spec& spec, renderer::render_api api) : _s
     auto monitor = get_primary_monitor();
     auto monitor_spec = monitor->get_spec();
 
-    core::log_info("primary monitor {}", monitor_spec.name);
-    core::log_info("\t width {} mm", monitor_spec.width_mm);
-    core::log_info("\t heigh {} mm", monitor_spec.height_mm);
-    core::log_info("\t heigh {}", monitor_spec.height);
-    core::log_info("\t width {}", monitor_spec.width);
-    core::log_info("\t green bits {}", monitor_spec.green_bits);
-    core::log_info("\t blue bits {}", monitor_spec.blue_bits);
-    core::log_info("\t red bits {}", monitor_spec.red_bits);
-    core::log_info("\t refresh rate {}", monitor_spec.refresh_rate);
+    log_info("primary monitor {}", monitor_spec.name);
+    log_info("\t width {} mm", monitor_spec.width_mm);
+    log_info("\t height {} mm", monitor_spec.height_mm);
+    log_info("\t width {}", monitor_spec.width);
+    log_info("\t height {}", monitor_spec.height);
+    log_info("\t green bits {}", monitor_spec.green_bits);
+    log_info("\t blue bits {}", monitor_spec.blue_bits);
+    log_info("\t red bits {}", monitor_spec.red_bits);
+    log_info("\t refresh rate {}", monitor_spec.refresh_rate);
 }
 
 glfw_window::~glfw_window() {
     if (_window) {
-        core::log_info("destroying window");
+        log_info("destroying window");
         glfwDestroyWindow(_window);
     }
-    core::log_info("terminating platform window");
+    log_info("terminating platform window");
     glfwTerminate();
 }
 
@@ -142,4 +142,4 @@ void glfw_window::set_scroll_callback(scroll_event_callback callback) {
     _scroll_callback = callback;
 }
 
-} // namespace cobalt::platform
+} // namespace cobalt

@@ -6,7 +6,7 @@
 #include <cobalt/platform/window.hpp>
 #include <cobalt/render/renderer.hpp>
 
-namespace cobalt::core {
+namespace cobalt {
 
 /// @brief Main entry point
 class application {
@@ -47,4 +47,4 @@ private:
     ecs::simple_scheduler _scheduler{ _registry };
 };
 
-} // namespace cobalt::core
+} // namespace cobalt

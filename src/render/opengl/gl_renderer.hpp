@@ -1,14 +1,14 @@
 #include <cobalt/core/logging.hpp>
 #include <cobalt/render/renderer.hpp>
 
-namespace cobalt::renderer {
+namespace cobalt {
 
 class gl_renderer : public renderer {
 public:
-    gl_renderer(platform::window& window);
+    gl_renderer(window& window);
 
     ~gl_renderer() override {
-        core::log_info("destroying OpenGL renderer");
+        log_info("destroying OpenGL renderer");
     }
 
     gl_renderer(const gl_renderer& rhs) = delete;
@@ -17,7 +17,7 @@ public:
     gl_renderer& operator=(gl_renderer&& rhs) = delete;
 
 private:
-    platform::window& _window;
+    window& _window;
 };
 
-} // namespace cobalt::renderer
+} // namespace cobalt

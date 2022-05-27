@@ -1,6 +1,6 @@
 #include "glfw_monitor.hpp"
 
-namespace cobalt::platform {
+namespace cobalt {
 
 monitor_spec glfw_monitor::get_spec() const {
     monitor_spec s{};
@@ -24,4 +24,4 @@ monitor_spec glfw_monitor::get_spec() const {
     return s;
 }
 
-} // namespace cobalt::platform
+} // namespace cobalt

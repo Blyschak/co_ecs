@@ -9,7 +9,7 @@ TEST(config, read_config) {
     std::stringstream ss;
     ss << "a.b.c =  23\n  hey=world\n";
 
-    auto config = core::config::from_stream(ss);
+    auto config = config::from_stream(ss);
 
     EXPECT_EQ(config.get("a.b.c"), "23");
     EXPECT_EQ(config.get("hey"), "world");

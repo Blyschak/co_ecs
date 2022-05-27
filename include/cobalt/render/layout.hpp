@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace cobalt::renderer {
+namespace cobalt {
 
 struct vertex_element {
     vertex_format format{};
@@ -70,4 +70,4 @@ private:
     std::size_t _stride{};
 };
 
-} // namespace cobalt::renderer
+} // namespace cobalt

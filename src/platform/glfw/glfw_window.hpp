@@ -9,11 +9,11 @@
 
 #include <vector>
 
-namespace cobalt::platform {
+namespace cobalt {
 
 class glfw_window : public window {
 public:
-    glfw_window(const window_spec&, renderer::render_api api = renderer::render_api::opengl);
+    glfw_window(const window_spec&, render_api api = render_api::opengl);
 
     glfw_window(const glfw_window& rhs) = delete;
     glfw_window& operator=(const glfw_window& rhs) = delete;
@@ -67,4 +67,4 @@ private:
     static scroll_event_callback _scroll_callback;
 };
 
-} // namespace cobalt::platform
+} // namespace cobalt

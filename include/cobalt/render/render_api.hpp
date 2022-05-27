@@ -1,6 +1,6 @@
 #pragma once
 
-namespace cobalt::renderer {
+namespace cobalt {
 
 enum class render_api {
     opengl,

@@ -5,7 +5,7 @@
 
 #include <sol/sol.hpp>
 
-namespace cobalt::scripting {
+namespace cobalt {
 
 /// @brief Lua table callbacks method names
 class lua_callbacks {
@@ -111,9 +111,9 @@ public:
 
 private:
     [[nodiscard]] std::string to_string(const sol::object& obj) const;
-    void log_callback(core::log_level level, const sol::variadic_args& args) const;
+    void log_callback(log_level level, const sol::variadic_args& args) const;
 
     sol::state lua;
 };
 
-} // namespace cobalt::scripting
+} // namespace cobalt

@@ -9,17 +9,17 @@
 #include <cobalt/asl/check.hpp>
 #include <cobalt/asl/hash_set.hpp>
 
-namespace cobalt::renderer {
+namespace cobalt {
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
     void* pUserData) {
-    core::log_debug("vulkan validation layer: {}", pCallbackData->pMessage);
+    log_debug("vulkan validation layer: {}", pCallbackData->pMessage);
     return VK_FALSE;
 }
 
-vk_device::vk_device(platform::window& window) : _window(window) {
+vk_device::vk_device(window& window) : _window(window) {
     init_required_validation_layers();
     init_required_instance_extensions();
     query_validation_layers();
@@ -91,9 +91,9 @@ void vk_device::create_instance() {
 }
 
 void vk_device::create_surface() {
-    auto* glfw_window = dynamic_cast<platform::glfw_window*>(&_window);
-    asl::check(glfw_window, "GLFW window implementation is required");
-    glfw_window->create_surface(_instance, &_surface);
+    auto* window = dynamic_cast<glfw_window*>(&_window);
+    asl::check(window, "GLFW window implementation is required");
+    window->create_surface(_instance, &_surface);
 }
 
 void vk_device::choose_physical_device() {
@@ -101,7 +101,7 @@ void vk_device::choose_physical_device() {
     vkEnumeratePhysicalDevices(_instance, &device_count, nullptr);
     asl::check(device_count, "vulkan physical devices not found");
 
-    core::log_info("vulkan found {} physical devices", device_count);
+    log_info("vulkan found {} physical devices", device_count);
 
     std::vector<VkPhysicalDevice> devices(device_count);
     vkEnumeratePhysicalDevices(_instance, &device_count, devices.data());
@@ -117,7 +117,7 @@ void vk_device::choose_physical_device() {
 
     vkGetPhysicalDeviceProperties(_physical_device, &_properties);
 
-    core::log_info("physical device: {}", _properties.deviceName);
+    log_info("physical device: {}", _properties.deviceName);
 }
 
 void vk_device::create_logical_device() {
@@ -177,13 +177,13 @@ void vk_device::query_validation_layers() {
     std::uint32_t layer_count;
     vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
 
-    core::log_debug("vulkan {} validation layers supported", layer_count);
+    log_debug("vulkan {} validation layers supported", layer_count);
 
     _validation_layers.resize(static_cast<std::size_t>(layer_count));
     vkEnumerateInstanceLayerProperties(&layer_count, _validation_layers.data());
 
     for (const auto& layer : _validation_layers) {
-        core::log_debug("vulkan validation layer supported: {}", layer.layerName);
+        log_debug("vulkan validation layer supported: {}", layer.layerName);
     }
 }
 
@@ -191,27 +191,27 @@ void vk_device::query_instance_extensions() {
     std::uint32_t extension_count;
     vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
 
-    core::log_debug("vulkan {} instance extensions supported", extension_count);
+    log_debug("vulkan {} instance extensions supported", extension_count);
 
     _instance_extensions.resize(static_cast<std::size_t>(extension_count));
     vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, _instance_extensions.data());
 
     for (const auto& extension : _instance_extensions) {
-        core::log_debug("vulkan instance extensions supported: {}", extension.extensionName);
+        log_debug("vulkan instance extensions supported: {}", extension.extensionName);
     }
 }
 
 void vk_device::init_required_instance_extensions() {
-    auto* glfw_window = dynamic_cast<platform::glfw_window*>(&_window);
-    asl::check(glfw_window, "GLFW window implementation is required");
-    _required_extensions = glfw_window->get_glfw_required_extensions();
+    auto* window = dynamic_cast<glfw_window*>(&_window);
+    asl::check(window, "GLFW window implementation is required");
+    _required_extensions = window->get_glfw_required_extensions();
 
     if (enable_validation_layers()) {
         _required_extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
     }
 
     for (const auto& extension : _required_extensions) {
-        core::log_debug("vulkan instance extensions required: {}", extension);
+        log_debug("vulkan instance extensions required: {}", extension);
     }
 }
 
@@ -326,4 +326,4 @@ swap_chain_support_details vk_device::query_swap_chain_support(VkPhysicalDevice 
     return details;
 }
 
-} // namespace cobalt::renderer
+} // namespace cobalt
