@@ -1,7 +1,16 @@
 FetchContent_Declare(
+  fmt
+  GIT_REPOSITORY https://github.com/fmtlib/fmt
+  GIT_TAG 8.0.0
+)
+FetchContent_MakeAvailable(fmt)
+
+set(SPDLOG_FMT_EXTERNAL ON)
+
+FetchContent_Declare(
   spdlog
   GIT_REPOSITORY https://github.com/gabime/spdlog
-  GIT_TAG v1.9.2)
+  GIT_TAG v1.10.0)
 FetchContent_MakeAvailable(spdlog)
 
 set(LUA_BUILD_COMPILER OFF CACHE INTERNAL "")
@@ -88,6 +97,7 @@ target_include_directories(
 
 target_link_libraries(
   engine
+  PUBLIC fmt::fmt
   PUBLIC spdlog::spdlog
   PUBLIC lua::lua
   PUBLIC sol2

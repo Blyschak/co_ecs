@@ -1,3 +1,7 @@
+#pragma once
+
+#include <cobalt/asl/bits.hpp>
+
 #include <algorithm>
 #include <climits>
 #include <cstdint>
@@ -74,8 +78,8 @@ public:
 
 private:
     static inline std::pair<std::size_t, std::size_t> block_and_bit(std::size_t pos) {
-        auto bit_pos = pos & ((sizeof(block_type) * CHAR_BIT) - 1U);
-        auto block_index = pos >> bit_pos;
+        auto bit_pos = asl::mod_2n(pos, sizeof(block_type) * CHAR_BIT);
+        auto block_index = asl::div_2n(pos, sizeof(block_type) * CHAR_BIT);
         return std::make_pair(block_index, bit_pos);
     }
 

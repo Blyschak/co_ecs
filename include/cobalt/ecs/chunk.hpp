@@ -5,7 +5,7 @@
 #include <optional>
 #include <type_traits>
 
-#include <cobalt/asl/alloc.hpp>
+#include <cobalt/asl/allocator.hpp>
 #include <cobalt/asl/bits.hpp>
 #include <cobalt/asl/sparse_map.hpp>
 #include <cobalt/ecs/component.hpp>
