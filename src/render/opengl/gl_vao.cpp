@@ -1,4 +1,4 @@
-#include <cobalt/asl/check.hpp>
+#include <cobalt/core/assert.hpp>
 
 #include "gl_buffer.hpp"
 #include "gl_vao.hpp"
@@ -26,7 +26,7 @@ static GLenum to_gl_enum(vertex_format format) {
         return GL_INT;
     }
 
-    asl::check_failed("invalid vertex format");
+    fail_with_message("invalid vertex format");
 }
 
 gl_vertex_array::gl_vertex_array() {

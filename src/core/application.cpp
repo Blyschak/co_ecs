@@ -31,8 +31,7 @@ application::application(int argc, char** argv) {
                 conf = config::from_stream(config_file);
             }
 
-            conf.set_default("core.log_level", "info");
-            set_log_level(conf.get<log_level>("core.log_level"));
+            set_log_level(log_level::trace);
 
             conf.set_default("window.width", 1920);
             conf.set_default("window.height", 1080);
@@ -47,8 +46,8 @@ application::application(int argc, char** argv) {
                              ecs::event_publisher<mouse_position>& mouse_pos_events,
                              ecs::event_publisher<scroll_offset>& scroll_offset_events) {
             window_spec spec{
-                conf.get<int>("window.width"),
-                conf.get<int>("window.height"),
+                stoi(conf.get("window.width")),
+                stoi(conf.get("window.height")),
                 conf.get("window.title"),
             };
 

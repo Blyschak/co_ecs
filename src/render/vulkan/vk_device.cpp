@@ -6,8 +6,8 @@
 
 #include <ranges>
 
-#include <cobalt/asl/check.hpp>
 #include <cobalt/asl/hash_set.hpp>
+#include <cobalt/core/assert.hpp>
 
 namespace cobalt {
 
@@ -48,8 +48,8 @@ vk_device::~vk_device() {
 }
 
 void vk_device::create_instance() {
-    asl::check(are_required_validation_layers_supported(), "validation layers aren't available");
-    asl::check(are_required_instance_extensions_supported(), "required instance extensions aren't supported");
+    assert_with_message(are_required_validation_layers_supported(), "validation layers aren't available");
+    assert_with_message(are_required_instance_extensions_supported(), "required instance extensions aren't supported");
 
     VkApplicationInfo app_info = {};
     app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -92,14 +92,14 @@ void vk_device::create_instance() {
 
 void vk_device::create_surface() {
     auto* window = dynamic_cast<glfw_window*>(&_window);
-    asl::check(window, "GLFW window implementation is required");
+    assert_with_message(window, "GLFW window implementation is required");
     window->create_surface(_instance, &_surface);
 }
 
 void vk_device::choose_physical_device() {
     uint32_t device_count = 0;
     vkEnumeratePhysicalDevices(_instance, &device_count, nullptr);
-    asl::check(device_count, "vulkan physical devices not found");
+    assert_with_message(device_count, "vulkan physical devices not found");
 
     log_info("vulkan found {} physical devices", device_count);
 
@@ -113,7 +113,7 @@ void vk_device::choose_physical_device() {
         }
     }
 
-    asl::check(_physical_device != VK_NULL_HANDLE, "failed to find a suitable GPU");
+    assert_with_message(_physical_device != VK_NULL_HANDLE, "failed to find a suitable GPU");
 
     vkGetPhysicalDeviceProperties(_physical_device, &_properties);
 
@@ -203,7 +203,7 @@ void vk_device::query_instance_extensions() {
 
 void vk_device::init_required_instance_extensions() {
     auto* window = dynamic_cast<glfw_window*>(&_window);
-    asl::check(window, "GLFW window implementation is required");
+    assert_with_message(window, "GLFW window implementation is required");
     _required_extensions = window->get_glfw_required_extensions();
 
     if (enable_validation_layers()) {

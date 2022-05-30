@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cobalt/asl/check.hpp>
+#include <cobalt/core/assert.hpp>
 #include <cobalt/platform/monitor.hpp>
 
 #define GLFW_INCLUDE_NONE
@@ -12,7 +12,7 @@ namespace cobalt {
 class glfw_monitor : public monitor {
 public:
     glfw_monitor(GLFWmonitor* monitor) : _monitor(monitor) {
-        asl::check(_monitor, "null monitor handle");
+        assert_with_message(_monitor, "null monitor handle");
     }
 
     ~glfw_monitor() override = default;

@@ -20,7 +20,7 @@ TEST(config, read_config) {
 
     config.set_default("myval", "1");
 
-    EXPECT_EQ(config.get<int>("myval"), 1);
+    EXPECT_EQ(config.get("myval"), "1");
 
-    EXPECT_THROW(config.get<int>("hey"), std::invalid_argument);
+    EXPECT_EQ(config.get("hey"), "world");
 }

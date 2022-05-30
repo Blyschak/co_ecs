@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cobalt/asl/check.hpp>
+#include <cobalt/core/assert.hpp>
 
 #include <glad/glad.h>
 
@@ -16,7 +16,7 @@ public:
         GLuint texture_id;
         auto [internal_format, data_format] = format_from_channels(channels);
 
-        asl::check(internal_format & data_format, "Format not supported!");
+        assert_with_message(internal_format & data_format, "Format not supported!");
 
         glCreateTextures(GL_TEXTURE_2D, 1, &texture_id);
         glTextureStorage2D(texture_id, 1, internal_format, width, height);
@@ -35,7 +35,7 @@ public:
 
     void set_data(u8_view raw) {
         uint32_t bpp = _data_format == GL_RGBA ? 4 : 3;
-        asl::check(raw.size() == _width * _height * bpp, "Data must be entire texture!");
+        assert_with_message(raw.size() == _width * _height * bpp, "Data must be entire texture!");
         glTextureSubImage2D(_texture, 0, 0, 0, _width, _height, _data_format, GL_UNSIGNED_BYTE, raw.data());
     }
 
@@ -60,7 +60,7 @@ private:
         if (channels == 3) {
             return { GL_RGB8, GL_RGB };
         }
-        asl::check_failed("Format not supported");
+        fail_with_message("Format not supported");
     }
 
     GLuint _texture;

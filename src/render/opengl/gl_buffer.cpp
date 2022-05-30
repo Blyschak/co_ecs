@@ -1,6 +1,6 @@
 #include "gl_buffer.hpp"
 
-#include <cobalt/asl/check.hpp>
+#include <cobalt/core/assert.hpp>
 #include <cobalt/core/logging.hpp>
 
 #include <glad/glad.h>
@@ -15,7 +15,7 @@ static GLenum to_gl_enum(buffer_usage usage) {
         return GL_DYNAMIC_DRAW;
     }
 
-    asl::check_failed("unknown buffer usage type");
+    fail_with_message("unknown buffer usage type");
 }
 
 static GLenum to_gl_enum(buffer_type type) {
@@ -26,7 +26,7 @@ static GLenum to_gl_enum(buffer_type type) {
         return GL_ELEMENT_ARRAY_BUFFER;
     }
 
-    asl::check_failed("unknown buffer type");
+    fail_with_message("unknown buffer type");
 }
 
 std::uint32_t create_gl_buffer(GLenum type, GLsizeiptr size, const void* ptr, GLenum usage) {
@@ -61,7 +61,7 @@ void gl_buffer::updateData(std::span<const std::uint8_t> data) {
 }
 
 void gl_buffer::updateData(const void* data, std::size_t size) {
-    asl::check(_size <= size, "gl_buffer data overflow");
+    assert_with_message(_size <= size, "gl_buffer data overflow");
     glBufferData(to_gl_enum(type()), size, data, to_gl_enum(usage()));
 }
 

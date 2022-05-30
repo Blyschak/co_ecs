@@ -1,4 +1,4 @@
-#include <cobalt/asl/check.hpp>
+#include <cobalt/core/assert.hpp>
 #include <cobalt/render/renderer.hpp>
 
 #include "opengl/gl_renderer.hpp"
@@ -14,7 +14,7 @@ std::unique_ptr<renderer> renderer::create(window& window, render_api api) {
         return std::make_unique<vk_renderer>(window);
     }
 
-    asl::check_failed("unknown render API");
+    fail_with_message("unknown render API");
 }
 
 } // namespace cobalt

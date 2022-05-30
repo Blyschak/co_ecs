@@ -22,7 +22,6 @@ add_executable(
   asl/test_defer.cpp
   asl/test_zip.cpp
   asl/test_dynamic_bitset.cpp
-  asl/test_convert.cpp
   asl/test_string_utils.cpp
   ecs/test_component.cpp
   ecs/test_registry.cpp

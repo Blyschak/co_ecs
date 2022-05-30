@@ -7,7 +7,6 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
-#include <cobalt/asl/convert.hpp>
 #include <cobalt/asl/hash_map.hpp>
 
 namespace cobalt {
@@ -15,15 +14,15 @@ namespace cobalt {
 using log_level = spdlog::level::level_enum;
 
 namespace detail {
-    /// @brief Create logger instance
-    ///
-    /// @return std::shared_ptr<spdlog::logger>
-    inline static std::shared_ptr<spdlog::logger> init_logger() {
-        auto logger = spdlog::stderr_color_mt("cobalt");
-        logger->set_pattern("[%H:%M:%S %z] [%n] [%^%l%$] [%s.%#] %v");
-        logger->set_level(spdlog::level::level_enum::trace);
-        return logger;
-    }
+/// @brief Create logger instance
+///
+/// @return std::shared_ptr<spdlog::logger>
+inline static std::shared_ptr<spdlog::logger> init_logger() {
+    auto logger = spdlog::stderr_color_mt("cobalt");
+    logger->set_pattern("[%H:%M:%S %z] [%n] [%^%l%$] [%s.%#] %v");
+    logger->set_level(spdlog::level::level_enum::trace);
+    return logger;
+}
 } // namespace detail
 
 /// @brief Get the logger object
@@ -118,21 +117,10 @@ private:
     std::chrono::time_point<std::chrono::high_resolution_clock> _start;
 };
 
-} // namespace cobalt
+namespace fmt {
 
-namespace cobalt::asl {
+using namespace spdlog::fmt_lib;
 
-template<>
-inline cobalt::log_level from_string<cobalt::log_level>(std::string_view str) {
-    static const cobalt::asl::hash_map<std::string_view, cobalt::log_level> _map = {
-        { "trace", cobalt::log_level::trace },
-        { "debug", cobalt::log_level::debug },
-        { "info", cobalt::log_level::info },
-        { "warn", cobalt::log_level::warn },
-        { "error", cobalt::log_level::err },
-        { "critical", cobalt::log_level::critical },
-    };
-    return _map.at(str);
 }
 
-} // namespace cobalt::asl
+} // namespace cobalt
