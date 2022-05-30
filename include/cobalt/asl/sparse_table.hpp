@@ -7,7 +7,7 @@
 namespace cobalt::asl {
 
 /// @brief Sparse table implementation.
-/// @details The underlaying layout is:
+/// @details The underlying layout is:
 ///          dense:  |value_type|value_type|value_type|value_type|
 ///          sparse: |key_type|          |key_type|key_type|          |key_type|
 ///
