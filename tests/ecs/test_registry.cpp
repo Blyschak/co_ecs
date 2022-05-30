@@ -158,7 +158,7 @@ TEST(registry, ref_view) {
     std::vector<ecs::entity> entities;
 
     for (int i = 0; i < 10000; i++) {
-        ecs::entity entity = ecs::entity::invalid();
+        ecs::entity entity = ecs::entity::invalid;
         if (i % 2 == 0) {
             entity = registry.create<position, velocity, rotation>({ 1, 2 }, { 3, 0 }, { 5, 6 });
         } else {
@@ -209,7 +209,7 @@ TEST(registry, const_view) {
     std::vector<ecs::entity> entities;
 
     for (int i = 0; i < 10000; i++) {
-        ecs::entity entity = ecs::entity::invalid();
+        ecs::entity entity = ecs::entity::invalid;
         if (i % 2 == 0) {
             entity = registry.create<position, velocity, rotation>({ 1, 2 }, { 3, 0 }, { 5, 6 });
         } else {

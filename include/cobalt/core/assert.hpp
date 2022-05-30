@@ -4,23 +4,18 @@
 
 #include <stdexcept>
 
-namespace cobalt {
+#define co_unreachable(...)                        \
+    do {                                           \
+        auto msg = fmt::format(__VA_ARGS__);       \
+        log_critical("unreachable code: {}", msg); \
+        std::abort();                              \
+    } while (0)
 
-namespace {
-
-template<typename... Args>
-void fail_with_message [[noreturn]] (Args&&... args) {
-    // log_err(std::forward<Args>(args)...);
-    throw 1;
-}
-
-template<typename... Args>
-void assert_with_message(bool result, Args&&... args) {
-    if (!result) {
-        fail_with_message(std::forward<Args>(args)...);
-    }
-}
-
-} // namespace
-
-} // namespace cobalt
+#define co_assert(expr, ...)                                         \
+    do {                                                             \
+        if (!(expr)) {                                               \
+            auto msg = fmt::format(__VA_ARGS__);                     \
+            log_critical("assertion failed \"{}\": {}", #expr, msg); \
+            std::abort();                                            \
+        }                                                            \
+    } while (0)

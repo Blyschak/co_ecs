@@ -26,7 +26,7 @@ static GLenum to_gl_enum(vertex_format format) {
         return GL_INT;
     }
 
-    fail_with_message("invalid vertex format");
+    co_unreachable("invalid vertex format");
 }
 
 gl_vertex_array::gl_vertex_array() {

@@ -14,7 +14,7 @@ std::unique_ptr<renderer> renderer::create(window& window, render_api api) {
         return std::make_unique<vk_renderer>(window);
     }
 
-    fail_with_message("unknown render API");
+    co_unreachable("unknown render API");
 }
 
 } // namespace cobalt

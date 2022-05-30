@@ -18,9 +18,9 @@ public:
         if (!_free_ids.empty()) {
             auto id = _free_ids.back();
             _free_ids.pop_back();
-            return H(id, _generations[id]);
+            return H{ id, _generations[id] };
         }
-        auto handle = H(_next_id++);
+        auto handle = H{ _next_id++ };
         _generations.emplace_back();
         return handle;
     };
@@ -30,7 +30,10 @@ public:
     /// @param handle Handle to check
     /// @return True if handle is alive
     [[nodiscard]] constexpr bool alive(H handle) const noexcept {
-        return _generations[handle.id()] == handle.generation();
+        if (handle.id() < _generations.size()) {
+            return _generations[handle.id()] == handle.generation();
+        }
+        return false;
     }
 
     /// @brief Recycle the handle, handle will be reused in next create()

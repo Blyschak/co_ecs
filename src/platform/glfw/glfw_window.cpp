@@ -52,7 +52,7 @@ glfw_window::glfw_window(const window_spec& spec, render_api api) : _spec(spec) 
     log_info("creating window {} {}x{}", _spec.title, _spec.width, _spec.height);
 
     _window = glfwCreateWindow(_spec.width, _spec.height, _spec.title.c_str(), nullptr, nullptr);
-    assert_with_message(_window, "failed to create GLFW window");
+    co_assert(_window, "failed to create GLFW window");
 
     switch (api) {
     case render_api::opengl:
@@ -108,7 +108,7 @@ void glfw_window::query_glfw_required_extensions() {
 }
 
 void glfw_window::create_surface(VkInstance instance, VkSurfaceKHR* surface) {
-    assert_with_message(glfwCreateWindowSurface(instance, _window, nullptr, surface) == VK_SUCCESS,
+    co_assert(glfwCreateWindowSurface(instance, _window, nullptr, surface) == VK_SUCCESS,
         "failed to create GLFW window surface");
 }
 
@@ -122,7 +122,7 @@ void glfw_window::set_vsync(vsync_mode mode) {
 
 std::unique_ptr<monitor> glfw_window::get_primary_monitor() {
     GLFWmonitor* primary = glfwGetPrimaryMonitor();
-    assert_with_message(primary, "failed to get primary monitor");
+    co_assert(primary, "failed to get primary monitor");
     return std::make_unique<glfw_monitor>(primary);
 }
 

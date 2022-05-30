@@ -1,4 +1,5 @@
 #include <cobalt/core/application.hpp>
+#include <cobalt/core/assert.hpp>
 #include <cobalt/core/logging.hpp>
 #include <cobalt/core/pointer.hpp>
 #include <fstream>
@@ -19,7 +20,6 @@ struct mouse_event {
 
 application::application(int argc, char** argv) {
     log_info("starting...");
-
 
     _scheduler
         .add_init_system([](ecs::command_queue& commands) {

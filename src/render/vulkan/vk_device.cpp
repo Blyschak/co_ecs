@@ -1,6 +1,5 @@
 #include "vk_device.hpp"
 #include "../../platform/glfw/glfw_window.hpp"
-#include "vk.hpp"
 
 #include <GLFW/glfw3.h>
 
@@ -48,8 +47,8 @@ vk_device::~vk_device() {
 }
 
 void vk_device::create_instance() {
-    assert_with_message(are_required_validation_layers_supported(), "validation layers aren't available");
-    assert_with_message(are_required_instance_extensions_supported(), "required instance extensions aren't supported");
+    co_assert(are_required_validation_layers_supported(), "validation layers aren't available");
+    co_assert(are_required_instance_extensions_supported(), "required instance extensions aren't supported");
 
     VkApplicationInfo app_info = {};
     app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -87,19 +86,19 @@ void vk_device::create_instance() {
         create_info.pNext = nullptr;
     }
 
-    vk_check(vkCreateInstance(&create_info, nullptr, &_instance), "failed to create instance");
+    co_assert(vkCreateInstance(&create_info, nullptr, &_instance) != VK_SUCCESS, "failed to create instance");
 }
 
 void vk_device::create_surface() {
     auto* window = dynamic_cast<glfw_window*>(&_window);
-    assert_with_message(window, "GLFW window implementation is required");
+    co_assert(window, "GLFW window implementation is required");
     window->create_surface(_instance, &_surface);
 }
 
 void vk_device::choose_physical_device() {
     uint32_t device_count = 0;
     vkEnumeratePhysicalDevices(_instance, &device_count, nullptr);
-    assert_with_message(device_count, "vulkan physical devices not found");
+    co_assert(device_count, "vulkan physical devices not found");
 
     log_info("vulkan found {} physical devices", device_count);
 
@@ -113,7 +112,7 @@ void vk_device::choose_physical_device() {
         }
     }
 
-    assert_with_message(_physical_device != VK_NULL_HANDLE, "failed to find a suitable GPU");
+    co_assert(_physical_device != VK_NULL_HANDLE, "failed to find a suitable GPU");
 
     vkGetPhysicalDeviceProperties(_physical_device, &_properties);
 
@@ -156,7 +155,8 @@ void vk_device::create_logical_device() {
         create_info.enabledLayerCount = 0;
     }
 
-    vk_check(vkCreateDevice(_physical_device, &create_info, nullptr, &_device), "failed to create logical device");
+    co_assert(vkCreateDevice(_physical_device, &create_info, nullptr, &_device) != VK_SUCCESS,
+        "failed to create logical device");
 
     vkGetDeviceQueue(_device, indices.graphics_family, 0, &_graphics_queue);
     vkGetDeviceQueue(_device, indices.present_family, 0, &_present_queue);
@@ -170,7 +170,8 @@ void vk_device::create_command_pool() {
     pool_info.queueFamilyIndex = queue_family_indices.graphics_family;
     pool_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
-    vk_check(vkCreateCommandPool(_device, &pool_info, nullptr, &_command_pool), "failed to create command pool");
+    co_assert(vkCreateCommandPool(_device, &pool_info, nullptr, &_command_pool) != VK_SUCCESS,
+        "failed to create command pool");
 }
 
 void vk_device::query_validation_layers() {
@@ -203,7 +204,7 @@ void vk_device::query_instance_extensions() {
 
 void vk_device::init_required_instance_extensions() {
     auto* window = dynamic_cast<glfw_window*>(&_window);
-    assert_with_message(window, "GLFW window implementation is required");
+    co_assert(window, "GLFW window implementation is required");
     _required_extensions = window->get_glfw_required_extensions();
 
     if (enable_validation_layers()) {

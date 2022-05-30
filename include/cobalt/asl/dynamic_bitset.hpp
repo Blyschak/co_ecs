@@ -37,7 +37,7 @@ public:
     [[nodiscard]] inline bool test(std::size_t pos) const noexcept {
         auto [block_index, bit_pos] = block_and_bit(pos);
         if (block_index < _blocks.size()) {
-            return _blocks[block_index] & (block_type(1) << bit_pos);
+            return _blocks[block_index] & (block_type{ 1 } << bit_pos);
         }
         return false;
     }
@@ -53,18 +53,11 @@ public:
             _blocks.resize(block_index + 1);
         }
         if (value) {
-            _blocks[block_index] |= (block_type(1) << bit_pos);
+            _blocks[block_index] |= (block_type{ 1 } << bit_pos);
         } else {
-            _blocks[block_index] &= ~(block_type(1) << bit_pos);
+            _blocks[block_index] &= ~(block_type{ 1 } << bit_pos);
         }
         return *this;
-    }
-
-    /// @brief Get blocks storage
-    ///
-    /// @return const storage_type&
-    [[nodiscard]] const storage_type& blocks() const noexcept {
-        return _blocks;
     }
 
     /// @brief Equality operator
@@ -77,6 +70,8 @@ public:
     }
 
 private:
+    friend class std::hash<dynamic_bitset>;
+
     static inline std::pair<std::size_t, std::size_t> block_and_bit(std::size_t pos) {
         auto bit_pos = asl::mod_2n(pos, sizeof(block_type) * CHAR_BIT);
         auto block_index = asl::div_2n(pos, sizeof(block_type) * CHAR_BIT);
@@ -95,7 +90,7 @@ template<typename A>
 struct hash<cobalt::asl::dynamic_bitset<A>> {
     std::size_t operator()(const cobalt::asl::dynamic_bitset<A>& bitset) const {
         std::size_t hash = 0;
-        for (auto block : bitset.blocks()) {
+        for (auto block : bitset._blocks) {
             hash ^= block;
         }
         return hash;

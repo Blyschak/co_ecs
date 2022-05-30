@@ -1,7 +1,8 @@
 #pragma once
 
 #include <cobalt/asl/type_name.hpp>
-#include <string>
+
+#include <string_view>
 
 namespace cobalt::ecs {
 
@@ -45,7 +46,7 @@ struct type_meta {
         static const type_meta meta{
             sizeof(T),
             alignof(T),
-            asl::type_name<T>(),
+            asl::type_name_v<T>,
             &move_constructor<T>,
             &move_assignment<T>,
             &destructor<T>,
@@ -55,7 +56,7 @@ struct type_meta {
 
     std::size_t size;
     std::size_t align;
-    std::string name;
+    std::string_view name;
     void (*move_construct)(void*, void*);
     void (*move_assign)(void*, void*);
     void (*destruct)(void*);

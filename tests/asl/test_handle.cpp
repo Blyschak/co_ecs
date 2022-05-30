@@ -37,7 +37,7 @@ TEST(handle, handle_ordering) {
 
 TEST(handle, handle_invalid) {
     auto h = handle{ 0, 0 };
-    auto invalid = handle<>::invalid();
+    auto invalid = handle<>::invalid;
 
     EXPECT_TRUE(h.valid());
     EXPECT_FALSE(invalid.valid());

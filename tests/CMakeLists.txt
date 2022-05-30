@@ -19,7 +19,6 @@ add_executable(
   asl/test_sparse_map.cpp
   asl/test_handle.cpp
   asl/test_family.cpp
-  asl/test_defer.cpp
   asl/test_zip.cpp
   asl/test_dynamic_bitset.cpp
   asl/test_string_utils.cpp

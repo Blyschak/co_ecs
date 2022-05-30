@@ -16,7 +16,7 @@ public:
         GLuint texture_id;
         auto [internal_format, data_format] = format_from_channels(channels);
 
-        assert_with_message(internal_format & data_format, "Format not supported!");
+        co_assert(internal_format & data_format, "Format not supported!");
 
         glCreateTextures(GL_TEXTURE_2D, 1, &texture_id);
         glTextureStorage2D(texture_id, 1, internal_format, width, height);
@@ -35,7 +35,7 @@ public:
 
     void set_data(u8_view raw) {
         uint32_t bpp = _data_format == GL_RGBA ? 4 : 3;
-        assert_with_message(raw.size() == _width * _height * bpp, "Data must be entire texture!");
+        co_assert(raw.size() == _width * _height * bpp, "Data must be entire texture!");
         glTextureSubImage2D(_texture, 0, 0, 0, _width, _height, _data_format, GL_UNSIGNED_BYTE, raw.data());
     }
 
@@ -60,7 +60,7 @@ private:
         if (channels == 3) {
             return { GL_RGB8, GL_RGB };
         }
-        fail_with_message("Format not supported");
+        co_unreachable("Format not supported");
     }
 
     GLuint _texture;

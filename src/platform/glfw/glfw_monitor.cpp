@@ -5,7 +5,7 @@ namespace cobalt {
 monitor_spec glfw_monitor::get_spec() const {
     monitor_spec s{};
     const GLFWvidmode* mode = glfwGetVideoMode(_monitor);
-    assert_with_message(mode, "failed to get video mode");
+    co_assert(mode, "failed to get video mode");
 
     s.width = mode->width;
     s.height = mode->height;
@@ -17,7 +17,7 @@ monitor_spec glfw_monitor::get_spec() const {
     glfwGetMonitorPhysicalSize(_monitor, &s.width_mm, &s.height_mm);
 
     const char* name = glfwGetMonitorName(_monitor);
-    assert_with_message(name, "failed to get the monitor name");
+    co_assert(name, "failed to get the monitor name");
 
     s.name = name;
 

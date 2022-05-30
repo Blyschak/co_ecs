@@ -5,10 +5,6 @@
 #include <cstdint>
 #include <numeric>
 
-#ifdef __cpp_lib_format
-#include <format>
-#endif
-
 namespace cobalt::asl {
 
 /// @brief Handle as an ID and generation
@@ -24,6 +20,8 @@ public:
     /// @brief Invalid generation number
     static constexpr auto invalid_generation = std::numeric_limits<generation_t>::max();
 
+    static const handle invalid;
+
     /// @brief Default construct a handle
     constexpr handle() = default;
 
@@ -35,18 +33,11 @@ public:
     explicit constexpr handle(id_t id, generation_t generation = 0) noexcept : _id(id), _generation(generation) {
     }
 
-    /// @brief Returns invalid handle
-    ///
-    /// @return Invalid handle
-    [[nodiscard]] constexpr static auto invalid() {
-        return handle{ invalid_id, invalid_generation };
-    }
-
     /// @brief Test if handle is valid
     ///
     /// @return True if handle is valid
     [[nodiscard]] constexpr bool valid() const noexcept {
-        return *this != handle::invalid();
+        return *this != handle::invalid;
     }
 
     /// @brief Return ID number
@@ -74,13 +65,7 @@ private:
     generation_t _generation{ invalid_generation };
 };
 
-} // namespace cobalt::asl
+template<typename H, typename G>
+const handle<H, G> handle<H, G>::invalid{ handle<H, G>::invalid_id, handle<H, G>::invalid_generation };
 
-#ifdef __cpp_lib_format
-template<typename T, typename U>
-struct std::formatter<cobalt::asl::handle<T, U>> : std::formatter<std::string> {
-    auto format(cobalt::asl::handle<T, U> h, format_context& ctx) {
-        return formatter<string>::format(std::format("[{}, {}]", h.id(), h.generation()), ctx);
-    }
-};
-#endif
+} // namespace cobalt::asl

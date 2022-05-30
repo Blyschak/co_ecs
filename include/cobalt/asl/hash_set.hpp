@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cobalt/asl/hash_table.hpp>
-#include <cobalt/asl/type_traits.hpp>
 
 namespace cobalt::asl {
 
@@ -16,8 +15,5 @@ template<typename K,
     typename KeyEqual = std::equal_to<K>,
     typename Allocator = std::allocator<K>>
 using hash_set = hash_table<K, K, false, Hash, KeyEqual, Allocator>;
-
-template<typename K>
-struct is_relocatable<hash_set<K>> : std::true_type {};
 
 } // namespace cobalt::asl

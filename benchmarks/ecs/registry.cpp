@@ -37,7 +37,7 @@ static void bm_entity_creation(benchmark::State& state) {
 template<std::size_t N>
 static void bm_entity_archetype_change(benchmark::State& state) {
     auto registry = cobalt::ecs::registry();
-    auto entity = cobalt::ecs::entity::invalid();
+    auto entity = cobalt::ecs::entity::invalid;
     for (auto i = 0; i < 1000000; i++) {
         entity = registry.create<position, rotation>({}, {});
     }

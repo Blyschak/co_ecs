@@ -12,7 +12,7 @@ namespace cobalt {
 class glfw_monitor : public monitor {
 public:
     glfw_monitor(GLFWmonitor* monitor) : _monitor(monitor) {
-        assert_with_message(_monitor, "null monitor handle");
+        co_assert(_monitor, "null monitor handle");
     }
 
     ~glfw_monitor() override = default;
