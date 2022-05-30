@@ -134,7 +134,7 @@ TEST(registry, view) {
 
     auto set = ecs::component_set::create<velocity, position, rotation>();
 
-    for (auto [vel, pos, rot] : registry.each<velocity&, position&, rotation&>()) {
+    for (auto [vel, pos, rot] : ecs::view<velocity&, position&, rotation&>(registry).each()) {
         static_assert(std::is_same_v<decltype(vel), velocity&>);
         static_assert(std::is_same_v<decltype(pos), position&>);
         static_assert(std::is_same_v<decltype(rot), rotation&>);
@@ -172,7 +172,7 @@ TEST(registry, ref_view) {
     int sum_pos{};
     int sum_rot{};
 
-    for (auto [vel, pos, rot] : registry.each<velocity&, const position&, rotation&>()) {
+    for (auto [vel, pos, rot] : ecs::view<velocity&, const position&, rotation&>(registry).each()) {
         static_assert(std::is_same_v<decltype(vel), velocity&>);
         static_assert(std::is_same_v<decltype(pos), const position&>);
         static_assert(std::is_same_v<decltype(rot), rotation&>);
@@ -188,7 +188,7 @@ TEST(registry, ref_view) {
     sum_vel = 0;
     sum_rot = 0;
 
-    for (auto [vel, rot] : registry.each<const velocity&, const rotation&>()) {
+    for (auto [vel, rot] : ecs::view<const velocity&, const rotation&>(registry).each()) {
         static_assert(std::is_same_v<decltype(vel), const velocity&>);
         static_assert(std::is_same_v<decltype(rot), const rotation&>);
         sum_vel += vel.x;
@@ -244,7 +244,7 @@ TEST(registry, view_part) {
     auto entity1 = registry.create<position>({ 1, 1 });
     auto entity2 = registry.create<position, velocity>({ 2, 2 }, { 22, 22 });
 
-    auto range = registry.each<const position&, const velocity&>();
+    auto range = ecs::view<const position&, const velocity&>(registry).each();
     auto iter = range.begin();
     EXPECT_EQ(std::get<0>(*iter).x, 2);
     EXPECT_EQ(std::get<0>(*iter).y, 2);

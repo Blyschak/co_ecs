@@ -72,7 +72,7 @@ static void bm_entity_iterate_component(benchmark::State& state) {
 
     int sum = 0;
     for (auto _ : state) {
-        for (auto [pos, rot] : registry.each<const position&, const rotation&>()) {
+        for (auto [pos, rot] : cobalt::ecs::view<const position&, const rotation&>(registry).each()) {
             sum += pos.x;
         }
     }

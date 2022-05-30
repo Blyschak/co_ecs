@@ -1,5 +1,6 @@
 #include <cobalt/core/logging.hpp>
 #include <cobalt/ecs/registry.hpp>
+#include <cobalt/ecs/view.hpp>
 
 using namespace cobalt;
 
@@ -26,13 +27,13 @@ int main() {
         }
     }
 
-    for (auto [transform, velocity] : registry.each<transform&, const velocity&>()) {
+    for (auto [transform, velocity] : ecs::view<transform&, const velocity&>(registry).each()) {
         transform.position[0] += velocity.vector[0];
         transform.position[1] += velocity.vector[1];
         transform.position[2] += velocity.vector[2];
     }
 
-    for (auto [transform] : registry.each<const transform&>()) {
+    for (auto [transform] : ecs::view<const transform&>(registry).each()) {
         log_info("transform {} {} {}", transform.position[0], transform.position[1], transform.position[2]);
     }
 

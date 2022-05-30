@@ -158,7 +158,6 @@ public:
         }
     }
 
-
 private:
     void init_blocks(const component_meta_set& components_meta) {
         // make space for entity
@@ -181,12 +180,12 @@ private:
         return offset;
     }
 
-    // Calculates the maxium size of individual components this chunk buffer can hold
+    // Calculates the maximum size of individual components this chunk buffer can hold
     static std::size_t get_max_size(auto&& components_meta) {
         // Calculate packed structure size
-        auto netto_size = aligned_components_size(components_meta);
+        auto packed_size = aligned_components_size(components_meta);
         // Remaining size for packed components
-        auto remaining_space = chunk::chunk_bytes - netto_size;
+        auto remaining_space = chunk::chunk_bytes - packed_size;
         // Calculate how much components we can pack into remaining space
         auto remaining_elements_count = remaining_space / packed_components_size(components_meta);
         //
@@ -252,7 +251,7 @@ private:
 /// @brief Container for archetypes, holds a map from component set to archetype
 class archetypes {
 public:
-    /// @brief Underlaying container storage type
+    /// @brief Underlying container storage type
     using storage_type = asl::hash_map<component_set, std::unique_ptr<archetype>, component_set_hasher>;
     using iterator = storage_type::iterator;
     using const_iterator = storage_type::const_iterator;
@@ -332,75 +331,6 @@ public:
     /// @return decltype(auto)
     [[nodiscard]] const_iterator end() const noexcept {
         return _archetypes.end();
-    }
-
-    /// TODO: Make chunks filtering logic part of view
-
-    /// @brief Return a range of chunks that match given component set in Args
-    ///
-    /// @tparam Args
-    /// @return decltype(auto)
-    template<component_reference... Args>
-    decltype(auto) chunks() requires(!const_component_references_v<Args...>) {
-        auto filter_archetypes = [](auto& archetype) {
-            return (... && archetype->template contains<decay_component_t<Args>>());
-        };
-        auto into_chunks = [](auto& archetype) -> decltype(auto) { return archetype->chunks(); };
-        auto as_typed_chunk = [](auto& chunk) -> decltype(auto) { return chunk_view<Args...>(chunk); };
-
-        return *this                                    // for each archetype entry in archetype map
-               | std::views::values                     // for each value, a pointer to archetype
-               | std::views::filter(filter_archetypes)  // filter archetype by requested components
-               | std::views::transform(into_chunks)     // fetch chunks vector
-               | std::views::join                       // join chunks together
-               | std::views::transform(as_typed_chunk); // each chunk casted to a typed chunk view range-like type
-    }
-
-    /// @brief Return a range of chunks that match given component set in Args
-    ///
-    /// @tparam Args
-    /// @return decltype(auto)
-    template<component_reference... Args>
-    decltype(auto) chunks() const requires(const_component_references_v<Args...>) {
-        auto filter_archetypes = [](auto& archetype) {
-            return (... && archetype->template contains<decay_component_t<Args>>());
-        };
-        auto into_chunks = [](auto& archetype) -> decltype(auto) { return archetype->chunks(); };
-        auto as_typed_chunk = [](auto& chunk) -> decltype(auto) { return chunk_view<Args...>(chunk); };
-
-        return *this                                    // for each archetype entry in archetype map
-               | std::views::values                     // for each value, a pointer to archetype
-               | std::views::filter(filter_archetypes)  // filter archetype by requested components
-               | std::views::transform(into_chunks)     // fetch chunks vector
-               | std::views::join                       // join chunks together
-               | std::views::transform(as_typed_chunk); // each chunk casted to a typed chunk view range-like type
-    }
-
-    /// @brief Return a range of chunks that match given ids in [first, last]
-    ///
-    /// @tparam iter_t Iterator to component ID
-    /// @param first First iterator
-    /// @param last Last iterator
-    /// @return decltype(auto)
-    template<std::forward_iterator iter_t>
-    decltype(auto) chunks(iter_t first, iter_t last) {
-        auto filter_archetypes = [first, last](auto& archetype) mutable {
-            for (; first != last; first++) {
-                if (!archetype->contains(*first)) {
-                    return false;
-                }
-            }
-            return true;
-        };
-        auto into_chunks = [](auto& archetype) -> decltype(auto) { return archetype->chunks(); };
-        auto as_typed_chunk = [](auto& chunk) -> decltype(auto) { return chunk_view<const entity&>(chunk); };
-
-        return *this                                    // for each archetype entry in archetype map
-               | std::views::values                     // for each value, a pointer to archetype
-               | std::views::filter(filter_archetypes)  // filter archetype by requested components
-               | std::views::transform(into_chunks)     // fetch chunks vector
-               | std::views::join                       // join chunks together
-               | std::views::transform(as_typed_chunk); // each chunk casted to a typed chunk view range-like type
     }
 
 private:
