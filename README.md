@@ -1,5 +1,7 @@
 # Cobalt Engine
 
+![Build badge](https://github.com/Blyschak/Cobalt-engine/actions/workflows/.github.yml/badge.svg)
+
 ## Usage
 
 ```c++
