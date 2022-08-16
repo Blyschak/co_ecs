@@ -16,6 +16,8 @@ jobs:
         run_tests: ON
         config: Debug
         cmake_args: -DCODE_COVERAGE=ON
+    - name: Make coverage
+      run: cd build && make coverage
     - name: Codecov
       uses: codecov/codecov-action@v3.1.0
       with:
