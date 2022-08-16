@@ -7,15 +7,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(
   cobalt
-  VERSION 0.1
-  DESCRIPTION "Cobalt Game Engine"
+  VERSION 0.9.0
+  DESCRIPTION "Cobalt ECS"
   LANGUAGES CXX)
 
 include(FetchContent)
 
 include_directories(include)
-
-add_subdirectory(src)
 
 find_package(Doxygen)
 

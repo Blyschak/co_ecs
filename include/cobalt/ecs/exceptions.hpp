@@ -55,27 +55,4 @@ private:
     std::string _msg;
 };
 
-/// @brief Exception raised when accessing a resource which was not set
-class resource_not_found : public std::exception {
-public:
-    /// @brief Construct a new resource not found exception object
-    ///
-    /// @param meta Type metadata
-    explicit resource_not_found(const type_meta* meta) {
-        std::stringstream ss;
-        ss << "resource \"" << meta->name << "\" not found";
-        _msg = ss.str();
-    }
-
-    /// @brief Message to the client
-    ///
-    /// @return const char*
-    const char* what() const noexcept override {
-        return _msg.c_str();
-    }
-
-private:
-    std::string _msg;
-};
-
 } // namespace cobalt::ecs

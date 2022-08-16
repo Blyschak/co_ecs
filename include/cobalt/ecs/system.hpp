@@ -62,102 +62,6 @@ private:
     view _view;
 };
 
-/// @brief System resource state, pre-fetches resource to be passed to the system
-///
-/// @tparam T Resource type
-template<typename T>
-class system_resource_state {
-public:
-    /// @brief Get the actual resource type
-    using resource_type = std::remove_cvref_t<T>;
-
-    /// @brief Construct a new system resource state object
-    ///
-    /// @param registry Registry reference
-    explicit system_resource_state(registry& registry) noexcept : _resource(registry.get_resource<resource_type>()) {
-    }
-
-    /// @brief Returns the actual state inside to pass to the system
-    ///
-    /// @return resource_type&
-    [[nodiscard]] resource_type& get() noexcept {
-        return _resource;
-    }
-
-    /// @brief Run deferred logic
-    void run_deferred() const noexcept {
-    }
-
-private:
-    resource_type& _resource;
-};
-
-/// @brief System event publisher state, pre-fetches the event queue and constructs an event publisher
-///
-/// @tparam event_publisher_ref Event publisher reference type
-template<typename event_publisher_ref>
-class system_event_publisher_state {
-public:
-    /// @brief Event publisher type
-    using event_publisher_type = std::decay_t<event_publisher_ref>;
-
-    /// @brief Event type
-    using event_type = typename event_publisher_type::event_type;
-
-    /// @brief Construct a new system event publisher state object
-    ///
-    /// @param registry Registry reference
-    explicit system_event_publisher_state(registry& registry) : _publisher(registry.get_event_queue<event_type>()) {
-    }
-
-    /// @brief Return event publisher
-    ///
-    /// @return event_publisher_ref Event publisher
-    [[nodiscard]] event_publisher_ref get() noexcept {
-        return _publisher;
-    }
-
-    /// @brief Run defferred commands, no-op.
-    void run_deferred() const noexcept {
-    }
-
-private:
-    event_publisher_type _publisher;
-};
-
-/// @brief System event reader state, pre-fetches the event queue and constructs an event reader
-///
-/// @tparam event_reader_ref Event reader reference type
-template<typename event_reader_ref>
-class system_event_reader_state {
-public:
-    /// @brief Event reader type
-    using event_reader_type = std::decay_t<event_reader_ref>;
-
-    /// @brief Event type
-    using event_type = typename event_reader_type::event_type;
-
-    /// @brief Construct a new system event reader state object
-    ///
-    /// @param registry Registry reference
-    explicit system_event_reader_state(registry& registry) : _reader(registry.get_event_queue<event_type>()) {
-    }
-
-    /// @brief Return event reader
-    ///
-    /// @return event_reader_ref Event reader
-    [[nodiscard]] event_reader_ref get() noexcept {
-        return _reader;
-    }
-
-    /// @brief Run defferred commands, no-op.
-    void run_deferred() const noexcept {
-    }
-
-private:
-    event_reader_type _reader;
-};
-
 /// @brief System commands state, creates a command queue to be passed to the system
 class system_commands_state {
 public:
@@ -190,36 +94,6 @@ private:
 /// @tparam T Input type
 template<typename T>
 class system_argument_state_trait;
-
-/// @brief Specialization for resource reference types
-///
-/// @tparam T Resource reference type
-template<typename T>
-class system_argument_state_trait {
-public:
-    /// @brief Actual state type for T
-    using state_type = system_resource_state<T>;
-};
-
-/// @brief Specialization for event publisher types
-///
-/// @tparam T Event type
-template<event T>
-class system_argument_state_trait<event_publisher<T>&> {
-public:
-    /// @brief Actual state type for T
-    using state_type = system_event_publisher_state<event_publisher<T>&>;
-};
-
-/// @brief Specialization for event reader types
-///
-/// @tparam T Event type
-template<event T>
-class system_argument_state_trait<const event_reader<T>&> {
-public:
-    /// @brief Actual state type for T
-    using state_type = system_event_publisher_state<const event_reader<T>&>;
-};
 
 /// @brief Specialization for ecs::view<Args...>
 ///

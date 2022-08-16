@@ -1,4 +1,3 @@
-#include <cobalt/core/logging.hpp>
 #include <cobalt/ecs/registry.hpp>
 #include <cobalt/ecs/view.hpp>
 
@@ -15,16 +14,12 @@ struct velocity {
 };
 
 int main() {
-    scoped_log scope("main()");
     ecs::registry registry;
 
-    {
-        scoped_timer_log scope("creation");
-        for (int i = 0; i < 100; i++) {
-            registry.create<transform, velocity>(
-                { { 0.f + i * 0.1f, -5.f + i * 0.1f, 0.f }, { i * 0.1f, i * 0.1f }, { 1.f, 1.f, 1.f } },
-                { 1.f, 2.f, 3.f });
-        }
+    for (int i = 0; i < 100; i++) {
+        registry.create<transform, velocity>(
+            { { 0.f + i * 0.1f, -5.f + i * 0.1f, 0.f }, { i * 0.1f, i * 0.1f }, { 1.f, 1.f, 1.f } },
+            { 1.f, 2.f, 3.f });
     }
 
     for (auto [transform, velocity] : ecs::view<transform&, const velocity&>(registry).each()) {
@@ -34,7 +29,7 @@ int main() {
     }
 
     for (auto [transform] : ecs::view<const transform&>(registry).each()) {
-        log_info("transform {} {} {}", transform.position[0], transform.position[1], transform.position[2]);
+        std::cout << "transform " << transform.position[0] << " " << transform.position[1] << " " <<  transform.position[2] << "\n";
     }
 
     return 0;

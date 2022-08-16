@@ -4,10 +4,6 @@
 #include <cobalt/ecs/archetype.hpp>
 #include <cobalt/ecs/entity.hpp>
 #include <cobalt/ecs/entity_location.hpp>
-#include <cobalt/ecs/event.hpp>
-#include <cobalt/ecs/resource.hpp>
-
-#include <any>
 
 namespace cobalt::ecs {
 
@@ -202,84 +198,6 @@ public:
         return location.archetype->template contains<C>();
     }
 
-    /// @brief Get the resource object
-    ///
-    /// @tparam R Resource type
-    /// @return R& Reference to the resource
-    template<resource R>
-    R& get_resource() {
-        try {
-            return _resources.at(resource_family::id<R>).template get<R>();
-        } catch (const std::out_of_range&) {
-            throw resource_not_found{ type_meta::of<R>() };
-        }
-    }
-
-    /// @brief Get the resource object
-    ///
-    /// @tparam R Resource type
-    /// @return R& Reference to the resource
-    template<resource R>
-    const R& get_resource() const {
-        try {
-            return _resources.at(resource_family::id<R>).template get<R>();
-        } catch (const std::out_of_range&) {
-            throw resource_not_found{ type_meta::of<R>() };
-        }
-    }
-
-    /// @brief Set the resource object
-    ///
-    /// @tparam R Resource type
-    /// @tparam Args Arguments type pack
-    /// @param args Arguments to construct resource from
-    template<resource R, typename... Args>
-    R& set_resource(Args&&... args) {
-        auto id = resource_family::id<R>;
-        auto iter = _resources.find(id);
-        if (iter == _resources.end()) {
-            auto [emplaced_iter, _] =
-                _resources.emplace(id, resource_container::create<R>(std::forward<Args>(args)...));
-            iter = emplaced_iter;
-        }
-        return iter->second.template get<R>();
-    }
-
-    /// @brief Remove resource from the registry
-    ///
-    /// @tparam R Resource type
-    template<resource R>
-    void remove_resource() {
-        _resources.erase(resource_family::id<R>);
-    }
-
-    /// @brief Get the event queue object
-    ///
-    /// @tparam T Event type
-    /// @return event_vector<T>& Event vector
-    template<event T>
-    event_vector<T>& get_event_queue() {
-        auto [iter, _] = _event_queues.emplace(event_family::id<T>, event_storage::create<T>());
-        return iter->second.template get<T>();
-    }
-
-    /// @brief Get the event queue object
-    ///
-    /// @tparam T Event type
-    /// @return const event_vector& Event vector
-    template<event T>
-    const event_vector<T>& get_event_queue() const {
-        auto [iter, _] = _event_queues.emplace(event_family::id<T>, event_storage::create<T>());
-        return iter->second.template get<T>();
-    }
-
-    /// @brief Flush event queues
-    void flush_event_queues() {
-        for (auto& [_, queue] : _event_queues) {
-            queue.clear();
-        }
-    }
-
     /// @brief Get the archetypes object
     ///
     /// @return archetypes&
@@ -328,8 +246,6 @@ private:
     entity_pool _entity_pool;
     archetypes _archetypes;
     asl::sparse_map<entity_id, entity_location> _entity_archetype_map;
-    asl::sparse_map<resource_id, resource_container> _resources;
-    mutable asl::sparse_map<event_id, event_storage> _event_queues;
 };
 
 } // namespace cobalt::ecs

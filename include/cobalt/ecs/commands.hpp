@@ -86,25 +86,6 @@ public:
         add_command([ent](registry& registry) { registry.destroy(ent); });
     }
 
-    /// @brief Set the resource object
-    ///
-    /// @tparam R Resource type
-    /// @tparam Args Argument types
-    /// @param args Arguments to construct resource from
-    template<resource R, typename... Args>
-    void set_resource(Args&&... args) {
-        add_command([... args = std::forward<decltype(args)>(args)](
-                        registry& registry) mutable { registry.set_resource<R>(std::forward<Args>(args)...); });
-    }
-
-    /// @brief Remove resource from the registry
-    ///
-    /// @tparam R Resource type
-    template<resource R>
-    void remove_resource() {
-        add_command([](registry& registry) { registry.remove_resource<R>(); });
-    }
-
     /// @brief Flush commands from the queue and execute them on the registry
     ///
     /// @param registry Registry reference

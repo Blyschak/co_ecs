@@ -23,14 +23,9 @@ add_executable(
   asl/test_string_utils.cpp
   ecs/test_component.cpp
   ecs/test_registry.cpp
-  ecs/test_system.cpp
-  ecs/test_scheduler.cpp
   ecs/test_command.cpp
-  scripting/test_lua_engine.cpp
-  core/test_config.cpp
-  core/test_shader_compiler.cpp
 )
 
-target_link_libraries(tests engine gtest gtest_main)
+target_link_libraries(tests gtest gtest_main)
 
 gtest_discover_tests(tests)

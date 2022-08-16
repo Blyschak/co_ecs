@@ -287,20 +287,6 @@ TEST(registry, view_get) {
     EXPECT_EQ(std::get<1>(components).y, 22);
 }
 
-TEST(registry, resources) {
-    struct my_resource {
-        std::string name;
-    } res, other_res;
-
-    ecs::registry registry;
-
-    registry.set_resource<my_resource>("my_name");
-    auto& pres = registry.get_resource<my_resource>();
-    EXPECT_EQ(pres.name, "my_name");
-    registry.remove_resource<my_resource>();
-    EXPECT_THROW(registry.get_resource<my_resource>(), ecs::resource_not_found);
-}
-
 TEST(registry, exceptions) {
     ecs::registry registry;
     auto ent = registry.create<position>({ 2, 2 });
@@ -312,36 +298,4 @@ TEST(registry, exceptions) {
     EXPECT_THROW(static_cast<void>(registry.has<velocity>(ent)), ecs::entity_not_found);
     EXPECT_THROW(registry.set<velocity>(ent), ecs::entity_not_found);
     EXPECT_THROW(registry.destroy(ent), ecs::entity_not_found);
-}
-
-TEST(registry, events) {
-    struct my_event {
-        int data;
-    };
-
-    ecs::registry registry;
-
-    ecs::event_publisher<my_event> publisher{ registry.get_event_queue<my_event>() };
-    ecs::event_reader<my_event> reader{ registry.get_event_queue<my_event>() };
-
-    publisher.publish(1);
-    publisher.publish(2);
-    publisher.publish(3);
-
-    int sum = 0;
-    for (auto& event : reader) {
-        sum += event.data;
-    }
-
-    EXPECT_EQ(sum, 6);
-
-    registry.flush_event_queues();
-
-    sum = 0;
-    for (auto& event : reader) {
-        std::cout << event.data << std::endl;
-        sum += event.data;
-    }
-
-    EXPECT_EQ(sum, 0);
 }
