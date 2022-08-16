@@ -1,11 +1,9 @@
 include(GoogleTest)
 
-if (CMAKE_COMPILER_IS_GNUCC)
-  option(ENABLE_COVERAGE "Enable coverage reporting for gcc/clang")
+option(ENABLE_COVERAGE "Enable coverage reporting for gcc/clang")
 
-  if (ENABLE_COVERAGE)
-    add_compile_options(--coverage -O0)
-  endif()
+if (ENABLE_COVERAGE)
+  add_compile_options(--coverage -O0)
 endif()
 
 if(MSVC)
