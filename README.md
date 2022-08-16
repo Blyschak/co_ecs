@@ -1,6 +1,7 @@
 # Cobalt ECS
 
 ![Build badge](https://github.com/Blyschak/cobalt-ecs/actions/workflows/.github.yml/badge.svg)
+[![codecov](https://codecov.io/gh/Blyschak/cobalt-ecs/branch/main/graph/badge.svg?token=BZ8Z6TXN55)](https://codecov.io/gh/Blyschak/cobalt-ecs)
 
 ## Usage
 
