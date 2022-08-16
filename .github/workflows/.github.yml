@@ -12,7 +12,7 @@ jobs:
       uses: nicledomaS/cmake_build_action@v1.4
       with:
         run_tests: ON
-        cmake_args: -DENABLE_COVERAGE=TRUE
+        cmake_args: -DCODE_COVERAGE=ON
     - name: Codecov
       uses: codecov/codecov-action@v3.1.0
       with:
