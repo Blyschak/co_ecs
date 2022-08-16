@@ -1,5 +1,13 @@
 include(GoogleTest)
 
+if (CMAKE_COMPILER_IS_GNUCC)
+  option(ENABLE_COVERAGE "Enable coverage reporting for gcc/clang" FALSE)
+
+  if (ENABLE_COVERAGE)
+    add_compile_options(--coverage -O0)
+  endif()
+endif()
+
 if(MSVC)
 # https://stackoverflow.com/questions/63925255/googletest-compile-with-mt-staticrelease-errors
 set(gtest_force_shared_crt ON)
@@ -27,5 +35,9 @@ add_executable(
 )
 
 target_link_libraries(tests gtest gtest_main)
+
+if (ENABLE_COVERAGE)
+  target_link_options(tests --coverage)
+endif()
 
 gtest_discover_tests(tests)
