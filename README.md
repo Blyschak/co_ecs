@@ -1,4 +1,4 @@
-# Cobalt Engine
+# Cobalt ECS
 
 ![Build badge](https://github.com/Blyschak/Cobalt-engine/actions/workflows/.github.yml/badge.svg)
 
