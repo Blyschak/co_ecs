@@ -37,7 +37,7 @@ gtest_discover_tests(tests)
 
 if(CODE_COVERAGE)
 append_coverage_compiler_flags()
-setup_target_for_coverage_gcovr_html(
+setup_target_for_coverage_gcovr_xml(
   NAME coverage
   EXECUTABLE tests
   BASE_DIRECTORY "${PROJECT_SOURCE_DIR}/include"
