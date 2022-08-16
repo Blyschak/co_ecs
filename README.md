@@ -1,6 +1,6 @@
 # Cobalt ECS
 
-![Build badge](https://github.com/Blyschak/Cobalt-engine/actions/workflows/.github.yml/badge.svg)
+![Build badge](https://github.com/Blyschak/cobalt-ecs/actions/workflows/.github.yml/badge.svg)
 
 ## Usage
 
