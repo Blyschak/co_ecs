@@ -1,7 +1,7 @@
 include(GoogleTest)
 
 if (CMAKE_COMPILER_IS_GNUCC)
-  option(ENABLE_COVERAGE "Enable coverage reporting for gcc/clang" FALSE)
+  option(ENABLE_COVERAGE "Enable coverage reporting for gcc/clang")
 
   if (ENABLE_COVERAGE)
     add_compile_options(--coverage -O0)
@@ -37,7 +37,7 @@ add_executable(
 target_link_libraries(tests gtest gtest_main)
 
 if (ENABLE_COVERAGE)
-  target_link_options(tests --coverage)
+  target_link_options(tests PUBLIC --coverage)
 endif()
 
 gtest_discover_tests(tests)
