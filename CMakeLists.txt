@@ -11,6 +11,8 @@ project(
   DESCRIPTION "Cobalt ECS"
   LANGUAGES CXX)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
 include(FetchContent)
 
 include_directories(include)

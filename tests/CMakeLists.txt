@@ -1,10 +1,9 @@
+
 include(GoogleTest)
 
-option(ENABLE_COVERAGE "Enable coverage reporting for gcc/clang")
-
-if (ENABLE_COVERAGE)
-  add_compile_options(--coverage -O0)
-endif()
+if(CODE_COVERAGE)
+include(CodeCoverage)
+endif(CODE_COVERAGE)
 
 if(MSVC)
 # https://stackoverflow.com/questions/63925255/googletest-compile-with-mt-staticrelease-errors
@@ -34,8 +33,13 @@ add_executable(
 
 target_link_libraries(tests gtest gtest_main)
 
-if (ENABLE_COVERAGE)
-  target_link_options(tests PUBLIC --coverage)
-endif()
-
 gtest_discover_tests(tests)
+
+if(CODE_COVERAGE)
+append_coverage_compiler_flags()
+setup_target_for_coverage_gcovr_html(
+  NAME coverage
+  EXECUTABLE tests
+  BASE_DIRECTORY "${PROJECT_SOURCE_DIR}/include"
+)
+endif()
