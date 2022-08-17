@@ -24,67 +24,67 @@ struct some_component {
     int m{};
 };
 
-TEST(registry, basic) {
-    ecs::registry registry;
-    auto entity = registry.create<position, velocity>({ 1, 2 }, { 3, 0 });
-    EXPECT_TRUE(registry.alive(entity));
+// TEST(registry, basic) {
+//     ecs::registry registry;
+//     auto entity = registry.create<position, velocity>({ 1, 2 }, { 3, 0 });
+//     EXPECT_TRUE(registry.alive(entity));
 
-    auto& pos = registry.get<position>(entity);
-    EXPECT_EQ(pos.x, 1);
-    EXPECT_EQ(pos.y, 2);
+//     auto& pos = registry.get<position>(entity);
+//     EXPECT_EQ(pos.x, 1);
+//     EXPECT_EQ(pos.y, 2);
 
-    registry.set<position>(entity, 5, 10);
+//     registry.set<position>(entity, 5, 10);
 
-    pos = registry.get<position>(entity);
-    EXPECT_EQ(pos.x, 5);
-    EXPECT_EQ(pos.y, 10);
+//     pos = registry.get<position>(entity);
+//     EXPECT_EQ(pos.x, 5);
+//     EXPECT_EQ(pos.y, 10);
 
-    registry.destroy(entity);
-    EXPECT_FALSE(registry.alive(entity));
-}
+//     registry.destroy(entity);
+//     EXPECT_FALSE(registry.alive(entity));
+// }
 
-TEST(registry, emplace_10k) {
-    ecs::registry registry;
-    std::vector<ecs::entity> entities;
-    for (int i = 0; i < 10000; i++) {
-        auto entity = registry.create<position, rotation, velocity>({ 0, 0 }, { 0, 0 }, { 0, 0 });
-        EXPECT_TRUE(registry.alive(entity));
-        entities.emplace_back(entity);
-    }
+// TEST(registry, emplace_10k) {
+//     ecs::registry registry;
+//     std::vector<ecs::entity> entities;
+//     for (int i = 0; i < 10000; i++) {
+//         auto entity = registry.create<position, rotation, velocity>({ 0, 0 }, { 0, 0 }, { 0, 0 });
+//         EXPECT_TRUE(registry.alive(entity));
+//         entities.emplace_back(entity);
+//     }
 
-    for (auto& entity : entities) {
-        registry.destroy(entity);
-        EXPECT_FALSE(registry.alive(entity));
-    }
-}
+//     for (auto& entity : entities) {
+//         registry.destroy(entity);
+//         EXPECT_FALSE(registry.alive(entity));
+//     }
+// }
 
-TEST(registry, emplace_and_set_remove) {
-    ecs::registry registry;
-    auto entity = registry.create<position, velocity>({ 1, 2 }, { 3, 0 });
-    EXPECT_TRUE(registry.alive(entity));
+// TEST(registry, emplace_and_set_remove) {
+//     ecs::registry registry;
+//     auto entity = registry.create<position, velocity>({ 1, 2 }, { 3, 0 });
+//     EXPECT_TRUE(registry.alive(entity));
 
-    auto pos = registry.get<position>(entity);
-    EXPECT_EQ(pos.x, 1);
-    EXPECT_EQ(pos.y, 2);
+//     auto pos = registry.get<position>(entity);
+//     EXPECT_EQ(pos.x, 1);
+//     EXPECT_EQ(pos.y, 2);
 
-    registry.set<some_component>(entity, 5);
+//     registry.set<some_component>(entity, 5);
 
-    auto c = registry.get<some_component>(entity);
-    EXPECT_EQ(c.m, 5);
+//     auto c = registry.get<some_component>(entity);
+//     EXPECT_EQ(c.m, 5);
 
-    auto& refpos = registry.get<position>(entity);
-    refpos.x = 10;
+//     auto& refpos = registry.get<position>(entity);
+//     refpos.x = 10;
 
-    pos = registry.get<position>(entity);
-    EXPECT_EQ(pos.x, 10);
-    EXPECT_EQ(pos.y, 2);
+//     pos = registry.get<position>(entity);
+//     EXPECT_EQ(pos.x, 10);
+//     EXPECT_EQ(pos.y, 2);
 
-    registry.remove<some_component>(entity);
+//     registry.remove<some_component>(entity);
 
-    pos = registry.get<position>(entity);
-    EXPECT_EQ(pos.x, 10);
-    EXPECT_EQ(pos.y, 2);
-}
+//     pos = registry.get<position>(entity);
+//     EXPECT_EQ(pos.x, 10);
+//     EXPECT_EQ(pos.y, 2);
+// }
 
 TEST(registry, emplace_and_set_remove_10k) {
     ecs::registry registry;
