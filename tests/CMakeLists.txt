@@ -2,7 +2,7 @@
 include(GoogleTest)
 
 if(CODE_COVERAGE)
-include(CodeCoverage)
+  include(CodeCoverage)
 endif(CODE_COVERAGE)
 
 if(MSVC)
@@ -35,10 +35,10 @@ target_link_libraries(tests gtest gtest_main)
 gtest_discover_tests(tests)
 
 if(CODE_COVERAGE)
-append_coverage_compiler_flags()
-setup_target_for_coverage_gcovr_xml(
-  NAME coverage
-  EXECUTABLE tests
-  BASE_DIRECTORY "${PROJECT_SOURCE_DIR}/include"
-)
+  append_coverage_compiler_flags()
+  setup_target_for_coverage_gcovr_xml(
+    NAME coverage
+    EXECUTABLE tests
+    BASE_DIRECTORY "${PROJECT_SOURCE_DIR}/include"
+  )
 endif()
