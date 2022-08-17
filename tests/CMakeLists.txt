@@ -25,7 +25,6 @@ add_executable(
   asl/test_handle.cpp
   asl/test_family.cpp
   asl/test_dynamic_bitset.cpp
-  asl/test_string_utils.cpp
   ecs/test_component.cpp
   ecs/test_registry.cpp
   ecs/test_command.cpp
