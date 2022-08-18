@@ -16,7 +16,7 @@ jobs:
         debug: false
         directory: ./
         badge: ./badges/badge.svg
-        ignore: 'node_modules/|README'
+        patterns: "include/**"
 
     - name: Print LoC stats
       run: |
