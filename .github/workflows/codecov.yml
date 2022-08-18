@@ -3,7 +3,7 @@ name: Code Coverage
 on: [push, pull_request]
 
 jobs:
-  ubuntu-build:
+  coverage:
     runs-on: ubuntu-22.04
     steps:
     - name: Checkout
