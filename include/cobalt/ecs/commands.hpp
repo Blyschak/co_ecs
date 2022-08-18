@@ -11,8 +11,7 @@ namespace cobalt::ecs {
 class command {
 public:
     /// @brief Destroy the command object
-    virtual ~command() {
-    }
+    virtual ~command() = default;
 
     /// @brief Execute command interface method
     ///
@@ -29,7 +28,7 @@ public:
     /// @brief Construct a new registry command object
     ///
     /// @param f Callable object
-    registry_command(F&& f) : _f(std::move(f)) {
+    explicit registry_command(F&& f) : _f(std::move(f)) {
     }
 
     /// @brief Execute command, executes a callable object
@@ -100,7 +99,7 @@ public:
 private:
     template<typename F>
     void add_command(F&& f) {
-        _commands.emplace_back(std::make_unique<registry_command<F>>(std::move(f)));
+        _commands.emplace_back(std::make_unique<registry_command<F>>(std::forward<F>(f)));
     }
 
     std::vector<std::unique_ptr<command>> _commands;

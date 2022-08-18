@@ -14,10 +14,15 @@
 
 namespace cobalt::ecs {
 
+// NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
+// NOLINTBEGIN(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+
 /// @brief Block metadata holds pointers where it begins, ends and a component metadata it holds
 struct block_metadata {
     std::size_t offset{};
     component_meta meta{};
+
+    block_metadata(std::size_t offset, const component_meta& meta) noexcept : offset(offset), meta(meta) {}
 };
 
 using blocks_type = asl::sparse_map<component_id, block_metadata>;
@@ -119,11 +124,12 @@ public:
             return std::nullopt;
         }
         assert(!other.empty());
-        std::size_t other_chunk_index = other._size - 1;
+        const std::size_t other_chunk_index = other._size - 1;
         entity ent = *other.ptr_unchecked<entity>(other_chunk_index);
         for (const auto& [id, block] : *_blocks) {
+            auto other_block = other._blocks->find(id)->second;
             const auto* type = block.meta.type;
-            auto* ptr = other._buffer + other._blocks->at(id).offset + other_chunk_index * type->size;
+            auto* ptr = other._buffer + other_block.offset + other_chunk_index * type->size;
             type->move_assign(_buffer + block.offset + index * type->size, ptr);
         }
         other.pop_back();
@@ -138,7 +144,7 @@ public:
     std::size_t move(std::size_t index, chunk& other_chunk) {
         assert(index < _size);
         assert(!other_chunk.full());
-        std::size_t other_chunk_index = other_chunk._size;
+        const std::size_t other_chunk_index = other_chunk._size;
         for (const auto& [id, block] : *_blocks) {
             const auto* type = block.meta.type;
             if (!other_chunk._blocks->contains(id)) {
@@ -380,5 +386,8 @@ public:
 private:
     chunk_type _chunk;
 };
+
+// NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+// NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
 
 } // namespace cobalt::ecs
