@@ -7,9 +7,13 @@ using namespace cobalt;
 
 struct sa {
     int a;
+
+    sa(int a) noexcept: a(a) {}
 };
 struct sb {
     int b;
+
+    sb(int b) noexcept: b(b) {}
 };
 
 TEST(commands, basic) {

@@ -8,20 +8,31 @@ using namespace cobalt;
 struct position {
     int x{};
     int y{};
+
+    position() = default;
+    position(int x, int y) noexcept : x(x), y(y) {}
 };
 
 struct rotation {
     int x{};
     int y{};
+
+    rotation() = default;
+    rotation(int x, int y) noexcept : x(x), y(y) {}
 };
 
 struct velocity {
     int x{};
     int y{};
+
+    velocity() = default;
+    velocity(int x, int y) noexcept : x(x), y(y) {}
 };
 
 struct some_component {
     int m{};
+
+    some_component(int m) noexcept : m(m) {}
 };
 
 TEST(registry, basic) {

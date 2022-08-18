@@ -44,8 +44,7 @@ template<typename T>
 struct type_name
 {
 private:
-	static constexpr auto get() noexcept
-	{
+	static constexpr auto get() noexcept {
 		constexpr std::string_view full_name{ __PRETTY_FUNCTION__ };
 		constexpr std::string_view left_marker{ "[T = " };
 		constexpr std::string_view right_marker{ "]" };

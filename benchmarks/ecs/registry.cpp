@@ -6,16 +6,25 @@
 struct position {
     int x{};
     int y{};
+
+    position() = default;
+    position(int x, int y) noexcept : x(x), y(y) {}
 };
 
 struct rotation {
     int x{};
     int y{};
+
+    rotation() = default;
+    rotation(int x, int y) noexcept : x(x), y(y) {}
 };
 
 struct velocity {
     int x{};
     int y{};
+
+    velocity() = default;
+    velocity(int x, int y) noexcept : x(x), y(y) {}
 };
 
 static void setup_registry_for_iteration(cobalt::ecs::registry& registry, std::size_t count) {
