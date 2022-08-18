@@ -243,9 +243,9 @@ private:
     }
 
     std::size_t _max_size{};
-    blocks_type _blocks {};
-    component_meta_set _components {};
-    chunks_storage_t _chunks {};
+    blocks_type _blocks{};
+    component_meta_set _components{};
+    chunks_storage_t _chunks{};
 };
 
 /// @brief Container for archetypes, holds a map from component set to archetype
@@ -352,7 +352,7 @@ private:
         return std::make_unique<ecs::archetype>(std::move(components_meta));
     }
 
-    storage_type _archetypes {};
+    storage_type _archetypes{};
 };
 
 } // namespace cobalt::ecs

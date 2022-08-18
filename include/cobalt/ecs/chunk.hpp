@@ -22,7 +22,8 @@ struct block_metadata {
     std::size_t offset{};
     component_meta meta{};
 
-    block_metadata(std::size_t offset, const component_meta& meta) noexcept : offset(offset), meta(meta) {}
+    block_metadata(std::size_t offset, const component_meta& meta) noexcept : offset(offset), meta(meta) {
+    }
 };
 
 using blocks_type = asl::sparse_map<component_id, block_metadata>;
@@ -249,8 +250,9 @@ struct component_fetch {
     ///
     /// @tparam C Component reference
     template<component_reference C>
-    static const decay_component_t<C>* fetch_pointer(auto&& chunk, std::size_t index) requires(
-        const_component_reference_v<C>) {
+    static const decay_component_t<C>* fetch_pointer(auto&& chunk, std::size_t index)
+        requires(const_component_reference_v<C>)
+    {
         try {
             return chunk.template ptr_const<decay_component_t<C>>(index);
         } catch (const std::out_of_range&) {
@@ -262,8 +264,9 @@ struct component_fetch {
     ///
     /// @tparam C Component reference
     template<component_reference C>
-    static decay_component_t<C>* fetch_pointer(auto&& chunk, std::size_t index) requires(
-        mutable_component_reference_v<C>) {
+    static decay_component_t<C>* fetch_pointer(auto&& chunk, std::size_t index)
+        requires(mutable_component_reference_v<C>)
+    {
         try {
             return chunk.template ptr_mut<decay_component_t<C>>(index);
         } catch (const std::out_of_range&) {

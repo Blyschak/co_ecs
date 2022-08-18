@@ -29,14 +29,18 @@ public:
     /// @brief Returns an iterator that yields a std::tuple<Args...>
     ///
     /// @return decltype(auto) Iterator
-    decltype(auto) each() requires(!is_const) {
+    decltype(auto) each()
+        requires(!is_const)
+    {
         return chunks(_registry.get_archetypes()) | std::views::join; // join all chunks together
     }
 
     /// @brief Returns an iterator that yields a std::tuple<Args...>
     ///
     /// @return decltype(auto) Iterator
-    decltype(auto) each() const requires(is_const) {
+    decltype(auto) each() const
+        requires(is_const)
+    {
         return chunks(_registry.get_archetypes()) | std::views::join; // join all chunks together
     }
 
@@ -48,7 +52,9 @@ public:
     /// to see the actual difference.
     ///
     /// @param func A callable to run on entity components
-    void each(auto&& func) requires(!is_const) {
+    void each(auto&& func)
+        requires(!is_const)
+    {
         for (auto chunk : chunks(_registry.get_archetypes())) {
             for (auto entry : chunk) {
                 std::apply([func = std::forward<decltype(func)>(func)](
@@ -66,7 +72,9 @@ public:
     /// to see the actual difference.
     ///
     /// @param func A callable to run on entity components
-    void each(auto&& func) const requires(is_const) {
+    void each(auto&& func) const
+        requires(is_const)
+    {
         for (auto chunk : chunks(_registry.get_archetypes())) {
             for (auto entry : chunk) {
                 std::apply([func = std::forward<decltype(func)>(func)](
@@ -80,7 +88,9 @@ public:
     ///
     /// @param ent Entity to query
     /// @return value_type Components tuple
-    value_type get(entity ent) requires(!is_const) {
+    value_type get(entity ent)
+        requires(!is_const)
+    {
         return _registry.template get<Args...>(ent);
     }
 
@@ -88,7 +98,9 @@ public:
     ///
     /// @param ent Entity to query
     /// @return value_type Components tuple
-    value_type get(entity ent) const requires(is_const) {
+    value_type get(entity ent) const
+        requires(is_const)
+    {
         return _registry.template get<Args...>(ent);
     }
 

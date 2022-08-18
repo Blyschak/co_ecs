@@ -170,7 +170,9 @@ public:
     /// @param ent Entity to query
     /// @return value_type Components tuple
     template<component_reference... Args>
-    [[nodiscard]] std::tuple<Args...> get(entity ent) requires(const_component_references_v<Args...>) {
+    [[nodiscard]] std::tuple<Args...> get(entity ent)
+        requires(const_component_references_v<Args...>)
+    {
         return get_impl<Args...>(*this, ent);
     }
 
@@ -180,7 +182,9 @@ public:
     /// @param ent Entity to query
     /// @return value_type Components tuple
     template<component_reference... Args>
-    [[nodiscard]] std::tuple<Args...> get(entity ent) const requires(!const_component_references_v<Args...>) {
+    [[nodiscard]] std::tuple<Args...> get(entity ent) const
+        requires(!const_component_references_v<Args...>)
+    {
         return get_impl<Args...>(*this, ent);
     }
 
