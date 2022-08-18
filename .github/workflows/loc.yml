@@ -1,0 +1,33 @@
+name: LoC
+
+on: [push]
+
+jobs:
+  LoC:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2.0.0
+
+    - name: Count The Lines
+      uses: shadowmoose/GHA-LoC-Badge@1.0.0
+      id: badge
+      with:
+        debug: false
+        directory: ./
+        badge: ./badges/badge.svg
+        ignore: 'node_modules/|README'
+
+    - name: Print LoC stats
+      run: |
+        echo "Scanned: ${{ steps.badge.outputs.counted_files }}";
+        echo "Line Count: ${{ steps.badge.outputs.total_lines }}";
+
+    - name: Deploy to badges branch
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        publish_dir: ./badges
+        publish_branch: badges
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        user_name: 'github-actions[bot]'
+        user_email: 'github-actions[bot]@users.noreply.github.com'
