@@ -1,6 +1,9 @@
 name: LoC
 
-on: [push]
+on:
+  push
+    branches:
+      - main
 
 jobs:
   LoC:
