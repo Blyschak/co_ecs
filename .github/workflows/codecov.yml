@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: Code Coverage
 
 on: [push]
 
@@ -8,20 +8,20 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2.0.0
-      
+
     - name: Install gcovr
       run: sudo apt-get install -y gcovr
-      
+
     - name: Build project
       uses: nicledomaS/cmake_build_action@v1.4
       with:
-        run_tests: ON
+        run_tests: OFF
         config: Debug
         cmake_args: -DCODE_COVERAGE=ON
-        
+
     - name: Make coverage
       run: cd build && make coverage
-      
+
     - name: Codecov
       uses: codecov/codecov-action@v3.1.0
       with:
