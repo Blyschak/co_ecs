@@ -33,7 +33,6 @@ jobs:
       with:
         debug: true
         directory: ./include/
-        patterns: "*.hpp"
         badge: ./badges/badge.svg
         
     - name: Print LoC stats
