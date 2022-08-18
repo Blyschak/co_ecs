@@ -1,7 +1,8 @@
 name: LoC
 
 on:
-  push
+  push:
+    # Sequence of patterns matched against refs/heads
     branches:
       - main
 
