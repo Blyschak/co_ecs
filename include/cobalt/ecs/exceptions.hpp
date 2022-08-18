@@ -24,7 +24,7 @@ public:
     /// @brief Message to the client
     ///
     /// @return const char*
-    const char* what() const noexcept override {
+    [[nodiscard]] const char* what() const noexcept override {
         return _msg.c_str();
     }
 
@@ -47,7 +47,7 @@ public:
     /// @brief Message to the client
     ///
     /// @return const char*
-    const char* what() const noexcept override {
+    [[nodiscard]] const char* what() const noexcept override {
         return _msg.c_str();
     }
 

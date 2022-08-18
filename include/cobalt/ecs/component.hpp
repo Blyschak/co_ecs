@@ -161,7 +161,7 @@ public:
     /// @return true When component type T is present
     /// @return false When component type T is not present
     template<component T>
-    bool contains() const {
+    [[nodiscard]] bool contains() const {
         return contains(component_family::id<T>);
     }
 
@@ -256,7 +256,7 @@ public:
     /// @return true When component type T is present
     /// @return false When component type T is not present
     template<component T>
-    bool contains() const {
+    [[nodiscard]] bool contains() const {
         return contains(component_family::id<T>);
     }
 
@@ -338,7 +338,7 @@ public:
     /// @brief Return a bitset of components
     ///
     /// @return const component_set& Component bitset
-    const component_set& ids() const noexcept {
+    [[nodiscard]] const component_set& ids() const noexcept {
         return _bitset;
     }
 

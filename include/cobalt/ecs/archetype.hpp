@@ -170,8 +170,8 @@ private:
     }
 
     std::size_t add_block(std::size_t offset, const component_meta& meta) {
-        std::size_t size_in_bytes = _max_size * meta.type->size;
-        std::size_t align = meta.type->align;
+        const std::size_t size_in_bytes = _max_size * meta.type->size;
+        const std::size_t align = meta.type->align;
 
         _blocks.emplace(meta.id, offset, meta);
 
@@ -243,9 +243,9 @@ private:
     }
 
     std::size_t _max_size{};
-    blocks_type _blocks;
-    component_meta_set _components;
-    chunks_storage_t _chunks;
+    blocks_type _blocks {};
+    component_meta_set _components {};
+    chunks_storage_t _chunks {};
 };
 
 /// @brief Container for archetypes, holds a map from component set to archetype
@@ -352,7 +352,7 @@ private:
         return std::make_unique<ecs::archetype>(std::move(components_meta));
     }
 
-    storage_type _archetypes;
+    storage_type _archetypes {};
 };
 
 } // namespace cobalt::ecs

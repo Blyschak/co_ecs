@@ -65,7 +65,7 @@ private:
     generation_t _generation{ invalid_generation };
 };
 
-template<typename H, typename G>
+template<std::integral H, std::integral G>
 const handle<H, G> handle<H, G>::invalid{ handle<H, G>::invalid_id, handle<H, G>::invalid_generation };
 
 } // namespace cobalt::asl
