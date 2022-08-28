@@ -1,14 +1,11 @@
-
 include(GoogleTest)
 
 if(CODE_COVERAGE)
   include(CodeCoverage)
 endif(CODE_COVERAGE)
 
-if(MSVC)
 # https://stackoverflow.com/questions/63925255/googletest-compile-with-mt-staticrelease-errors
 set(gtest_force_shared_crt ON)
-endif(MSVC)
 
 FetchContent_Declare(
   googletest
