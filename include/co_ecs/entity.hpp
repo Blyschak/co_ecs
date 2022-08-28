@@ -77,7 +77,7 @@ public:
     /// @brief Create new handle
     ///
     /// @return Handle
-    [[nodiscard]] constexpr entity create() {
+    [[nodiscard]] entity create() {
         if (!_free_ids.empty()) {
             auto id = _free_ids.back();
             _free_ids.pop_back();
@@ -92,7 +92,7 @@ public:
     ///
     /// @param handle Handle to check
     /// @return True if handle is alive
-    [[nodiscard]] constexpr bool alive(entity handle) const noexcept {
+    [[nodiscard]] bool alive(entity handle) const noexcept {
         if (handle.id() < _generations.size()) {
             return _generations[handle.id()] == handle.generation();
         }
@@ -102,7 +102,7 @@ public:
     /// @brief Recycle the handle, handle will be reused in next create()
     ///
     /// @param handle Handle to recycle
-    void constexpr recycle(entity handle) {
+    void recycle(entity handle) {
         if (!alive(handle)) {
             return;
         }
