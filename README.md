@@ -8,7 +8,7 @@
 
 ## Usage
 
-![Example](examples/hello-registry/main.cpp)
+[Example](examples/hello-registry/main.cpp)
 
 ```c++
 #include <co_ecs/registry.hpp>
