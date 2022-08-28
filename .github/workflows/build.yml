@@ -10,7 +10,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         configs: [Release, Debug]
-        compilers: [g++, clang++-16]
+        compilers: [g++]
     steps:
     - name: Checkout
       uses: actions/checkout@v2.0.0
