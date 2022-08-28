@@ -253,9 +253,9 @@ private:
             }
         }
 
-        pointer _ptr;
-        pointer _end;
-        info_iter _info;
+        pointer _ptr{};
+        pointer _end{};
+        info_iter _info{};
     };
 
 public:

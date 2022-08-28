@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: CI
 
 on:
   push
@@ -8,19 +8,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-22.04, windows-latest]
         configs: [Release, Debug]
-        compilers: [g++]
     steps:
     - name: Checkout
       uses: actions/checkout@v2.0.0
-
-#     - name: Install clang-16
-#       run: wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add - && sudo apt-add-repository "deb https://apt.llvm.org/jammy/ llvm-toolchain-jammy main" && sudo apt-get update && sudo apt-get install clang-16
 
     - name: Build project
       uses: nicledomaS/cmake_build_action@v1.4
       with:
         run_tests: ON
         config: ${{ matrix.configs }}
-        cmake_args: -DCMAKE_CXX_COMPILER=${{ matrix.compilers }}

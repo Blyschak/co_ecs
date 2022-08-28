@@ -11,28 +11,27 @@ assignees: ''
 A clear and concise description of what the bug is.
 
 **To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+Paste the reproduction code snippet below:
+
+```c++
+int main() {
+	return 0;
+}
+```
 
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+**Observed behavior**
+Paste the result/output of your code snippet (and, if possible, attach a core dump if the program crashes):
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+```
+```
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+**Environment**
+
+- OS: [e.g. Ubuntu-22.04]
+- Arch: [e.g. amd64]
 
 **Additional context**
 Add any other context about the problem here.

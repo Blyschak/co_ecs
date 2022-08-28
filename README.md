@@ -8,6 +8,8 @@
 
 ## Usage
 
+![Example](examples/hello-registry/main.cpp)
+
 ```c++
 #include <co_ecs/registry.hpp>
 #include <co_ecs/view.hpp>

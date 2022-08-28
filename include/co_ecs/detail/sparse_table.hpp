@@ -206,7 +206,7 @@ public:
             return std::pair(_dense.begin() + _sparse[key], false);
         }
 
-        reserve_sparse(key + 1);
+        reserve_sparse(static_cast<std::size_t>(key) + 1);
 
         if constexpr (is_map) {
             _dense.emplace_back(std::piecewise_construct,

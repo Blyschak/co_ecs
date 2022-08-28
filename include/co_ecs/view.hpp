@@ -17,7 +17,10 @@ public:
     /// @brief Const when all component references are const
     static constexpr bool is_const = const_component_references_v<Args...>;
 
+    /// @brief Iteration value type
     using value_type = std::tuple<Args...>;
+
+    /// @brief Registry type deduced based on input component reference types
     using registry_type = std::conditional_t<is_const, const registry&, registry&>;
 
     /// @brief Construct a new view object
@@ -57,9 +60,7 @@ public:
     {
         for (auto chunk : chunks(_registry.get_archetypes())) {
             for (auto entry : chunk) {
-                std::apply([func = std::forward<decltype(func)>(func)](
-                               auto&&... args) { func(std::forward<decltype(args)>(args)...); },
-                    entry);
+                std::apply(func, entry);
             }
         }
     }
@@ -77,9 +78,7 @@ public:
     {
         for (auto chunk : chunks(_registry.get_archetypes())) {
             for (auto entry : chunk) {
-                std::apply([func = std::forward<decltype(func)>(func)](
-                               auto&&... args) { func(std::forward<decltype(args)>(args)...); },
-                    entry);
+                std::apply(func, entry);
             }
         }
     }
