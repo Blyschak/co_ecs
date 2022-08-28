@@ -18,16 +18,13 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(
   tests
-  asl/test_hash_map.cpp
-  asl/test_hash_set.cpp
-  asl/test_sparse_set.cpp
-  asl/test_sparse_map.cpp
-  asl/test_handle.cpp
-  asl/test_family.cpp
-  asl/test_dynamic_bitset.cpp
-  ecs/test_component.cpp
-  ecs/test_registry.cpp
-  ecs/test_command.cpp
+  co_ecs/detail/test_hash_map.cpp
+  co_ecs/detail/test_sparse_map.cpp
+  co_ecs/detail/test_dynamic_bitset.cpp
+  co_ecs/test_entity.cpp
+  co_ecs/test_component.cpp
+  co_ecs/test_registry.cpp
+  
 )
 
 target_link_libraries(tests gtest gtest_main)
