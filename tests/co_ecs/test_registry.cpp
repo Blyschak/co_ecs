@@ -3,60 +3,86 @@
 
 #include <gtest/gtest.h>
 
-struct position {
-    int x{};
-    int y{};
+template<std::size_t I>
+struct foo {
+    int a{};
+    int b{};
 
-    position() = default;
-    position(int x, int y) noexcept : x(x), y(y) {}
+    foo() = default;
+    foo(int a, int b) noexcept : a(a), b(b) {
+    }
 };
 
-struct rotation {
-    int x{};
-    int y{};
+template<std::size_t I>
+struct bar {
+    int a{};
+    int b{};
 
-    rotation() = default;
-    rotation(int x, int y) noexcept : x(x), y(y) {}
+    bar() = default;
+    bar(int a, int b) noexcept : a(a), b(b) {
+    }
 };
 
-struct velocity {
-    int x{};
-    int y{};
-
-    velocity() = default;
-    velocity(int x, int y) noexcept : x(x), y(y) {}
+struct foo_creator {
+    template<std::size_t I>
+    using type = foo<I>;
 };
 
-struct some_component {
-    int m{};
-
-    some_component(int m) noexcept : m(m) {}
+struct bar_creator {
+    template<std::size_t I>
+    using type = foo<I>;
 };
 
-TEST(registry, basic) {
-    co_ecs::registry registry;
-    auto entity = registry.create<position, velocity>({ 1, 2 }, { 3, 0 });
-    EXPECT_TRUE(registry.alive(entity));
+template<typename T, std::size_t N>
+class components_generator {
+    template<typename = std::make_index_sequence<N>>
+    struct impl;
 
-    auto& pos = registry.get<position>(entity);
-    EXPECT_EQ(pos.x, 1);
-    EXPECT_EQ(pos.y, 2);
+    template<std::size_t... Is>
+    struct impl<std::index_sequence<Is...>> {
+        template<std::size_t II>
+        using wrap = typename T::template type<II>;
 
-    registry.set<position>(entity, 5, 10);
+        using type = std::tuple<wrap<Is>...>;
+    };
 
-    pos = registry.get<position>(entity);
-    EXPECT_EQ(pos.x, 5);
-    EXPECT_EQ(pos.y, 10);
+public:
+    using type = typename impl<>::type;
+};
 
-    registry.destroy(entity);
-    EXPECT_FALSE(registry.alive(entity));
+template<std::size_t N, std::size_t M>
+static void setup_archetype(co_ecs::registry& registry) {
+    // Setup N entities with M foo<i> components
+    for (int i = 0; i < N; i++) {
+        std::apply([&](auto&&... args) { registry.create(std::forward<decltype(args)>(args)...); },
+            typename components_generator<bar_creator, M>::type{});
+    }
 }
 
-TEST(registry, emplace_10k) {
+static void setup_archetypes(co_ecs::registry& registry) {
+    setup_archetype<1000, 0>(registry);
+    setup_archetype<1000, 1>(registry);
+    setup_archetype<1000, 2>(registry);
+    setup_archetype<1000, 4>(registry);
+    setup_archetype<1000, 8>(registry);
+    setup_archetype<1000, 16>(registry);
+    setup_archetype<1000, 32>(registry);
+    setup_archetype<1000, 64>(registry);
+
+    EXPECT_EQ(registry.get_archetypes().size(), 8);
+}
+
+template<std::size_t N, bool setup = false>
+static void entity_creation_N() {
     co_ecs::registry registry;
     std::vector<co_ecs::entity> entities;
-    for (int i = 0; i < 10000; i++) {
-        auto entity = registry.create<position, rotation, velocity>({ 0, 0 }, { 0, 0 }, { 0, 0 });
+
+    if constexpr (setup) {
+        setup_archetypes(registry);
+    }
+
+    for (int i = 0; i < N; i++) {
+        auto entity = registry.create<foo<0>, foo<1>, foo<2>>({}, {}, {});
         EXPECT_TRUE(registry.alive(entity));
         entities.emplace_back(entity);
     }
@@ -67,244 +93,168 @@ TEST(registry, emplace_10k) {
     }
 }
 
-TEST(registry, emplace_and_set_remove) {
+template<std::size_t N, bool setup = false>
+static void emplace_and_set_remove_N() {
     co_ecs::registry registry;
-    auto entity = registry.create<position, velocity>({ 1, 2 }, { 3, 0 });
+    std::vector<co_ecs::entity> entities;
+
+    if constexpr (setup) {
+        setup_archetypes(registry);
+    }
+
+    for (int i = 0; i < N; i++) {
+        auto entity = registry.create<foo<0>, foo<1>>({ 1, 2 }, { 3, 0 });
+        EXPECT_TRUE(registry.alive(entity));
+        entities.emplace_back(entity);
+    }
+
+    for (auto entity : entities) {
+        auto foo_0 = registry.get<foo<0>>(entity);
+        EXPECT_EQ(foo_0.a, 1);
+        EXPECT_EQ(foo_0.b, 2);
+
+        registry.set<foo<2>>(entity, 4, 5);
+
+        auto foo_2 = registry.get<foo<2>>(entity);
+        EXPECT_EQ(foo_2.a, 4);
+        EXPECT_EQ(foo_2.b, 5);
+
+        auto& ref_foo_0 = registry.get<foo<0>>(entity);
+        ref_foo_0.a = 10;
+
+        foo_0 = registry.get<foo<0>>(entity);
+        EXPECT_EQ(foo_0.a, 10);
+        EXPECT_EQ(foo_0.b, 2);
+
+        registry.remove<foo<2>>(entity);
+
+        foo_0 = registry.get<foo<0>>(entity);
+        EXPECT_EQ(foo_0.a, 10);
+        EXPECT_EQ(foo_0.b, 2);
+    }
+
+    for (auto entity : entities) {
+        registry.destroy(entity);
+        EXPECT_FALSE(registry.alive(entity));
+    }
+}
+template<std::size_t N, bool setup = false>
+static void view_N() {
+    co_ecs::registry registry;
+
+    if constexpr (setup) {
+        setup_archetypes(registry);
+    }
+
+    for (int i = 0; i < N / 2; i++) {
+        auto entity = registry.create<foo<0>, foo<1>, foo<2>>({ 1, 2 }, { 3, 0 }, { 5, 6 });
+        EXPECT_TRUE(registry.alive(entity));
+    }
+
+    for (int i = 0; i < N / 2; i++) {
+        auto entity = registry.create<foo<0>, foo<2>>({ 1, 2 }, { 5, 6 });
+        EXPECT_TRUE(registry.alive(entity));
+    }
+
+    int sum_0{};
+    int sum_1{};
+    int sum_2{};
+
+    for (auto [foo_0, foo_1, foo_2] : co_ecs::view<foo<0>&, const foo<1>&, foo<2>&>(registry).each()) {
+        static_assert(std::is_same_v<decltype(foo_0), foo<0>&>);
+        static_assert(std::is_same_v<decltype(foo_1), const foo<1>&>);
+        static_assert(std::is_same_v<decltype(foo_2), foo<2>&>);
+        sum_0 += foo_0.a;
+        sum_1 += foo_1.a;
+        sum_2 += foo_2.a;
+    }
+
+    EXPECT_EQ(sum_0, N / 2 * 1);
+    EXPECT_EQ(sum_1, N / 2 * 3);
+    EXPECT_EQ(sum_2, N / 2 * 5);
+
+    sum_0 = 0;
+    sum_2 = 0;
+
+    const co_ecs::registry& c_reg = registry;
+    for (auto [foo_0, foo_2] : co_ecs::view<const foo<0>&, const foo<2>&>(c_reg).each()) {
+        static_assert(std::is_same_v<decltype(foo_0), const foo<0>&>);
+        static_assert(std::is_same_v<decltype(foo_2), const foo<2>&>);
+        sum_0 += foo_0.a;
+        sum_2 += foo_2.a;
+    }
+
+    EXPECT_EQ(sum_0, N * 1);
+    EXPECT_EQ(sum_2, N * 5);
+}
+
+TEST(registry, entity_creation_empty) {
+    co_ecs::registry registry;
+
+    auto entity = registry.create();
+
     EXPECT_TRUE(registry.alive(entity));
+    registry.destroy(entity);
+    EXPECT_FALSE(registry.alive(entity));
+}
 
-    auto pos = registry.get<position>(entity);
-    EXPECT_EQ(pos.x, 1);
-    EXPECT_EQ(pos.y, 2);
+TEST(registry, entity_creation) {
+    entity_creation_N<10000>();
+}
 
-    registry.set<some_component>(entity, 5);
+TEST(registry, entity_creation_10k) {
+    entity_creation_N<10000>();
+}
 
-    auto c = registry.get<some_component>(entity);
-    EXPECT_EQ(c.m, 5);
-
-    auto& refpos = registry.get<position>(entity);
-    refpos.x = 10;
-
-    pos = registry.get<position>(entity);
-    EXPECT_EQ(pos.x, 10);
-    EXPECT_EQ(pos.y, 2);
-
-    registry.remove<some_component>(entity);
-
-    pos = registry.get<position>(entity);
-    EXPECT_EQ(pos.x, 10);
-    EXPECT_EQ(pos.y, 2);
+TEST(registry, emplace_and_set_remove) {
+    emplace_and_set_remove_N<1>();
 }
 
 TEST(registry, emplace_and_set_remove_10k) {
-    co_ecs::registry registry;
-    std::vector<co_ecs::entity> entities;
-
-    for (int i = 0; i < 10000; i++) {
-        auto entity = registry.create<position, velocity>({ 1, 2 }, { 3, 0 });
-        EXPECT_TRUE(registry.alive(entity));
-        entities.emplace_back(entity);
-    }
-
-    for (const auto& entity : entities) {
-        auto pos = registry.get<position>(entity);
-        EXPECT_EQ(pos.x, 1);
-        EXPECT_EQ(pos.y, 2);
-    }
-
-    for (const auto& entity : entities) {
-        registry.set<some_component>(entity, 5);
-        auto c = registry.get<some_component>(entity);
-    }
-
-    for (const auto& entity : entities) {
-        auto c = registry.get<some_component>(entity);
-        EXPECT_EQ(c.m, 5);
-    }
-
-    for (const auto& entity : entities) {
-        registry.destroy(entity);
-        EXPECT_FALSE(registry.alive(entity));
-    }
+    emplace_and_set_remove_N<10000>();
 }
 
-TEST(registry, view) {
-    co_ecs::registry registry;
-    std::vector<co_ecs::entity> entities;
-
-    for (int i = 0; i < 10000; i++) {
-        auto entity = registry.create<position, velocity, rotation>({ 1, 2 }, { 3, 0 }, { 5, 6 });
-        EXPECT_TRUE(registry.alive(entity));
-        entities.emplace_back(entity);
-    }
-
-    int sum_vel{};
-    int sum_pos{};
-    int sum_rot{};
-
-    auto set = co_ecs::component_set::create<velocity, position, rotation>();
-
-    for (auto [vel, pos, rot] : co_ecs::view<velocity&, position&, rotation&>(registry).each()) {
-        static_assert(std::is_same_v<decltype(vel), velocity&>);
-        static_assert(std::is_same_v<decltype(pos), position&>);
-        static_assert(std::is_same_v<decltype(rot), rotation&>);
-        sum_vel += vel.x;
-        sum_pos += pos.x;
-        sum_rot += rot.x;
-    }
-
-    EXPECT_EQ(sum_vel, 30000);
-    EXPECT_EQ(sum_pos, 10000);
-    EXPECT_EQ(sum_rot, 50000);
-
-    for (const auto& entity : entities) {
-        registry.destroy(entity);
-        EXPECT_FALSE(registry.alive(entity));
-    }
+TEST(registry, entity_creation_8_archetypes) {
+    entity_creation_N<10000, true>();
 }
 
-TEST(registry, ref_view) {
-    co_ecs::registry registry;
-    std::vector<co_ecs::entity> entities;
-
-    for (int i = 0; i < 10000; i++) {
-        co_ecs::entity entity = co_ecs::entity::invalid;
-        if (i % 2 == 0) {
-            entity = registry.create<position, velocity, rotation>({ 1, 2 }, { 3, 0 }, { 5, 6 });
-        } else {
-            entity = registry.create<velocity, rotation>({ 3, 0 }, { 5, 6 });
-        }
-        EXPECT_TRUE(registry.alive(entity));
-        entities.emplace_back(entity);
-    }
-
-    int sum_vel{};
-    int sum_pos{};
-    int sum_rot{};
-
-    for (auto [vel, pos, rot] : co_ecs::view<velocity&, const position&, rotation&>(registry).each()) {
-        static_assert(std::is_same_v<decltype(vel), velocity&>);
-        static_assert(std::is_same_v<decltype(pos), const position&>);
-        static_assert(std::is_same_v<decltype(rot), rotation&>);
-        sum_vel += vel.x;
-        sum_pos += pos.x;
-        sum_rot += rot.x;
-    }
-
-    EXPECT_EQ(sum_vel, 15000);
-    EXPECT_EQ(sum_pos, 5000);
-    EXPECT_EQ(sum_rot, 25000);
-
-    sum_vel = 0;
-    sum_rot = 0;
-
-    for (auto [vel, rot] : co_ecs::view<const velocity&, const rotation&>(registry).each()) {
-        static_assert(std::is_same_v<decltype(vel), const velocity&>);
-        static_assert(std::is_same_v<decltype(rot), const rotation&>);
-        sum_vel += vel.x;
-        sum_rot += rot.x;
-    }
-
-    EXPECT_EQ(sum_vel, 30000);
-    EXPECT_EQ(sum_rot, 50000);
-
-    for (const auto& entity : entities) {
-        registry.destroy(entity);
-        EXPECT_FALSE(registry.alive(entity));
-    }
+TEST(registry, entity_creation_10k_8_archetypes) {
+    entity_creation_N<10000, true>();
 }
 
-TEST(registry, const_view) {
-    co_ecs::registry registry;
-    std::vector<co_ecs::entity> entities;
-
-    for (int i = 0; i < 10000; i++) {
-        co_ecs::entity entity = co_ecs::entity::invalid;
-        if (i % 2 == 0) {
-            entity = registry.create<position, velocity, rotation>({ 1, 2 }, { 3, 0 }, { 5, 6 });
-        } else {
-            entity = registry.create<velocity, rotation>({ 3, 0 }, { 5, 6 });
-        }
-        EXPECT_TRUE(registry.alive(entity));
-        entities.emplace_back(entity);
-    }
-
-    int sum_vel{};
-    int sum_pos{};
-    int sum_rot{};
-
-    const auto& const_registry = registry;
-    auto view = co_ecs::view<const velocity&, const position&, const rotation&>(const_registry);
-    for (auto [vel, pos, rot] : view.each()) {
-        static_assert(std::is_same_v<decltype(vel), const velocity&>);
-        static_assert(std::is_same_v<decltype(pos), const position&>);
-        static_assert(std::is_same_v<decltype(rot), const rotation&>);
-        sum_vel += vel.x;
-        sum_pos += pos.x;
-        sum_rot += rot.x;
-    }
-
-    EXPECT_EQ(sum_vel, 15000);
-    EXPECT_EQ(sum_pos, 5000);
-    EXPECT_EQ(sum_rot, 25000);
+TEST(registry, emplace_and_set_remove_8_archetypes) {
+    emplace_and_set_remove_N<1, true>();
 }
 
-TEST(registry, view_part) {
-    co_ecs::registry registry;
-    auto entity1 = registry.create<position>({ 1, 1 });
-    auto entity2 = registry.create<position, velocity>({ 2, 2 }, { 22, 22 });
-
-    auto range = co_ecs::view<const position&, const velocity&>(registry).each();
-    auto iter = range.begin();
-    EXPECT_EQ(std::get<0>(*iter).x, 2);
-    EXPECT_EQ(std::get<0>(*iter).y, 2);
-    EXPECT_EQ(std::get<1>(*iter).x, 22);
-    EXPECT_EQ(std::get<1>(*iter).y, 22);
+TEST(registry, emplace_and_set_remove_10k_8_archetypes) {
+    emplace_and_set_remove_N<10000, true>();
 }
 
-TEST(registry, view_class) {
-    co_ecs::registry registry;
-    auto entity1 = registry.create<position>({ 1, 1 });
-    auto entity2 = registry.create<position, velocity>({ 2, 2 }, { 22, 22 });
-
-    auto view = co_ecs::view<const position&, const velocity&>(registry);
-
-    int sum = 0;
-    view.each([&sum](const auto& pos, const auto& vel) { sum += pos.x + vel.x; });
-    EXPECT_EQ(sum, 24);
+TEST(registry, view_20) {
+    view_N<20, false>();
 }
 
-TEST(registry, view_entity) {
-    co_ecs::registry registry;
-    registry.create<position>({ 1, 1 });
-    registry.create<position, velocity>({ 2, 2 }, { 22, 22 });
-
-    auto view = co_ecs::view<const co_ecs::entity&>(registry);
-    int sum = 0;
-    view.each([&sum](auto& ent) { sum += ent.id(); });
-    EXPECT_EQ(sum, 1);
+TEST(registry, view_1M) {
+    view_N<1000000, false>();
 }
 
-TEST(registry, view_get) {
-    co_ecs::registry registry;
-    auto ent = registry.create<position, velocity>({ 2, 2 }, { 22, 22 });
+TEST(registry, view_20_8_archetypes) {
+    view_N<20, true>();
+}
 
-    auto view = co_ecs::view<const position&, velocity&>(registry);
-    auto components = view.get(ent);
-    EXPECT_EQ(std::get<0>(components).x, 2);
-    EXPECT_EQ(std::get<0>(components).y, 2);
-    EXPECT_EQ(std::get<1>(components).x, 22);
-    EXPECT_EQ(std::get<1>(components).y, 22);
+TEST(registry, view_1M_8_archetypes) {
+    view_N<1000000, true>();
 }
 
 TEST(registry, exceptions) {
     co_ecs::registry registry;
-    auto ent = registry.create<position>({ 2, 2 });
-    EXPECT_THROW(static_cast<void>(registry.get<velocity>(ent)), co_ecs::component_not_found);
+    auto ent = registry.create<foo<0>>({ 2, 2 });
+    EXPECT_THROW(static_cast<void>(registry.get<foo<1>>(ent)), co_ecs::component_not_found);
     EXPECT_THROW(
-        static_cast<void>(registry.template get<const velocity&, const position&>(ent)), co_ecs::component_not_found);
+        static_cast<void>(registry.template get<const foo<0>&, const foo<1>&>(ent)), co_ecs::component_not_found);
     registry.destroy(ent);
-    EXPECT_THROW(static_cast<void>(registry.get<velocity>(ent)), co_ecs::entity_not_found);
-    EXPECT_THROW(static_cast<void>(registry.has<velocity>(ent)), co_ecs::entity_not_found);
-    EXPECT_THROW(registry.set<velocity>(ent), co_ecs::entity_not_found);
+    EXPECT_THROW(static_cast<void>(registry.get<foo<0>>(ent)), co_ecs::entity_not_found);
+    EXPECT_THROW(static_cast<void>(registry.has<foo<0>>(ent)), co_ecs::entity_not_found);
+    EXPECT_THROW(registry.set<foo<0>>(ent), co_ecs::entity_not_found);
     EXPECT_THROW(registry.destroy(ent), co_ecs::entity_not_found);
 }

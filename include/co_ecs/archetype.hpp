@@ -337,6 +337,13 @@ public:
         return _archetypes.end();
     }
 
+    /// @brief Returns the number of archetypes
+    ///
+    /// @return std::size_t
+    [[nodiscard]] std::size_t size() const noexcept {
+        return _archetypes.size();
+    }
+
 private:
     static decltype(auto) create_archetype(auto&& components_meta) {
         return std::make_unique<co_ecs::archetype>(std::forward<decltype(components_meta)>(components_meta));
