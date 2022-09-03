@@ -1,8 +1,9 @@
 include(GoogleTest)
 
-if(CODE_COVERAGE)
+option(CO_ECS_CODE_COVERAGE "Enable coverage" OFF)
+if(CO_ECS_CODE_COVERAGE)
   include(CodeCoverage)
-endif(CODE_COVERAGE)
+endif(CO_ECS_CODE_COVERAGE)
 
 FetchContent_Declare(
   googletest
@@ -28,7 +29,7 @@ target_link_libraries(tests co_ecs gtest gtest_main)
 
 gtest_discover_tests(tests)
 
-if(CODE_COVERAGE)
+if(CO_ECS_CODE_COVERAGE)
   append_coverage_compiler_flags()
   setup_target_for_coverage_gcovr_xml(
     NAME coverage
