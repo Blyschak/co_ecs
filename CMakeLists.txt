@@ -19,7 +19,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 include(FetchContent)
 
-include_directories(include)
+add_library(co_ecs INTERFACE)
+target_include_directories(co_ecs INTERFACE include/)
 
 find_package(Doxygen)
 

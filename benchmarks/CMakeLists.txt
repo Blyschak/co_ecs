@@ -8,4 +8,4 @@ FetchContent_MakeAvailable(benchmark)
 
 add_executable(benchmarks ecs/registry.cpp main.cpp)
 
-target_link_libraries(benchmarks benchmark::benchmark)
+target_link_libraries(benchmarks co_ecs benchmark::benchmark)

@@ -24,7 +24,7 @@ add_executable(
   co_ecs/test_registry.cpp
 )
 
-target_link_libraries(tests gtest gtest_main)
+target_link_libraries(tests co_ecs gtest gtest_main)
 
 gtest_discover_tests(tests)
 

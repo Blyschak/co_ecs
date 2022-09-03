@@ -6,6 +6,35 @@
 [![codecov](https://codecov.io/gh/Blyschak/cobalt-ecs/branch/main/graph/badge.svg?token=BZ8Z6TXN55)](https://codecov.io/gh/Blyschak/cobalt-ecs)
 ![LoC](https://raw.githubusercontent.com/Blyschak/cobalt-ecs/badges/badge.svg)
 
+## Build
+
+Compilation requires compiler with C++ 20 support.
+
+Tested compilers:
+    - GCC 11.2
+    - MSVC 14.32
+
+```
+mkdir build && cd build
+cmake ..
+make -j$(nproc)
+```
+
+## Run tests
+
+```
+make test
+```
+
+## Run benchmarks
+
+```
+~/cobalt-ecs/$ mkdir build && cd build
+~/cobalt-ecs/build$ cmake ..
+~/cobalt-ecs/build$ make -j$(nproc)
+~/cobalt-ecs/build$ benchmarks/benchmarks
+```
+
 ## Usage
 
 [Example](examples/hello-registry/main.cpp)
