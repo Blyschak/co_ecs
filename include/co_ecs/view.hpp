@@ -126,4 +126,4 @@ private:
     registry_type _registry;
 };
 
-} // namespace cobalt::ecs
+} // namespace co_ecs

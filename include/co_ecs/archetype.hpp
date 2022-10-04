@@ -2,11 +2,12 @@
 
 #include <ranges>
 
-#include <co_ecs/detail/hash_map.hpp>
 #include <co_ecs/chunk.hpp>
 #include <co_ecs/component.hpp>
+#include <co_ecs/detail/hash_map.hpp>
 #include <co_ecs/entity.hpp>
 #include <co_ecs/entity_location.hpp>
+
 
 namespace co_ecs {
 
@@ -25,6 +26,7 @@ public:
     /// @param components Components
     explicit archetype(component_meta_set components) noexcept : _components(std::move(components)) {
         _max_size = get_max_size(_components);
+        assert((_max_size < chunk::chunk_bytes) && "Total size of components exceeds chunk block size of 16KB");
         init_blocks(_components);
         _chunks.emplace_back(_blocks, _max_size);
     }
@@ -93,7 +95,7 @@ public:
     /// @return std::pair<entity_location, std::optional<entity>>
     std::pair<entity_location, std::optional<entity>> move(const entity_location& location, archetype& other) {
         auto& chunk = get_chunk(location);
-        assert(location.entry_index < chunk.size());
+        assert((location.entry_index < chunk.size()) && "Entity location index exceeds chunk size");
 
         auto& free_chunk = other.ensure_free_chunk();
         auto entry_index = chunk.move(location.entry_index, free_chunk);
@@ -182,13 +184,24 @@ private:
 
     // Calculates the maximum size of individual components this chunk buffer can hold
     static std::size_t get_max_size(auto&& components_meta) {
-        // Calculate packed structure size
-        auto packed_size = aligned_components_size(components_meta);
+        // Calculate size of the following structure:
+        //
+        // struct {
+        //     component_a_t a;
+        //     component_b_t b;
+        //     component_c_t c;
+        //     ...
+        // };
+        //
+        auto aligned_size = aligned_components_size(components_meta);
+
         // Remaining size for packed components
-        auto remaining_space = chunk::chunk_bytes - packed_size;
+        auto remaining_space = chunk::chunk_bytes - aligned_size;
+
         // Calculate how much components we can pack into remaining space
         auto remaining_elements_count = remaining_space / packed_components_size(components_meta);
-        //
+
+        // The maximum amount of entities we can hold is grater by 1 for which we calculated aligned_size
         return remaining_elements_count + 1;
     }
 
@@ -222,13 +235,13 @@ private:
     template<component_reference ComponentRef>
     inline static ComponentRef read_impl(auto&& self, entity_location location) {
         auto& chunk = self.get_chunk(location);
-        assert(location.entry_index < chunk.size());
+        assert((location.entry_index < chunk.size()) && "Entity location index exceeds chunk size");
         return *component_fetch::fetch_pointer<ComponentRef>(chunk, location.entry_index);
     }
 
     inline chunk& get_chunk(entity_location location) noexcept {
-        assert(location.archetype == this);
-        assert(location.chunk_index < _chunks.size());
+        assert((location.archetype == this) && "Location archetype pointer does not point to this archetype");
+        assert((location.chunk_index < _chunks.size()) && "Location chunk index exceeds the chunks vector size");
         auto& chunk = _chunks[location.chunk_index];
         return chunk;
     }
@@ -365,8 +378,8 @@ private:
 
     // Member component set is here to speed up archetype lookup.
     // If we create component_set every time we need to search for an archetype
-    // that requires memory allocation for underlaying data structure of the component_set.
-    // The downside is that we need to NOT FORGET to clean the _component_set before use.
+    // that requires memory allocation for underlying data structure of the component_set.
+    // The downside is that we need to NOT FORGET to clean the _search_component_set before use.
     // The other solution may require a custom allocator but create way more problems when I tried it.
     // In-ability to simply find() in the hash map due to a type mismatch is one of them.
     component_set _search_component_set{};

@@ -35,7 +35,7 @@ public:
     /// @return true If bit is set
     /// @return false If bit is unset
     [[nodiscard]] inline bool test(std::size_t pos) const noexcept {
-        auto [block_index, bit_pos] = block_and_bit(pos);
+        const auto [block_index, bit_pos] = block_and_bit(pos);
         if (block_index < _blocks.size()) {
             return _blocks[block_index] & (block_type{ 1 } << bit_pos);
         }
@@ -48,7 +48,7 @@ public:
     /// @param value Value to set
     /// @return dynamic_bitset&
     inline dynamic_bitset& set(std::size_t pos, bool value = true) {
-        auto [block_index, bit_pos] = block_and_bit(pos);
+        const auto [block_index, bit_pos] = block_and_bit(pos);
         if (block_index >= _blocks.size()) {
             _blocks.resize(block_index + 1);
         }
@@ -56,6 +56,12 @@ public:
             _blocks[block_index] |= (block_type{ 1 } << bit_pos);
         } else {
             _blocks[block_index] &= ~(block_type{ 1 } << bit_pos);
+
+            std::size_t i = _blocks.size() - 1;
+            while (!_blocks[i] && i != 0) {
+                i--;
+            }
+            _blocks.resize(i + 1);
         }
         return *this;
     }
@@ -78,8 +84,8 @@ private:
     friend struct std::hash<dynamic_bitset>;
 
     static inline std::pair<std::size_t, std::size_t> block_and_bit(std::size_t pos) {
-        auto bit_pos = detail::mod_2n(pos, sizeof(block_type) * CHAR_BIT);
-        auto block_index = detail::div_2n(pos, sizeof(block_type) * CHAR_BIT);
+        const auto bit_pos = pos % (sizeof(block_type) * CHAR_BIT);
+        const auto block_index = pos / (sizeof(block_type) * CHAR_BIT);
         return std::make_pair(block_index, bit_pos);
     }
 

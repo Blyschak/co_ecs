@@ -56,4 +56,4 @@ private:
     std::string _msg;
 };
 
-} // namespace cobalt::ecs
+} // namespace co_ecs

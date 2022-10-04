@@ -285,7 +285,7 @@ public:
         const Allocator& alloc = Allocator()) :
         _buckets(alloc, bucket_count),
         _info(bucket_count), _hash(hash), _equal(equal) {
-        assert(bucket_count % 2 == 0);
+        assert((bucket_count % 2 == 0) && "Bucket count must be a power of two");
     }
 
     /// @brief Construct hash table
@@ -329,7 +329,7 @@ public:
         const Allocator& alloc = Allocator()) :
         _buckets(alloc, bucket_count),
         _info(default_bucket_count), _equal(equal), _hash(hash) {
-        assert(bucket_count % 2 == 0);
+        assert((bucket_count % 2 == 0) && "Bucket count must be a power of two");
         for (; first != last; ++first) {
             emplace_or_assign_impl(std::move(*first));
         }
@@ -443,7 +443,9 @@ public:
     ///
     /// @param key Key to insert
     /// @return mapped_type& Reference to the mapped type
-    mapped_type& operator[](const key_type& key) requires(is_map) {
+    mapped_type& operator[](const key_type& key)
+        requires(is_map)
+    {
         if (auto iter = find(key); iter != end()) {
             return iter->second;
         }
@@ -457,7 +459,9 @@ public:
     ///
     /// @param key Key to insert
     /// @return mapped_type& Reference to the mapped type
-    mapped_type& at(const key_type& key) requires(is_map) {
+    mapped_type& at(const key_type& key)
+        requires(is_map)
+    {
         if (auto iter = find_impl(*this, key); iter != end()) {
             return iter->second;
         }
@@ -470,7 +474,9 @@ public:
     ///
     /// @param key Key to insert
     /// @return const mapped_type& Reference to the mapped type
-    const mapped_type& at(const key_type& key) const requires(is_map) {
+    const mapped_type& at(const key_type& key) const
+        requires(is_map)
+    {
         if (auto iter = find_impl(*this, key); iter != end()) {
             return iter->second;
         }
@@ -478,11 +484,15 @@ public:
     }
 
     /// @brief Clear all values in the table
-    void clear() {
+    void clear() noexcept {
+        // destroy held elements
         for (auto& value : *this) {
             allocator_traits::destroy(_buckets.allocator(), std::addressof(value));
         }
-        _info.clear();
+        // clear the bucket info
+        for (auto& info : _info) {
+            info = bucket_info{};
+        }
         _size = 0;
     }
 
@@ -874,4 +884,4 @@ private:
     hasher _hash{};
 };
 
-} // namespace cobalt::asl
+} // namespace co_ecs::detail

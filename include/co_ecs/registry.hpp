@@ -1,13 +1,15 @@
 #pragma once
 
-#include <co_ecs/detail/sparse_map.hpp>
 #include <co_ecs/archetype.hpp>
+#include <co_ecs/detail/sparse_map.hpp>
+#include <co_ecs/detail/type_traits.hpp>
 #include <co_ecs/entity.hpp>
 #include <co_ecs/entity_location.hpp>
 
+
 namespace co_ecs {
 
-/// @brief Registry is a container for all our entities and components. Components are stored in continuosly in memory
+/// @brief Registry is a container for all our entities and components. Components are stored in continuously in memory
 /// allowing for very fast iterations, a so called SoA approach. A set of unique components form an archetype, where
 /// every entity is mapped to an archetype.
 class registry {
@@ -33,6 +35,9 @@ public:
     /// @return entity Entity to construct
     template<component... Args>
     entity create(Args&&... args) {
+        // compile-time check to make sure all component types in parameter pack are unique
+        [[maybe_unused]] detail::unique_types<Args...> uniqueness_check;
+
         auto entity = _entity_pool.create();
         auto archetype = _archetypes.ensure_archetype<Args...>();
         auto location = archetype->template emplace_back<Args...>(entity, std::forward<Args>(args)...);
@@ -81,7 +86,7 @@ public:
     /// }
     /// @endcode
     ///
-    /// @tparam C Compone type
+    /// @tparam C Component type
     /// @tparam Args Parameter pack, argument types to construct C from
     /// @param ent Entity to assign component to
     /// @param args Arguments to construct C from
@@ -147,7 +152,7 @@ public:
     /// @brief Get reference to component C
     ///
     /// @tparam C Component C
-    /// @param ent Entity to read componet from
+    /// @param ent Entity to read component from
     /// @return C& Reference to component C
     template<component C>
     [[nodiscard]] C& get(entity ent) {
@@ -157,7 +162,7 @@ public:
     /// @brief Get const reference to component C
     ///
     /// @tparam C Component C
-    /// @param ent Entity to read componet from
+    /// @param ent Entity to read component from
     /// @return const C& Const reference to component C
     template<component C>
     [[nodiscard]] const C& get(entity ent) const {
@@ -190,7 +195,7 @@ public:
 
     /// @brief Check if entity has component attached or not
     ///
-    /// @tparam C Compone ttype
+    /// @tparam C Component type
     /// @param ent Entity to check
     /// @return true If entity has component C attached
     /// @return false Otherwise

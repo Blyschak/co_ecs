@@ -1,5 +1,4 @@
-#include <co_ecs/registry.hpp>
-#include <co_ecs/view.hpp>
+#include <co_ecs/co_ecs.hpp>
 
 #include <iostream>
 

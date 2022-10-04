@@ -5,11 +5,12 @@
 #include <optional>
 #include <type_traits>
 
+#include <co_ecs/component.hpp>
 #include <co_ecs/detail/bits.hpp>
 #include <co_ecs/detail/sparse_map.hpp>
-#include <co_ecs/component.hpp>
 #include <co_ecs/entity.hpp>
 #include <co_ecs/exceptions.hpp>
+
 
 namespace co_ecs {
 
@@ -95,11 +96,11 @@ public:
 
     /// @brief Emplace back components into blocks
     ///
-    /// @tparam Args Paramter pack
+    /// @tparam Args Parameter pack
     /// @param args component arguments
     template<component... Args>
     void emplace_back(entity ent, Args&&... args) {
-        assert(!full());
+        assert((!full()) && "Chunk is full, cannot add more entities");
         std::construct_at(ptr_unchecked<entity>(size()), ent);
         (..., std::construct_at(ptr_unchecked<Args>(size()), std::move(args)));
         _size++;
@@ -107,7 +108,7 @@ public:
 
     /// @brief Remove back elements from blocks
     void pop_back() noexcept {
-        assert(!empty());
+        assert((!empty()) && "Chunk is empty, cannot pop out any entity");
         _size--;
         destroy_at(_size);
     }
@@ -120,12 +121,12 @@ public:
     /// @param other_chunk Other chunk
     /// @return std::optional<entity>
     std::optional<entity> swap_erase(std::size_t index, chunk& other) noexcept {
-        assert(index < _size);
+        assert((index < _size) && "Entity index exceeds chunk size");
         if (size() == 1 || index == _size - 1) {
             pop_back();
             return std::nullopt;
         }
-        assert(!other.empty());
+        assert((!other.empty()) && "Other chunk is empty, cannot move entity out of it");
         const std::size_t other_chunk_index = other._size - 1;
         entity ent = *other.ptr_unchecked<entity>(other_chunk_index);
         for (const auto& [id, block] : *_blocks) {
@@ -144,8 +145,8 @@ public:
     /// @param other_chunk Chunk to move to
     /// @return std::size_t Other chunk index
     std::size_t move(std::size_t index, chunk& other_chunk) {
-        assert(index < _size);
-        assert(!other_chunk.full());
+        assert((index < _size) && "Entity index exceeds chunk size");
+        assert((!other_chunk.full()) && "Other chunk is full, cannot move entity to it");
         const std::size_t other_chunk_index = other_chunk._size;
         for (const auto& [id, block] : *_blocks) {
             const auto* type = block.meta.type;
@@ -164,7 +165,7 @@ public:
     /// @tparam T Component type
     /// @param index Index
     /// @return const T* Resulting pointer
-    template<component T>
+    template<typename T>
     inline const T* ptr_const(std::size_t index) const {
         return ptr_unchecked_impl<const T*>(*this, index);
     }
@@ -174,7 +175,7 @@ public:
     /// @tparam T Component type
     /// @param index Index
     /// @return const T* Resulting pointer
-    template<component T>
+    template<typename T>
     inline T* ptr_mut(std::size_t index) {
         static_assert(!std::is_same_v<T, entity>, "Cannot give a mutable pointer/reference to the entity");
         return ptr_unchecked_impl<T*>(*this, index);
@@ -211,12 +212,12 @@ public:
     }
 
 private:
-    template<component T>
+    template<typename T>
     inline T* ptr_unchecked(std::size_t index) noexcept {
         return ptr_unchecked_impl<T*>(*this, index);
     }
 
-    template<component T>
+    template<typename T>
     [[nodiscard]] inline const T* ptr_unchecked(std::size_t index) const noexcept {
         return ptr_unchecked_impl<const T*>(*this, index);
     }
