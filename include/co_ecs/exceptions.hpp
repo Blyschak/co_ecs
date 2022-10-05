@@ -56,4 +56,28 @@ private:
     std::string _msg;
 };
 
+/// @brief Insufficient chunk size error
+class insufficient_chunk_size : public std::exception {
+public:
+    /// @brief Construct a new component not found exception object
+    ///
+    /// @param meta Type metadata
+    explicit insufficient_chunk_size(std::size_t requested_size, std::size_t chunk_size) {
+        std::stringstream ss;
+        ss << "Total size of components " << requested_size << " bytes exceeds chunk block size of " << chunk_size
+           << " bytes";
+        _msg = ss.str();
+    }
+
+    /// @brief Message to the client
+    ///
+    /// @return const char*
+    [[nodiscard]] const char* what() const noexcept override {
+        return _msg.c_str();
+    }
+
+private:
+    std::string _msg;
+};
+
 } // namespace co_ecs

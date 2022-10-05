@@ -5,6 +5,7 @@
 #include <co_ecs/detail/type_traits.hpp>
 #include <co_ecs/entity.hpp>
 #include <co_ecs/entity_location.hpp>
+#include <co_ecs/view_arguments.hpp>
 
 
 namespace co_ecs {
@@ -183,7 +184,7 @@ public:
 
     /// @brief Get components for a single entity
     ///
-    /// @tparam Args Component reference
+    /// @tparam Args Component references
     /// @param ent Entity to query
     /// @return value_type Components tuple
     template<component_reference... Args>
@@ -207,21 +208,52 @@ public:
         return location.archetype->template contains<C>();
     }
 
-    /// @brief Get the archetypes object
+    /// @brief Create a non-const view based on component query in parameter pack
     ///
-    /// @return archetypes&
+    /// @tparam Args Component references
+    /// @return view<Args...> A view
+    template<component_reference... Args>
+    co_ecs::view<Args...> view()
+        requires(!const_component_references_v<Args...>);
+
+    /// @brief Create a const view based on component query in parameter pack
+    ///
+    /// @tparam Args Component references
+    /// @return view<Args...> A view
+    template<component_reference... Args>
+    co_ecs::view<Args...> view() const
+        requires const_component_references_v<Args...>;
+
+    /// @brief Run func on every entity that matches the Args requirement
+    ///
+    /// NOTE: This kind of iteration might be faster and better optimized by the compiler since the func can operate on
+    /// a chunk that yields two tuples of pointers to the actual data whereas an each() variant returns an iterator over
+    /// iterator over iterator to the actual data which is a challenge for compiler to optimize. Look at the benchmarks
+    /// to see the actual difference.
+    ///
+    /// @param func A callable to run on entity components
+    template<typename F>
+    void each(F&& func)
+        requires(!detail::func_decomposer<F>::is_const);
+
+    /// @brief Run func on every entity that matches the Args requirement. Constant version
+    ///
+    /// NOTE: See the note on non-const each()
+    ///
+    /// @param func A callable to run on entity components
+    template<typename F>
+    void each(F&& func) const
+        requires(detail::func_decomposer<F>::is_const);
+
+private:
     [[nodiscard]] archetypes& get_archetypes() noexcept {
         return _archetypes;
     }
 
-    /// @brief Get the archetypes object
-    ///
-    /// @return const archetypes&
     [[nodiscard]] const archetypes& get_archetypes() const noexcept {
         return _archetypes;
     }
 
-private:
     template<component_reference... Args>
     static std::tuple<Args...> get_impl(auto&& self, entity ent) {
         self.ensure_alive(ent);
@@ -255,6 +287,10 @@ private:
     entity_pool _entity_pool;
     archetypes _archetypes;
     detail::sparse_map<entity_id_t, entity_location> _entity_archetype_map;
+
+    // Let view access registry private members
+    template<component_reference... Args>
+    friend class view;
 };
 
 } // namespace co_ecs

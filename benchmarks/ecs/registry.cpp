@@ -220,7 +220,7 @@ static void bm_entity_iterate_component_with_view(benchmark::State& state) {
 // BENCHMARK(bm_entity_creation_number_of_components<16, 128>);
 // BENCHMARK(bm_entity_creation_number_of_components<32, 128>);
 // BENCHMARK(bm_entity_creation_number_of_components<64, 128>);
-BENCHMARK(bm_entity_creation_number_of_components<128, 128>);
+// BENCHMARK(bm_entity_creation_number_of_components<128, 128>);
 
 // BENCHMARK(bm_entity_set_component_number_of_components<0>);
 // BENCHMARK(bm_entity_set_component_number_of_components<1>);

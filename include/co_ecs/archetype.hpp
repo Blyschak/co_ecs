@@ -24,9 +24,8 @@ public:
     /// @brief Construct a new archetype object
     ///
     /// @param components Components
-    explicit archetype(component_meta_set components) noexcept : _components(std::move(components)) {
+    explicit archetype(component_meta_set components) : _components(std::move(components)) {
         _max_size = get_max_size(_components);
-        assert((_max_size < chunk::chunk_bytes) && "Total size of components exceeds chunk block size of 16KB");
         init_blocks(_components);
         _chunks.emplace_back(_blocks, _max_size);
     }
@@ -194,6 +193,11 @@ private:
         // };
         //
         auto aligned_size = aligned_components_size(components_meta);
+
+        // handle subtraction overflow - chunk size is insufficient to hold at least one such entity
+        if (aligned_size > chunk::chunk_bytes) [[unlikely]] {
+            throw insufficient_chunk_size{ aligned_size, chunk::chunk_bytes };
+        }
 
         // Remaining size for packed components
         auto remaining_space = chunk::chunk_bytes - aligned_size;

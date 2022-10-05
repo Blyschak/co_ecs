@@ -102,7 +102,7 @@ public:
     void emplace_back(entity ent, Args&&... args) {
         assert((!full()) && "Chunk is full, cannot add more entities");
         std::construct_at(ptr_unchecked<entity>(size()), ent);
-        (..., std::construct_at(ptr_unchecked<Args>(size()), std::move(args)));
+        (..., std::construct_at(ptr_mut<Args>(size()), std::move(args)));
         _size++;
     }
 
@@ -165,7 +165,7 @@ public:
     /// @tparam T Component type
     /// @param index Index
     /// @return const T* Resulting pointer
-    template<typename T>
+    template<component T>
     inline const T* ptr_const(std::size_t index) const {
         return ptr_unchecked_impl<const T*>(*this, index);
     }
@@ -175,7 +175,7 @@ public:
     /// @tparam T Component type
     /// @param index Index
     /// @return const T* Resulting pointer
-    template<typename T>
+    template<component T>
     inline T* ptr_mut(std::size_t index) {
         static_assert(!std::is_same_v<T, entity>, "Cannot give a mutable pointer/reference to the entity");
         return ptr_unchecked_impl<T*>(*this, index);
@@ -212,12 +212,12 @@ public:
     }
 
 private:
-    template<typename T>
+    template<component T>
     inline T* ptr_unchecked(std::size_t index) noexcept {
         return ptr_unchecked_impl<T*>(*this, index);
     }
 
-    template<typename T>
+    template<component T>
     [[nodiscard]] inline const T* ptr_unchecked(std::size_t index) const noexcept {
         return ptr_unchecked_impl<const T*>(*this, index);
     }

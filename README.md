@@ -110,6 +110,11 @@ struct velocity {
     float x, y;
 };
 
+void print_positions(const co_ecs::registry& registry) {
+    registry.each(
+        [](const position& position) { std::cout << "position {" << position.x << ", " << position.y << "}\n"; });
+}
+
 int main() {
     co_ecs::registry registry;
 
@@ -117,14 +122,12 @@ int main() {
         registry.create<position, velocity>({ i * 1.f, i * 1.5f }, { i * .3f, -i * 5.f });
     }
 
-    for (auto [position, velocity] : co_ecs::view<position&, const velocity&>(registry).each()) {
+    for (auto [position, velocity] : registry.view<position&, const velocity&>().each()) {
         position.x += velocity.x;
         position.y += velocity.y;
     }
 
-    for (auto [position] : co_ecs::view<const position&>(registry).each()) {
-        std::cout << "position {" << position.x << ", " << position.y << "}\n";
-    }
+    print_positions(registry);
 
     return 0;
 }
@@ -137,19 +140,36 @@ Component is any C++ type that satisfies the following:
   - It is ```noexcept``` move constructible
   - It is ```noexcept``` move assignable
 
-The ```co_ecs::entity``` ID structure is handled the same way components are internally. It would be invalid to assign it as a component to an entity, so when attempting to do the following:
+## Views
+
+Views are used to iterate over entities in the registry which have a given set of components attached:
 
 ```c++
-registry.create<co_ecs::entity, position>({}, { 3, 4 });
+for (auto [position, velocity] : registry.view<position&, const velocity&>().each()) {
+    // ...
+}
 ```
 
-MSVC will generate the following error:
+Note, you don't have to worry about caching a view object returned by a ```registry::view()``` as it is very cheap to create, only when start iterating over it using ```view::each()``` an actual work on matching archetypes is done.
 
-```
-error C2672: 'co_ecs::registry::create': no matching overloaded function found
+There's another way to iterate over interesting entities by using ```registry::each()``` which takes in an invocable as a parameter accepting component reference types:
+
+```c++
+registry.each([](position& pos, const velocity& vel){
+    // ...
+});
 ```
 
-## Empty component type
+Note that this kind of iteration might be even faster and better optimized by the compiler since the func can operate on a chunk that yields two tuples of pointers to the actual data whereas an each() variant returns an iterator over iterator over iterator to the actual data which is a challenge for compiler to optimize. Look at the benchmarks to see the actual difference. Looking forward for compilers to be better at optimizing ```<ranges>``` machinery for the above two variants to match in performance.
+
+```co_ecs``` tries to provide const-correct API. For example, a view with ```const``` references only can be created with from a ```const``` registry reference:
+
+```c++
+void foo(const co_ecs::registry& registry) {
+    registry.view<const position&, const velocity&>(); // OK
+    registry.view<position&, const velocity&>();       // Error
+}
+```
 
 ## Safety
 
@@ -159,25 +179,41 @@ error C2672: 'co_ecs::registry::create': no matching overloaded function found
 registry.create<position, position>({ 1, 2 }, { 3, 4 });
 ```
 
-GCC gives the following error:
+compiler will generate a static assertion error:
 
 ```
-main.cpp:7:27:   required from here
-type_traits.hpp:83:19: error: static assertion failed: Types must be unique within parameter pack
-   83 |     static_assert(!std::is_same<T1, T2>::value, "Types must be unique within parameter pack");
+Types must be unique within parameter pack
 ```
 
-With MSVC, the error looks like this:
+Another example is when trying to assign a component of type ```co_ecs::entity``` by mistake. The ```co_ecs::entity``` structure is handled the same way components are internally. It would be invalid to assign it as a component to an entity, so when attempting to do the following:
+
+```c++
+registry.create<co_ecs::entity, position>({}, { 3, 4 });
+```
+
+compiler will raise the following static assertion error:
 
 ```
-error C2338: static_assert failed: 'Types must be unique within parameter pack'
+Cannot give a mutable pointer/reference to the entity
 ```
 
-```co_ecs::entity``` internally is stored as if it were a component
+implying that you cannot have a write access into chunk's memory where ```co_ecs::entity``` objects are stored.
 
-Another example - querying ```co_ecs::entity```
+The same error message appears when trying to create a ```co_ecs::view``` with read-write access to ```co_ecs::entity```:
 
-### Pitfalls
+```c++
+auto view = registry.view<co_ecs::entity&, position&>(); // Error
+```
+
+On the other hand, trying to query for ```const co_ecs::entity&``` is valid and the right method to fetch entity IDs together with it's components in the view:
+
+```c++
+auto view = registry.view<const co_ecs::entity&, position&>(); // Ok
+```
+
+
+
+## Pitfalls
 
 Components are referenced internally with IDs. The component ID is generated statically and the resulting ID is compiler implementation-defined. There should be no logic which expects a concrete ID value.
 Given how the ID generation works there's one limitation that restricts placing components inside implementation files (```*.cpp```) or private headers.
@@ -202,4 +238,6 @@ struct my_component {
 
 There is a high chance the compiler will generate the same ID for two different structures which will lead to undefined behavior. Thus, it is recommended to place all components in public header files or even in a single header file to avoid name collisions.
 
-### Usage with shared objects/DLLs
+## Usage with shared objects/DLLs
+
+## Performance

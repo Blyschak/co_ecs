@@ -15,7 +15,7 @@ template<component_reference... Args>
 class view {
 public:
     /// @brief Const when all component references are const
-    static constexpr bool is_const = const_component_references_v<Args...>;
+    static constexpr bool is_const = view_arguments<Args...>::is_const;
 
     /// @brief Iteration value type
     using value_type = std::tuple<Args...>;
@@ -49,11 +49,6 @@ public:
 
     /// @brief Run func on every entity that matches the Args requirement
     ///
-    /// NOTE: This kind of iteration might be faster and better optimized by the compiler since the func can operate on
-    /// a chunk that yields two tuples of pointers to the actual data whereas an each() variant returns an iterator over
-    /// iterator over iterator to the actual data which is a challenge for compiler to optimize. Look at the benchmarks
-    /// to see the actual difference.
-    ///
     /// @param func A callable to run on entity components
     void each(auto&& func)
         requires(!is_const)
@@ -67,10 +62,7 @@ public:
 
     /// @brief Run func on every entity that matches the Args requirement. Constant version
     ///
-    /// NOTE: This kind of iteration might be faster and better optimized by the compiler since the func can operate on
-    /// a chunk that yields two tuples of pointers to the actual data whereas an each() variant returns an iterator over
-    /// iterator over iterator to the actual data which is a challenge for compiler to optimize. Look at the benchmarks
-    /// to see the actual difference.
+    /// NOTE: See the note on non-const each()
     ///
     /// @param func A callable to run on entity components
     void each(auto&& func) const
@@ -125,5 +117,37 @@ private:
 
     registry_type _registry;
 };
+
+// Implement registry methods after we have view class defined
+
+template<component_reference... Args>
+co_ecs::view<Args...> registry::view()
+    requires(!const_component_references_v<Args...>)
+{
+    return co_ecs::view<Args...>{ *this };
+}
+
+template<component_reference... Args>
+co_ecs::view<Args...> registry::view() const
+    requires const_component_references_v<Args...>
+{
+    return co_ecs::view<Args...>{ *this };
+}
+
+template<typename F>
+void registry::each(F&& func)
+    requires(!detail::func_decomposer<F>::is_const)
+{
+    using view_t = typename detail::func_decomposer<F>::view_t;
+    view_t{ *this }.each(std::forward<F>(func));
+}
+
+template<typename F>
+void registry::each(F&& func) const
+    requires(detail::func_decomposer<F>::is_const)
+{
+    using view_t = typename detail::func_decomposer<F>::view_t;
+    view_t{ *this }.each(std::forward<F>(func));
+}
 
 } // namespace co_ecs

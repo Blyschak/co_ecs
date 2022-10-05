@@ -9,7 +9,6 @@
 
 #include <co_ecs/detail/dynamic_bitset.hpp>
 #include <co_ecs/detail/type_traits.hpp>
-#include <co_ecs/entity.hpp>
 #include <co_ecs/type_meta.hpp>
 
 namespace co_ecs {
@@ -49,20 +48,13 @@ constexpr auto invalid_component_id = std::numeric_limits<component_id>::max();
 /// @brief Type for family used to generated component IDs.
 using component_family = detail::family<struct _component_family_t, component_id>;
 
-// clang-format off
-
 /// @brief Component concept. The component must be a struct/class that can be move constructed and move
 /// assignable
 ///
 /// @tparam T Component type
 template<typename T>
 concept component =
-    std::is_class_v<T> && \
-    std::is_nothrow_move_constructible_v<T> && \
-    std::is_nothrow_move_assignable_v<T> && \
-    !std::is_same_v<entity, T>;
-
-// clang-format on
+    std::is_class_v<T> && std::is_nothrow_move_constructible_v<T> && std::is_nothrow_move_assignable_v<T>;
 
 /// @brief Component reference concept. It should be a reference or const reference to C, where C satisfies component
 /// concept
@@ -126,7 +118,7 @@ public:
     ///
     /// @tparam T Component type
     /// @return component_meta Component metadata
-    template<typename T>
+    template<component T>
     static component_meta of() noexcept {
         return component_meta{
             component_family::id<T>,

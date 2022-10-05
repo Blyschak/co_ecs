@@ -10,6 +10,11 @@ struct velocity {
     float x, y;
 };
 
+void print_positions(const co_ecs::registry& registry) {
+    registry.each(
+        [](const position& position) { std::cout << "position {" << position.x << ", " << position.y << "}\n"; });
+}
+
 int main() {
     co_ecs::registry registry;
 
@@ -17,14 +22,12 @@ int main() {
         registry.create<position, velocity>({ i * 1.f, i * 1.5f }, { i * .3f, -i * 5.f });
     }
 
-    for (auto [position, velocity] : co_ecs::view<position&, const velocity&>(registry).each()) {
+    for (auto [position, velocity] : registry.view<position&, const velocity&>().each()) {
         position.x += velocity.x;
         position.y += velocity.y;
     }
 
-    for (auto [position] : co_ecs::view<const position&>(registry).each()) {
-        std::cout << "position {" << position.x << ", " << position.y << "}\n";
-    }
+    print_positions(registry);
 
     return 0;
 }
