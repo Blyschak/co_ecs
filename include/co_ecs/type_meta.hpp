@@ -1,8 +1,23 @@
 #pragma once
 
+#include <co_ecs/macro.hpp>
+
 #include <string_view>
 
 namespace co_ecs {
+
+template<typename T>
+constexpr static std::string_view type_name() noexcept {
+#if defined CO_ECS_PRETTY_FUNCTION
+    std::string_view pretty_function{ CO_ECS_PRETTY_FUNCTION };
+    auto first =
+        pretty_function.find_first_not_of(' ', pretty_function.find_first_of(CO_ECS_PRETTY_FUNCTION_PREFIX) + 1);
+    auto value = pretty_function.substr(first, pretty_function.find_last_of(CO_ECS_PRETTY_FUNCTION_SUFFIX) - first);
+    return value;
+#else
+    return typeid(T).name();
+#endif
+}
 
 /// @brief Type meta information
 struct type_meta {
@@ -44,7 +59,7 @@ struct type_meta {
         static const type_meta meta{
             sizeof(T),
             alignof(T),
-            typeid(T).name(),
+            type_name<T>(),
             &move_constructor<T>,
             &move_assignment<T>,
             &destructor<T>,
@@ -61,4 +76,4 @@ struct type_meta {
 };
 
 
-} // namespace cobalt::ecs
+} // namespace co_ecs

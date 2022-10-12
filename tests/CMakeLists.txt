@@ -26,6 +26,8 @@ target_link_libraries(tests PRIVATE co_ecs PRIVATE Catch2::Catch2WithMain)
 
 catch_discover_tests(tests)
 
+add_subdirectory(test_shared)
+
 if(CO_ECS_CODE_COVERAGE)
   append_coverage_compiler_flags()
   setup_target_for_coverage_gcovr_xml(

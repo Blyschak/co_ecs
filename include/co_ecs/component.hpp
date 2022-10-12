@@ -8,45 +8,62 @@
 #include <stdexcept>
 
 #include <co_ecs/detail/dynamic_bitset.hpp>
+#include <co_ecs/detail/hash_map.hpp>
 #include <co_ecs/detail/type_traits.hpp>
 #include <co_ecs/type_meta.hpp>
 
 namespace co_ecs {
 
 namespace detail {
-/// @brief Family pattern for generating unique sequential ids for types
-///
-/// @tparam Family type
-/// @tparam _id_type Type for id
+
 template<typename = void, typename _id_type = std::uint64_t>
-class family {
+class type_registry {
 public:
     using id_type = _id_type;
 
-    /// @brief Get next ID value
-    ///
-    /// @return id_type Next ID
-    inline static id_type next() noexcept {
-        return identifier++;
+    inline static id_type id(std::string_view type_string) {
+        auto [iter, inserted] = id_map.emplace(type_string, next_id);
+        if (inserted) {
+            next_id++;
+        }
+        auto [_, type_id] = *iter;
+        return type_id;
     }
 
 private:
-    inline static id_type identifier{}; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
-
-public:
-    template<typename... T>
-    inline static const id_type id = next();
+#ifndef CO_ECS_CLIENT
+    // We are host, we own the id_map and next_id variables and expose them
+    CO_ECS_EXPORT inline static hash_map<std::string_view, id_type> id_map{};
+    CO_ECS_EXPORT inline static id_type next_id{};
+#else
+    // This is client's code, we import id_map and next_id
+    CO_ECS_IMPORT static hash_map<std::string_view, id_type> id_map;
+    CO_ECS_IMPORT static id_type next_id;
+#endif
 };
+
+/// @brief Generate unique sequential IDs for types
+///
+/// @tparam Base type
+/// @tparam _id_type Type for id
+template<typename Base = void, typename _id_type = std::uint64_t>
+struct type_id {
+    using id_type = _id_type;
+
+    template<typename T>
+    inline static const id_type value = type_registry<Base, id_type>::id(type_name<T>());
+};
+
 } // namespace detail
 
 /// @brief Type for component ID
-using component_id = std::uint32_t;
+using component_id_t = std::uint32_t;
 
 /// @brief Invalid component ID
-constexpr auto invalid_component_id = std::numeric_limits<component_id>::max();
+constexpr auto invalid_component_id = std::numeric_limits<component_id_t>::max();
 
 /// @brief Type for family used to generated component IDs.
-using component_family = detail::family<struct _component_family_t, component_id>;
+using component_id = detail::type_id<struct _component_family_t, component_id_t>;
 
 /// @brief Component concept. The component must be a struct/class that can be move constructed and move
 /// assignable
@@ -121,7 +138,7 @@ public:
     template<component T>
     static component_meta of() noexcept {
         return component_meta{
-            component_family::id<T>,
+            component_id::value<T>,
             type_meta::of<T>(),
         };
     }
@@ -143,7 +160,7 @@ public:
         return id == rhs.id;
     }
 
-    component_id id;
+    component_id_t id;
     const type_meta* type;
 };
 
@@ -168,7 +185,7 @@ public:
     /// @tparam T Component type
     template<component T>
     void insert() {
-        insert(component_family::id<T>);
+        insert(component_id::value<T>);
     }
 
     /// @brief Erase component of type T
@@ -176,7 +193,7 @@ public:
     /// @tparam T Component type
     template<component T>
     void erase() {
-        erase(component_family::id<T>);
+        erase(component_id::value<T>);
     }
 
     /// @brief Check if component of type T is present in the set
@@ -186,20 +203,20 @@ public:
     /// @return false When component type T is not present
     template<component T>
     [[nodiscard]] bool contains() const {
-        return contains(component_family::id<T>);
+        return contains(component_id::value<T>);
     }
 
     /// @brief Inserts component into the set
     ///
     /// @param id Component ID
-    void insert(component_id id) {
+    void insert(component_id_t id) {
         _bitset.set(id);
     }
 
     /// @brief Erases component from the set
     ///
     /// @param id Component ID
-    void erase(component_id id) {
+    void erase(component_id_t id) {
         _bitset.set(id, false);
     }
 
@@ -208,7 +225,7 @@ public:
     /// @param id Component ID
     /// @return true When component ID is present
     /// @return false When component ID is not present
-    [[nodiscard]] bool contains(component_id id) const {
+    [[nodiscard]] bool contains(component_id_t id) const {
         return _bitset.test(id);
     }
 
@@ -275,7 +292,7 @@ public:
     /// @tparam T Component type
     template<component T>
     void erase() {
-        erase(component_family::id<T>);
+        erase(component_id::value<T>);
     }
 
     /// @brief Check if component of type T is present in the set
@@ -285,7 +302,7 @@ public:
     /// @return false When component type T is not present
     template<component T>
     [[nodiscard]] bool contains() const {
-        return contains(component_family::id<T>);
+        return contains(component_id::value<T>);
     }
 
     /// @brief Inserts component into the set
@@ -302,7 +319,7 @@ public:
     /// @brief Erases component from the set
     ///
     /// @param id Component ID
-    void erase(component_id id) {
+    void erase(component_id_t id) {
         if (!contains(id)) {
             return;
         }
@@ -315,7 +332,7 @@ public:
     /// @param id Component ID
     /// @return true When component ID is present
     /// @return false When component ID is not present
-    [[nodiscard]] bool contains(component_id id) const {
+    [[nodiscard]] bool contains(component_id_t id) const {
         return _component_set.contains(id);
     }
 

@@ -3,8 +3,6 @@
 #include <catch2/catch_all.hpp>
 #include <co_ecs/co_ecs.hpp>
 
-#include <iostream>
-
 using namespace co_ecs;
 
 TEST_CASE("ECS Registry", "Creation and destruction of entities") {

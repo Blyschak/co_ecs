@@ -8,19 +8,19 @@
 using namespace co_ecs;
 using namespace co_ecs::detail;
 
-TEST_CASE("Family ID", "Family ID generation") {
-    REQUIRE(family<>::id<int> != family<>::id<const int>);
-    REQUIRE(family<>::id<int> == family<>::id<int>);
+TEST_CASE("Type ID", "Type ID generation") {
+    REQUIRE(type_id<>::value<int> != type_id<>::value<const int>);
+    REQUIRE(type_id<>::value<int> == type_id<>::value<int>);
 
-    using family_ints = family<int>;
+    using base_int_ids = type_id<int>;
 
-    REQUIRE(family_ints::id<int> == family<>::id<int>);
-    REQUIRE(family_ints::id<int> != family_ints::id<const int>);
-    REQUIRE(family_ints::id<int> == family_ints::id<int>);
+    REQUIRE(base_int_ids::value<int> == type_id<>::value<int>);
+    REQUIRE(base_int_ids::value<int> != base_int_ids::value<const int>);
+    REQUIRE(base_int_ids::value<int> == base_int_ids::value<int>);
 
-    using family_ints_small = co_ecs::detail::family<int, std::uint8_t>;
+    using base_int_small_ids = co_ecs::detail::type_id<int, std::uint8_t>;
 
-    REQUIRE(sizeof(family_ints_small::id<int>) == sizeof(std::uint8_t));
+    REQUIRE(sizeof(base_int_small_ids::value<int>) == sizeof(std::uint8_t));
 }
 
 TEST_CASE("Components", "Components utilities") {
@@ -69,13 +69,13 @@ TEST_CASE("Components", "Components utilities") {
 
     SECTION("Test type metadata") {
         auto meta = component_meta::of<foo<0>>();
-        REQUIRE(meta.id == component_family::id<foo<0>>);
+        REQUIRE(meta.id == component_id::value<foo<0>>);
         REQUIRE(meta.type->size == sizeof(foo<0>));
         REQUIRE(meta.type->align == alignof(foo<0>));
         REQUIRE(meta.type->destruct);
 
         meta = component_meta::of<foo<1>>();
-        REQUIRE(meta.id == component_family::id<foo<1>>);
+        REQUIRE(meta.id == component_id::value<foo<1>>);
         REQUIRE(meta.type->size == sizeof(foo<1>));
         REQUIRE(meta.type->align == alignof(foo<1>));
         REQUIRE(meta.type->destruct);

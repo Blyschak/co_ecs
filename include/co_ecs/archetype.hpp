@@ -151,8 +151,8 @@ public:
     /// @param id Component ID
     /// @return true If this archetype has component C
     /// @return false If this archetype does not have component C
-    [[nodiscard]] bool contains(component_id component_id) const noexcept {
-        if (component_id == component_family::id<entity>) {
+    [[nodiscard]] bool contains(component_id_t component_id) const noexcept {
+        if (component_id == component_id::value<entity>) {
             return true;
         } else {
             return components().contains(component_id);

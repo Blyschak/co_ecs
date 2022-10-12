@@ -1,10 +1,10 @@
-# Cobalt ECS
+# CoECS
 
 ![C++](https://img.shields.io/badge/STD-C++20-blue)
 [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
-![Build badge](https://github.com/Blyschak/cobalt-ecs/actions/workflows/build.yml/badge.svg)
-[![codecov](https://codecov.io/gh/Blyschak/cobalt-ecs/branch/main/graph/badge.svg?token=BZ8Z6TXN55)](https://codecov.io/gh/Blyschak/cobalt-ecs)
-![LoC](https://raw.githubusercontent.com/Blyschak/cobalt-ecs/badges/badge.svg)
+![Build badge](https://github.com/Blyschak/co_ecs/actions/workflows/build.yml/badge.svg)
+[![codecov](https://codecov.io/gh/Blyschak/co_ecs/branch/main/graph/badge.svg?token=BZ8Z6TXN55)](https://codecov.io/gh/Blyschak/cobalt-ecs)
+![LoC](https://raw.githubusercontent.com/Blyschak/co_ecs/badges/badge.svg)
 
 ```co_ecs``` is a header-only library implementing an Entity Component System.
 
@@ -85,7 +85,7 @@ include(FetchContent)
 
 FetchContent_Declare(
   co_ecs
-  GIT_REPOSITORY https://github.com/Blyschak/cobalt-ecs
+  GIT_REPOSITORY https://github.com/Blyschak/co_ecs
   GIT_TAG main)
 FetchContent_MakeAvailable(co_ecs)
 
@@ -238,6 +238,36 @@ struct my_component {
 
 There is a high chance the compiler will generate the same ID for two different structures which will lead to undefined behavior. Thus, it is recommended to place all components in public header files or even in a single header file to avoid name collisions.
 
-## Usage with shared objects/DLLs
+## Exception safety
+
+## Usage across binary boundaries
+
+```co_ecs``` can be used across boundaries. One may create an engine shared library with core components and then use the registry inside another shared library or executable that links to the engine.
+The core shared library should be compiled with ```CO_ECS_HOST``` defined and others must define ```CO_ECS_CLIENT```:
+
+*engine.h*:
+```c++
+#include <co_ecs/co_ecs.hpp>
+
+struct transform {
+    float translation[3];
+    float rotation[3];
+    float scale[3];
+};
+```
+
+*engine.cpp*:
+```c++
+#define CO_ECS_HOST
+
+#include "engine.h"
+```
+
+*client.cpp*:
+```c++
+#define CO_ECS_CLIENT
+
+#include "engine.h"
+```
 
 ## Performance

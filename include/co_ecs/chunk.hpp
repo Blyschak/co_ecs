@@ -26,7 +26,7 @@ struct block_metadata {
     }
 };
 
-using blocks_type = detail::sparse_map<component_id, block_metadata>;
+using blocks_type = detail::sparse_map<component_id_t, block_metadata>;
 
 /// @brief Chunk holds a 16 Kb block of memory that holds components in blocks:
 /// |A1|A2|A3|...padding|B1|B2|B3|...padding|C1|C2|C3...padding where A, B, C are component types and A1, B1, C1 and
@@ -225,11 +225,11 @@ private:
     template<typename P>
     static inline P ptr_unchecked_impl(auto&& self, std::size_t index) {
         using component_type = std::remove_const_t<std::remove_pointer_t<P>>;
-        const auto& block = self.get_block(component_family::id<component_type>);
+        const auto& block = self.get_block(component_id::value<component_type>);
         return (reinterpret_cast<P>(self._buffer + block.offset) + index);
     }
 
-    [[nodiscard]] const block_metadata& get_block(component_id id) const {
+    [[nodiscard]] const block_metadata& get_block(component_id_t id) const {
         return _blocks->at(id);
     }
 
