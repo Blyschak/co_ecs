@@ -21,24 +21,29 @@ class type_registry {
 public:
     using id_type = _id_type;
 
-    inline static id_type id(std::string_view type_string) {
-        auto [iter, inserted] = id_map.emplace(type_string, next_id);
+#ifndef CO_ECS_CLIENT
+    CO_ECS_EXPORT static id_type id(std::string_view type_string) {
+        auto [iter, inserted] = get_id_map().emplace(type_string, get_next_id());
         if (inserted) {
-            next_id++;
+            get_next_id()++;
         }
-        auto [_, type_id] = *iter;
+        auto type_id = iter->second;
         return type_id;
     }
 
-private:
-#ifndef CO_ECS_CLIENT
-    // We are host, we own the id_map and next_id variables and expose them
-    CO_ECS_EXPORT inline static hash_map<std::string_view, id_type> id_map{};
-    CO_ECS_EXPORT inline static id_type next_id{};
+    CO_ECS_EXPORT static hash_map<std::string_view, id_type>& get_id_map() {
+        static hash_map<std::string_view, id_type> id_map{};
+        return id_map;
+    }
+
+    CO_ECS_EXPORT static id_type& get_next_id() {
+        static id_type next_id{};
+        return next_id;
+    }
 #else
-    // This is client's code, we import id_map and next_id
-    CO_ECS_IMPORT static hash_map<std::string_view, id_type> id_map;
-    CO_ECS_IMPORT static id_type next_id;
+    CO_ECS_IMPORT static hash_map<std::string_view, id_type>& get_id_map();
+    CO_ECS_IMPORT static id_type& get_next_id();
+    CO_ECS_IMPORT static id_type id(std::string_view type_string);
 #endif
 };
 

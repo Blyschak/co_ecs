@@ -51,11 +51,11 @@ public:
     using type = typename impl<>::type;
 };
 
-constexpr std::size_t operator"" _components(std::size_t number) {
+constexpr std::size_t operator"" _components(unsigned long long int number) {
     return number;
 }
 
-constexpr std::size_t operator"" _bytes_each(std::size_t number) {
+constexpr std::size_t operator"" _bytes_each(unsigned long long int number) {
     return number;
 }
 
