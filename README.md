@@ -240,6 +240,8 @@ There is a high chance the compiler will generate the same ID for two different 
 
 ## Exception safety
 
+TBD
+
 ## Usage across binary boundaries
 
 ```co_ecs``` can be used across boundaries. One may create an engine shared library with core components and then use the registry inside another shared library or executable that links to the engine.
@@ -271,3 +273,5 @@ struct transform {
 ```
 
 ## Performance
+
+TBD
