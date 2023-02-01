@@ -388,45 +388,47 @@ TEST_CASE("Dynamic bitset equality", "Test equality of bitsets") {
     }
 }
 
-// TEST(sparse_map, iteration) {
-//     co_ecs::detail::sparse_map<unsigned int, unsigned int> map = { { 1, 1 }, { 2, 4 }, { 3, 9 }, { 4, 16 }, { 5, 25 }
-//     }; map.emplace(6, 36); map.erase(6); EXPECT_EQ(
-//         std::accumulate(map.cbegin(), map.cend(), 0, [](auto res, const auto& kv) { return res + kv.first; }), 15);
-//     EXPECT_EQ(
-//         std::accumulate(map.cbegin(), map.cend(), 0, [](auto res, const auto& kv) { return res + kv.second; }), 55);
-// }
+TEST_CASE("Sparse Map Iteration", "Insert values into sparse_map and calculate the sum") {
+    sparse_map<unsigned int, unsigned int> map = { { 1, 1 }, { 2, 4 }, { 3, 9 }, { 4, 16 }, { 5, 25 } };
+    map.emplace(6, 36);
+    map.erase(6);
+    REQUIRE(
+        std::accumulate(map.cbegin(), map.cend(), 0, [](auto res, const auto& kv) { return res + kv.first; }) == 15);
+    REQUIRE(
+        std::accumulate(map.cbegin(), map.cend(), 0, [](auto res, const auto& kv) { return res + kv.second; }) == 55);
+}
 
-// TEST(sparse_map, insert_non_copiable) {
-//     co_ecs::detail::sparse_map<unsigned int, std::unique_ptr<int>> map{};
+TEST_CASE("Sparse Map Insertion", "Insert non copiable object into sparse map") {
+    sparse_map<unsigned int, std::unique_ptr<int>> map{};
 
-//     map.emplace(5, std::make_unique<int>(5));
-//     EXPECT_TRUE(map.contains(5));
-// }
+    map.emplace(5, std::make_unique<int>(5));
+    REQUIRE(map.contains(5));
+}
 
-// TEST_CASE("Hash map", "benchmarks") {
-//     hash_map<int, int> table;
-//     int i = 0;
+TEST_CASE("Hash map", "benchmarks") {
+    hash_map<int, int> table;
+    int i = 0;
 
-//     BENCHMARK("Emplace key") {
-//         table.emplace(i++, 100);
-//     };
+    BENCHMARK("Emplace key") {
+        table.emplace(i++, 100);
+    };
 
-//     BENCHMARK("Emplace key that already exists") {
-//         table.emplace(0, 100);
-//     };
+    BENCHMARK("Emplace key that already exists") {
+        table.emplace(0, 100);
+    };
 
-//     BENCHMARK("call operator[] with key that already exists") {
-//         return table[0];
-//     };
+    BENCHMARK("call operator[] with key that already exists") {
+        return table[0];
+    };
 
-//     table = hash_map<int, int>{};
-//     table.clear();
-//     for (int i = 0; i < 100; i++) {
-//         table.emplace(i, i*i);
-//     }
+    table = hash_map<int, int>{};
+    table.clear();
+    for (int i = 0; i < 100; i++) {
+        table.emplace(i, i * i);
+    }
 
-//     BENCHMARK("Iterate over hash map containing 100 elements") {
-//         return std::accumulate(table.begin(), table.end(), 0,
-//             [](const auto& sum, const auto& entry) { return sum + entry.second; });
-//     };
-// }
+    BENCHMARK("Iterate over hash map containing 100 elements") {
+        return std::accumulate(
+            table.begin(), table.end(), 0, [](const auto& sum, const auto& entry) { return sum + entry.second; });
+    };
+}
