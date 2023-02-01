@@ -92,7 +92,7 @@ private:
     storage_type _blocks;
 };
 
-} // namespace cobalt::asl
+} // namespace co_ecs::detail
 
 namespace std {
 

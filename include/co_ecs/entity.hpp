@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
 #include <numeric>
+#include <vector>
 
 namespace co_ecs {
 
@@ -117,4 +117,4 @@ private:
     std::vector<typename entity::id_t> _free_ids;
 };
 
-} // namespace cobalt::ecs
+} // namespace co_ecs

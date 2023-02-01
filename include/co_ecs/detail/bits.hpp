@@ -11,4 +11,4 @@ constexpr decltype(auto) mod_2n(auto value, auto divisor) noexcept {
     return value & (divisor - 1U);
 }
 
-} // namespace cobalt::asl
+} // namespace co_ecs::detail

@@ -18,4 +18,4 @@ template<typename K,
     typename Allocator = std::allocator<std::pair<K, T>>>
 using hash_map = hash_table<K, T, true, Hash, KeyEqual, Allocator>;
 
-} // namespace cobalt::asl
+} // namespace co_ecs::detail

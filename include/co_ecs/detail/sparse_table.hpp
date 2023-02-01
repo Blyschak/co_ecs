@@ -226,7 +226,9 @@ public:
     /// @return Reference to element found;
     ///         std::out_of_range is thrown if key does not exist in the
     ///         container
-    constexpr mapped_type& at(const key_type& key) requires(is_map) {
+    constexpr mapped_type& at(const key_type& key)
+        requires(is_map)
+    {
         if (!contains(key)) {
             throw std::out_of_range("Key is not in the BaseSparseSet");
         }
@@ -239,7 +241,9 @@ public:
     /// @return Reference to element found;
     ///         std::out_of_range is thrown if key does not exist in the
     ///         container
-    constexpr const mapped_type& at(const key_type& key) const requires(is_map) {
+    constexpr const mapped_type& at(const key_type& key) const
+        requires(is_map)
+    {
         if (!contains(key)) {
             throw std::out_of_range("Key is not in the BaseSparseSet");
         }
@@ -251,7 +255,9 @@ public:
     ///
     /// @param key Key to look for
     /// @return Reference to element found or inserted
-    constexpr mapped_type& operator[](const key_type& key) noexcept requires(is_map) {
+    constexpr mapped_type& operator[](const key_type& key) noexcept
+        requires(is_map)
+    {
         auto [iter, _] = emplace(key);
         mapped_type& value = get_value(*iter);
         return value;
@@ -304,4 +310,4 @@ private:
     size_t _sparse_capacity{};
 };
 
-} // namespace cobalt::asl
+} // namespace co_ecs::detail

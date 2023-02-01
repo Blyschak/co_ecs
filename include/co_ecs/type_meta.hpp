@@ -6,6 +6,10 @@
 
 namespace co_ecs {
 
+/// @brief Utility to get type name at compile type
+///
+/// @tparam T Type to get name for
+/// @return std::string_view Type name string
 template<typename T>
 constexpr static std::string_view type_name() noexcept {
 #if defined CO_ECS_PRETTY_FUNCTION
