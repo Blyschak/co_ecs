@@ -289,6 +289,8 @@ public:
         if (!archetype) {
             archetype = create_archetype(component_meta_set::create<Components...>());
         }
+        assert((archetype->components().ids() == _search_component_set)
+               && "Archetype components do not match the search request");
         return archetype.get();
     }
 
@@ -306,6 +308,8 @@ public:
         if (!archetype) {
             archetype = create_archetype_added<Components...>(anchor_archetype);
         }
+        assert((archetype->components().ids() == _search_component_set)
+               && "Archetype components do not match the search request");
         return archetype.get();
     }
 
@@ -323,6 +327,8 @@ public:
         if (!archetype) {
             archetype = create_archetype_removed<Components...>(anchor_archetype);
         }
+        assert((archetype->components().ids() == _search_component_set)
+               && "Archetype components do not match the search request");
         return archetype.get();
     }
 
