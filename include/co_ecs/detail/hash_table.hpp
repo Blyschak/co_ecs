@@ -774,18 +774,25 @@ private:
         bucket_info n_info = { true, hash, psl };
         size_type index = mod_2n(hash, buckets_size);
 
+        value_type* ret{ nullptr };
+        info_iterator ret_info{};
+
         while (true) {
             value_type* ptr = _buckets.begin() + index;
             auto info = _info.begin() + index;
             if (info->occupied) {
                 if (info->hash == hash && _equal(get_key(*ptr), get_key(temp))) {
                     get_value(*ptr) = std::move(get_value(temp));
-                    return std::make_pair(iterator(ptr, _buckets.end(), info), false);
+                    return std::make_pair(create_iterator(ptr, info), false);
                 }
 
                 if (n_info.psl > info->psl) {
                     std::swap(temp, *ptr);
                     std::swap(n_info, *info);
+                    if (!ret) {
+                        ret = ptr;
+                        ret_info = info;
+                    }
                 }
                 n_info.psl++;
                 index = mod_2n(index + 1, buckets_size);
@@ -793,8 +800,12 @@ private:
             }
             allocator_traits::construct(_buckets.allocator(), ptr, std::move(temp));
             *info = n_info;
+            if (!ret) {
+                ret = ptr;
+                ret_info = info;
+            }
             _size++;
-            return std::make_pair(iterator(ptr, _buckets.end(), info), true);
+            return std::make_pair(create_iterator(ret, ret_info), true);
         }
     }
 
@@ -807,17 +818,24 @@ private:
         bucket_info n_info = { true, hash, psl };
         size_type index = mod_2n(hash, buckets_size);
 
+        value_type* ret{ nullptr };
+        info_iterator ret_info{};
+
         while (true) {
             value_type* ptr = _buckets.begin() + index;
             auto info = _info.begin() + index;
             if (info->occupied) {
                 if (info->hash == hash && _equal(get_key(*ptr), get_key(temp))) {
-                    return std::make_pair(iterator(ptr, _buckets.end(), info), false);
+                    return std::make_pair(create_iterator(ptr, info), false);
                 }
 
                 if (n_info.psl > info->psl) {
                     std::swap(temp, *ptr);
                     std::swap(n_info, *info);
+                    if (!ret) {
+                        ret = ptr;
+                        ret_info = info;
+                    }
                 }
                 n_info.psl++;
                 index = mod_2n(index + 1, buckets_size);
@@ -825,8 +843,12 @@ private:
             }
             allocator_traits::construct(_buckets.allocator(), ptr, std::move(temp));
             *info = n_info;
+            if (!ret) {
+                ret = ptr;
+                ret_info = info;
+            }
             _size++;
-            return std::make_pair(iterator(ptr, _buckets.end(), info), true);
+            return std::make_pair(create_iterator(ret, ret_info), true);
         }
     }
 
