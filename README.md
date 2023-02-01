@@ -14,6 +14,7 @@ Compilation requires compiler with C++ 20 support.
 
 Tested compilers:
   - GCC 11.2
+  - Clang 16
   - MSVC 14.32
 
 Before building targets create a ```build/``` directory in the root of the source tree and ```cd``` into it:
