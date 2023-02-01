@@ -68,7 +68,8 @@ public:
 
     /// @brief Clear all bits
     inline void clear() noexcept {
-        _blocks.clear();
+        _blocks.resize(1);
+        _blocks[0] = 0;
     }
 
     /// @brief Equality operator
