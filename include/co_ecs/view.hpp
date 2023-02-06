@@ -32,7 +32,7 @@ public:
     /// @brief Returns an iterator that yields a std::tuple<Args...>
     ///
     /// @return decltype(auto) Iterator
-    decltype(auto) each()
+    auto each() -> decltype(auto)
         requires(!is_const)
     {
         return chunks(_registry.get_archetypes()) | std::views::join; // join all chunks together
@@ -41,7 +41,7 @@ public:
     /// @brief Returns an iterator that yields a std::tuple<Args...>
     ///
     /// @return decltype(auto) Iterator
-    decltype(auto) each() const
+    auto each() const -> decltype(auto)
         requires(is_const)
     {
         return chunks(_registry.get_archetypes()) | std::views::join; // join all chunks together
@@ -79,7 +79,7 @@ public:
     ///
     /// @param ent Entity to query
     /// @return value_type Components tuple
-    value_type get(entity ent)
+    auto get(entity ent) -> value_type
         requires(!is_const)
     {
         return _registry.template get<Args...>(ent);
@@ -89,7 +89,7 @@ public:
     ///
     /// @param ent Entity to query
     /// @return value_type Components tuple
-    value_type get(entity ent) const
+    auto get(entity ent) const -> value_type
         requires(is_const)
     {
         return _registry.template get<Args...>(ent);
@@ -100,7 +100,7 @@ private:
     ///
     /// @param archetypes Archetypes
     /// @return decltype(auto)
-    static decltype(auto) chunks(auto&& archetypes) {
+    static auto chunks(auto&& archetypes) -> decltype(auto) {
         auto filter_archetypes = [](auto& archetype) {
             return (... && archetype->template contains<decay_component_t<Args>>());
         };
@@ -121,14 +121,14 @@ private:
 // Implement registry methods after we have view class defined
 
 template<component_reference... Args>
-co_ecs::view<Args...> registry::view()
+auto registry::view() -> co_ecs::view<Args...>
     requires(!const_component_references_v<Args...>)
 {
     return co_ecs::view<Args...>{ *this };
 }
 
 template<component_reference... Args>
-co_ecs::view<Args...> registry::view() const
+auto registry::view() const -> co_ecs::view<Args...>
     requires const_component_references_v<Args...>
 {
     return co_ecs::view<Args...>{ *this };

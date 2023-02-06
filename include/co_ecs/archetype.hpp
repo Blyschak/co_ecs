@@ -33,21 +33,21 @@ public:
     /// @brief Return components set
     ///
     /// @return const component_meta_set&
-    [[nodiscard]] const component_meta_set& components() const noexcept {
+    [[nodiscard]] auto components() const noexcept -> const component_meta_set& {
         return _components;
     }
 
     /// @brief Return reference to chunks vector
     ///
     /// @return chunks_storage_t&
-    [[nodiscard]] chunks_storage_t& chunks() noexcept {
+    [[nodiscard]] auto chunks() noexcept -> chunks_storage_t& {
         return _chunks;
     }
 
     /// @brief Return const reference to chunks vector
     ///
     /// @return const chunks_storage_t&
-    [[nodiscard]] const chunks_storage_t& chunks() const noexcept {
+    [[nodiscard]] auto chunks() const noexcept -> const chunks_storage_t& {
         return _chunks;
     }
 
@@ -58,7 +58,7 @@ public:
     /// @param components Components parameter pack
     /// @return entity_location
     template<component... Components>
-    entity_location emplace_back(entity ent, Components&&... components) {
+    auto emplace_back(entity ent, Components&&... components) -> entity_location {
         auto& free_chunk = ensure_free_chunk();
         auto entry_index = free_chunk.size();
         auto chunk_index = _chunks.size() - 1;
@@ -75,7 +75,7 @@ public:
     ///
     /// @param location Entity location
     /// @return std::optional<entity>
-    std::optional<entity> swap_erase(const entity_location& location) noexcept {
+    auto swap_erase(const entity_location& location) noexcept -> std::optional<entity> {
         auto& chunk = get_chunk(location);
         auto& last_chunk = _chunks.back();
         auto maybe_ent = chunk.swap_erase(location.entry_index, last_chunk);
@@ -92,7 +92,7 @@ public:
     /// @param location Entity location
     /// @param other Archetype to move entity and its components to
     /// @return std::pair<entity_location, std::optional<entity>>
-    std::pair<entity_location, std::optional<entity>> move(const entity_location& location, archetype& other) {
+    auto move(const entity_location& location, archetype& other) -> std::pair<entity_location, std::optional<entity>> {
         auto& chunk = get_chunk(location);
         assert((location.entry_index < chunk.size()) && "Entity location index exceeds chunk size");
 
@@ -115,7 +115,7 @@ public:
     /// @param location Entity location
     /// @return Component& Component reference
     template<component_reference ComponentRef>
-    ComponentRef get(entity_location location) {
+    auto get(entity_location location) -> ComponentRef {
         return read_impl<ComponentRef>(*this, location);
     }
 
@@ -126,7 +126,7 @@ public:
     /// @param location Entity location
     /// @return ComponentRef Component reference
     template<component_reference ComponentRef>
-    ComponentRef get(entity_location location) const {
+    auto get(entity_location location) const -> ComponentRef {
         static_assert(
             const_component_reference_v<ComponentRef>, "Can only get a non-const reference on const archetype");
         return read_impl<ComponentRef>(*this, location);
@@ -138,7 +138,7 @@ public:
     /// @return true If this archetype has component C
     /// @return false If this archetype does not have component C
     template<component C>
-    [[nodiscard]] bool contains() const noexcept {
+    [[nodiscard]] auto contains() const noexcept -> bool {
         if constexpr (std::is_same_v<C, entity>) {
             return true;
         } else {
@@ -151,7 +151,7 @@ public:
     /// @param id Component ID
     /// @return true If this archetype has component C
     /// @return false If this archetype does not have component C
-    [[nodiscard]] bool contains(component_id_t component_id) const noexcept {
+    [[nodiscard]] auto contains(component_id_t component_id) const noexcept -> bool {
         if (component_id == component_id::value<entity>) {
             return true;
         } else {
@@ -170,7 +170,7 @@ private:
         }
     }
 
-    std::size_t add_block(std::size_t offset, const component_meta& meta) {
+    auto add_block(std::size_t offset, const component_meta& meta) -> std::size_t {
         const std::size_t size_in_bytes = _max_size * meta.type->size;
         const std::size_t align = meta.type->align;
 
@@ -182,7 +182,7 @@ private:
     }
 
     // Calculates the maximum size of individual components this chunk buffer can hold
-    static std::size_t get_max_size(auto&& components_meta) {
+    static auto get_max_size(auto&& components_meta) -> std::size_t {
         // Calculate size of the following structure:
         //
         // struct {
@@ -210,7 +210,7 @@ private:
     }
 
     // Calculate size of packed structure of components
-    static std::size_t packed_components_size(auto&& components_meta) noexcept {
+    static auto packed_components_size(auto&& components_meta) noexcept -> std::size_t {
         return std::accumulate(components_meta.begin(),
             components_meta.end(),
             component_meta::of<entity>().type->size,
@@ -218,7 +218,7 @@ private:
     }
 
     // Calculate size of properly aligned structure of components
-    static std::size_t aligned_components_size(auto&& components_meta) noexcept {
+    static auto aligned_components_size(auto&& components_meta) noexcept -> std::size_t {
         auto begin = chunk::alloc_alignment;
         auto end = begin;
 
@@ -237,20 +237,20 @@ private:
     }
 
     template<component_reference ComponentRef>
-    inline static ComponentRef read_impl(auto&& self, entity_location location) {
+    inline static auto read_impl(auto&& self, entity_location location) -> ComponentRef {
         auto& chunk = self.get_chunk(location);
         assert((location.entry_index < chunk.size()) && "Entity location index exceeds chunk size");
         return *component_fetch::fetch_pointer<ComponentRef>(chunk, location.entry_index);
     }
 
-    inline chunk& get_chunk(entity_location location) noexcept {
+    inline auto get_chunk(entity_location location) noexcept -> chunk& {
         assert((location.archetype == this) && "Location archetype pointer does not point to this archetype");
         assert((location.chunk_index < _chunks.size()) && "Location chunk index exceeds the chunks vector size");
         auto& chunk = _chunks[location.chunk_index];
         return chunk;
     }
 
-    chunk& ensure_free_chunk() {
+    auto ensure_free_chunk() -> chunk& {
         auto& chunk = _chunks.back();
         if (!chunk.full()) {
             return chunk;
@@ -281,7 +281,7 @@ public:
     /// @tparam Components Component types
     /// @return archetype*
     template<component... Components>
-    archetype* ensure_archetype() {
+    auto ensure_archetype() -> archetype* {
         _search_component_set.clear();
         (..., _search_component_set.insert<Components>());
 
@@ -300,7 +300,7 @@ public:
     /// @param anchor_archetype Anchor archetype
     /// @return archetype*
     template<component... Components>
-    archetype* ensure_archetype_added(const archetype* anchor_archetype) {
+    auto ensure_archetype_added(const archetype* anchor_archetype) -> archetype* {
         _search_component_set = anchor_archetype->components().ids();
         (..., _search_component_set.insert<Components>());
 
@@ -319,7 +319,7 @@ public:
     /// @param anchor_archetype Anchor archetype
     /// @return archetype*
     template<component... Components>
-    archetype* ensure_archetype_removed(const archetype* anchor_archetype) {
+    auto ensure_archetype_removed(const archetype* anchor_archetype) -> archetype* {
         _search_component_set = anchor_archetype->components().ids();
         (..., _search_component_set.erase<Components>());
 
@@ -335,52 +335,52 @@ public:
     /// @brief Returns iterator to the beginning of archetypes container
     ///
     /// @return decltype(auto)
-    iterator begin() noexcept {
+    auto begin() noexcept -> iterator {
         return _archetypes.begin();
     }
 
     /// @brief Returns an iterator to the end of archetypes container
     ///
     /// @return decltype(auto)
-    iterator end() noexcept {
+    auto end() noexcept -> iterator {
         return _archetypes.end();
     }
 
     /// @brief Returns iterator to the beginning of archetypes container
     ///
     /// @return decltype(auto)
-    [[nodiscard]] const_iterator begin() const noexcept {
+    [[nodiscard]] auto begin() const noexcept -> const_iterator {
         return _archetypes.begin();
     }
 
     /// @brief Returns an iterator to the end of archetypes container
     ///
     /// @return decltype(auto)
-    [[nodiscard]] const_iterator end() const noexcept {
+    [[nodiscard]] auto end() const noexcept -> const_iterator {
         return _archetypes.end();
     }
 
     /// @brief Returns the number of archetypes
     ///
     /// @return std::size_t
-    [[nodiscard]] std::size_t size() const noexcept {
+    [[nodiscard]] auto size() const noexcept -> std::size_t {
         return _archetypes.size();
     }
 
 private:
-    static decltype(auto) create_archetype(auto&& components_meta) {
+    static auto create_archetype(auto&& components_meta) -> decltype(auto) {
         return std::make_unique<co_ecs::archetype>(std::forward<decltype(components_meta)>(components_meta));
     }
 
     template<component... Components>
-    static decltype(auto) create_archetype_added(const archetype* anchor_archetype) {
+    static auto create_archetype_added(const archetype* anchor_archetype) -> decltype(auto) {
         auto components_meta = anchor_archetype->components();
         (..., components_meta.insert<Components>());
         return std::make_unique<co_ecs::archetype>(std::move(components_meta));
     }
 
     template<component... Components>
-    static decltype(auto) create_archetype_removed(const archetype* anchor_archetype) {
+    static auto create_archetype_removed(const archetype* anchor_archetype) -> decltype(auto) {
         auto components_meta = anchor_archetype->components();
         (..., components_meta.erase<Components>());
         return std::make_unique<co_ecs::archetype>(std::move(components_meta));

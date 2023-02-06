@@ -2,6 +2,7 @@
 
 #include <co_ecs/macro.hpp>
 
+#include <memory>
 #include <string_view>
 
 namespace co_ecs {
@@ -11,7 +12,7 @@ namespace co_ecs {
 /// @tparam T Type to get name for
 /// @return std::string_view Type name string
 template<typename T>
-constexpr static std::string_view type_name() noexcept {
+constexpr static auto type_name() noexcept -> std::string_view {
 #if defined CO_ECS_PRETTY_FUNCTION
     std::string_view pretty_function{ CO_ECS_PRETTY_FUNCTION };
     auto first =
@@ -59,7 +60,7 @@ struct type_meta {
     /// @tparam T Target type
     /// @return const type_meta* Target type meta
     template<typename T>
-    static const type_meta* of() noexcept {
+    static auto of() noexcept -> const type_meta* {
         static const type_meta meta{
             sizeof(T),
             alignof(T),

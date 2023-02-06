@@ -7,7 +7,7 @@ namespace co_ecs::detail {
 /// @param value Value
 /// @param divisor Power of 2 divisor
 /// @return decltype(auto) Result
-constexpr decltype(auto) mod_2n(auto value, auto divisor) noexcept {
+constexpr auto mod_2n(auto value, auto divisor) noexcept -> decltype(auto) {
     return value & (divisor - 1U);
 }
 

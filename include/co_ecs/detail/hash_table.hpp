@@ -13,7 +13,7 @@ namespace co_ecs::detail {
 ///
 /// @param value Value
 /// @return decltype(auto) Result
-constexpr decltype(auto) approx_85_percent(auto value) noexcept {
+constexpr auto approx_85_percent(auto value) noexcept -> decltype(auto) {
     return (value * 870) >> 10U; // NOLINT(readability-magic-numbers)
 }
 
@@ -21,7 +21,7 @@ constexpr decltype(auto) approx_85_percent(auto value) noexcept {
 ///
 /// @param value Value
 /// @return decltype(auto) Result
-constexpr decltype(auto) approx_40_percent(auto value) noexcept {
+constexpr auto approx_40_percent(auto value) noexcept -> decltype(auto) {
     return (value * 409) >> 10U; // NOLINT(readability-magic-numbers)
 }
 
@@ -87,13 +87,13 @@ private:
         ///
         /// @param rhs Another buckets
         /// @return Buckets
-        constexpr buckets& operator=(const buckets& rhs) = delete;
+        constexpr auto operator=(const buckets& rhs) -> buckets& = delete;
 
         /// @brief Move assignment operator
         ///
         /// @param rhs Another buckets
         /// @return Buckets
-        constexpr buckets& operator=(buckets&& rhs) noexcept {
+        constexpr auto operator=(buckets&& rhs) noexcept -> buckets& {
             swap(std::move(rhs));
             return *this;
         }
@@ -116,49 +116,49 @@ private:
         /// @brief Get the allocator object
         ///
         /// @return Allocator object
-        constexpr allocator_type& allocator() noexcept {
+        constexpr auto allocator() noexcept -> allocator_type& {
             return a;
         }
 
         /// @brief Get the allocator object
         ///
         /// @return Allocator object
-        constexpr const allocator_type& allocator() const noexcept {
+        constexpr auto allocator() const noexcept -> const allocator_type& {
             return a;
         }
 
         /// @brief Get iterator to the begin of the vector
         ///
         /// @return Iterator
-        constexpr value_type* begin() noexcept {
+        constexpr auto begin() noexcept -> value_type* {
             return b;
         }
 
         /// @brief Get const iterator to the begin of the vector
         ///
         /// @return Iterator
-        constexpr const value_type* begin() const noexcept {
+        constexpr auto begin() const noexcept -> const value_type* {
             return b;
         }
 
         /// @brief Get iterator to the end of the vector
         ///
         /// @return Iterator
-        constexpr value_type* end() noexcept {
+        constexpr auto end() noexcept -> value_type* {
             return e;
         }
 
         /// @brief Get const iterator to the end of the vector
         ///
         /// @return Iterator
-        constexpr const value_type* end() const noexcept {
+        constexpr auto end() const noexcept -> const value_type* {
             return e;
         }
 
         /// @brief Returns the size of the vector
         ///
         /// @return Size of the vector
-        [[nodiscard]] constexpr size_type size() const noexcept {
+        [[nodiscard]] constexpr auto size() const noexcept -> size_type {
             return e - b;
         }
 
@@ -202,14 +202,14 @@ private:
         }
 
         constexpr iterator_impl(const iterator_impl& other) noexcept = default;
-        constexpr iterator_impl& operator=(const iterator_impl& other) noexcept = default;
+        constexpr auto operator=(const iterator_impl& other) noexcept -> iterator_impl& = default;
         constexpr iterator_impl(iterator_impl&& other) noexcept = default;
-        constexpr iterator_impl& operator=(iterator_impl&& other) noexcept = default;
+        constexpr auto operator=(iterator_impl&& other) noexcept -> iterator_impl& = default;
 
         /// @brief Pre-increment iterator
         ///
         /// @return iterator_impl& Incremented iterator
-        constexpr iterator_impl& operator++() noexcept {
+        constexpr auto operator++() noexcept -> iterator_impl& {
             _info++;
             _ptr++;
             fast_forward();
@@ -219,7 +219,7 @@ private:
         /// @brief Post-increment iterator
         ///
         /// @return iterator_impl& Iterator
-        constexpr iterator_impl operator++(int) noexcept {
+        constexpr auto operator++(int) noexcept -> iterator_impl {
             iterator_impl tmp(*this);
             *this ++;
             return tmp;
@@ -228,14 +228,14 @@ private:
         /// @brief Dereference iterator
         ///
         /// @return reference Reference to value
-        constexpr reference operator*() const noexcept {
+        constexpr auto operator*() const noexcept -> reference {
             return *_ptr;
         }
 
         /// @brief Dereference iterator
         ///
         /// @return reference Pointer to value
-        constexpr pointer operator->() const noexcept {
+        constexpr auto operator->() const noexcept -> pointer {
             return _ptr;
         }
 
@@ -400,7 +400,7 @@ public:
     /// @brief Copy assignment operator
     ///
     /// @param rhs Right hand side
-    constexpr hash_table& operator=(const hash_table& rhs) {
+    constexpr auto operator=(const hash_table& rhs) -> hash_table& {
         hash_table copy(rhs);
         swap(std::move(copy));
         return *this;
@@ -416,7 +416,7 @@ public:
     /// @brief Move assignment operator
     ///
     /// @param rhs Right hand side
-    constexpr hash_table& operator=(hash_table&& rhs) noexcept {
+    constexpr auto operator=(hash_table&& rhs) noexcept -> hash_table& {
         swap(std::move(rhs));
         return *this;
     }
@@ -435,7 +435,7 @@ public:
     /// @brief Get the allocator object
     ///
     /// @return allocator_type Allocator object
-    constexpr allocator_type get_allocator() const noexcept {
+    constexpr auto get_allocator() const noexcept -> allocator_type {
         return _buckets.allocator();
     }
 
@@ -443,7 +443,7 @@ public:
     ///
     /// @param key Key to insert
     /// @return mapped_type& Reference to the mapped type
-    mapped_type& operator[](const key_type& key)
+    auto operator[](const key_type& key) -> mapped_type&
         requires(is_map)
     {
         if (auto iter = find(key); iter != end()) {
@@ -459,7 +459,7 @@ public:
     ///
     /// @param key Key to insert
     /// @return mapped_type& Reference to the mapped type
-    mapped_type& at(const key_type& key)
+    auto at(const key_type& key) -> mapped_type&
         requires(is_map)
     {
         if (auto iter = find_impl(*this, key); iter != end()) {
@@ -474,7 +474,7 @@ public:
     ///
     /// @param key Key to insert
     /// @return const mapped_type& Reference to the mapped type
-    const mapped_type& at(const key_type& key) const
+    auto at(const key_type& key) const -> const mapped_type&
         requires(is_map)
     {
         if (auto iter = find_impl(*this, key); iter != end()) {
@@ -501,7 +501,7 @@ public:
     /// @param value Value to insert
     /// @return std::pair<iterator, bool> Pair of iterator to the inserted/found value and a boolean indicating whether
     /// insertion happened
-    std::pair<iterator, bool> insert(const value_type& value) {
+    auto insert(const value_type& value) -> std::pair<iterator, bool> {
         return emplace_impl(value);
     }
 
@@ -510,7 +510,7 @@ public:
     /// @param hint Hint to where insert
     /// @param value Value to insert
     /// @return iterator Iterator to the inserted/found value
-    iterator insert([[maybe_unused]] iterator hint, value_type&& value) {
+    auto insert([[maybe_unused]] iterator hint, value_type&& value) -> iterator {
         return emplace_impl(std::move(value)).first;
     }
 
@@ -519,7 +519,7 @@ public:
     /// @param hint Hint to where insert
     /// @param value Value to insert
     /// @return iterator Iterator to the inserted/found value
-    iterator insert([[maybe_unused]] iterator hint, const value_type& value) {
+    auto insert([[maybe_unused]] iterator hint, const value_type& value) -> iterator {
         return emplace_impl(value).first;
     }
 
@@ -528,7 +528,7 @@ public:
     /// @param value Value to insert
     /// @return std::pair<iterator, bool> Pair of iterator to the inserted/found value and a boolean indicating whether
     /// insertion happened
-    std::pair<iterator, bool> insert_or_assign(const value_type& value) {
+    auto insert_or_assign(const value_type& value) -> std::pair<iterator, bool> {
         return emplace_or_assign_impl(value);
     }
 
@@ -540,7 +540,7 @@ public:
     /// @return std::pair<iterator, bool> Returns a pair consisting of an iterator to the inserted element, or the
     /// already-existing element if no insertion happened, and a bool denoting whether the insertion took place
     template<typename... Args>
-    std::pair<iterator, bool> emplace(Args&&... args) {
+    auto emplace(Args&&... args) -> std::pair<iterator, bool> {
         return emplace_impl(std::forward<Args>(args)...);
     }
 
@@ -579,7 +579,7 @@ public:
     ///
     /// @param key key to compare to
     /// @return size_type Number of elements (1 or 0)
-    [[nodiscard]] size_type count(const key_type& key) const noexcept {
+    [[nodiscard]] auto count(const key_type& key) const noexcept -> size_type {
         return find_impl(*this, key) != end() ? 1 : 0;
     }
 
@@ -588,7 +588,7 @@ public:
     /// @param key Key to check
     /// @return true If key exists in the container
     /// @return false If key does not exist in the container
-    [[nodiscard]] bool contains(const key_type& key) const noexcept {
+    [[nodiscard]] auto contains(const key_type& key) const noexcept -> bool {
         return count(key) > 0;
     }
 
@@ -596,7 +596,7 @@ public:
     ///
     /// @param key Key to find
     /// @return iterator Iterator result
-    [[nodiscard]] iterator find(const auto& key) noexcept {
+    [[nodiscard]] auto find(const auto& key) noexcept -> iterator {
         return find_impl(*this, key);
     }
 
@@ -604,7 +604,7 @@ public:
     ///
     /// @param key Key to find
     /// @return iterator Iterator result
-    [[nodiscard]] const_iterator find(const key_type& key) const noexcept {
+    [[nodiscard]] auto find(const key_type& key) const noexcept -> const_iterator {
         return find_impl(*this, key);
     }
 
@@ -632,49 +632,49 @@ public:
     /// @brief Get iterator to the begin of the container
     ///
     /// @return Iterator
-    [[nodiscard]] constexpr iterator begin() noexcept {
+    [[nodiscard]] constexpr auto begin() noexcept -> iterator {
         return iterator{ _buckets.begin(), _buckets.end(), _info.begin() };
     }
 
     /// @brief Get iterator to the end of the container
     ///
     /// @return Iterator
-    [[nodiscard]] constexpr iterator end() noexcept {
+    [[nodiscard]] constexpr auto end() noexcept -> iterator {
         return iterator{ _buckets.end(), _buckets.end(), _info.end() };
     }
 
     /// @brief Get iterator to the begin of the container
     ///
     /// @return Iterator
-    [[nodiscard]] constexpr const_iterator begin() const noexcept {
+    [[nodiscard]] constexpr auto begin() const noexcept -> const_iterator {
         return const_iterator{ _buckets.begin(), _buckets.end(), _info.begin() };
     }
 
     /// @brief Get iterator to the end of the container
     ///
     /// @return Iterator
-    [[nodiscard]] constexpr const_iterator end() const noexcept {
+    [[nodiscard]] constexpr auto end() const noexcept -> const_iterator {
         return const_iterator{ _buckets.end(), _buckets.end(), _info.end() };
     }
 
     /// @brief Get iterator to the begin of the container
     ///
     /// @return Iterator
-    [[nodiscard]] constexpr iterator cbegin() const noexcept {
+    [[nodiscard]] constexpr auto cbegin() const noexcept -> iterator {
         return begin();
     }
 
     /// @brief Get iterator to the end of the container
     ///
     /// @return Iterator
-    [[nodiscard]] constexpr iterator cend() const noexcept {
+    [[nodiscard]] constexpr auto cend() const noexcept -> iterator {
         return end();
     }
 
     /// @brief Return size of container
     ///
     /// @return size_type Number of elements in the container
-    [[nodiscard]] constexpr size_type size() const noexcept {
+    [[nodiscard]] constexpr auto size() const noexcept -> size_type {
         return _size;
     }
 
@@ -682,7 +682,7 @@ public:
     ///
     /// @return true If it is empty
     /// @return false If it is not empty
-    [[nodiscard]] constexpr bool empty() const noexcept {
+    [[nodiscard]] constexpr auto empty() const noexcept -> bool {
         return size() == 0;
     }
 
@@ -743,7 +743,7 @@ private:
     }
 
     template<typename... Args>
-    constexpr std::pair<iterator, bool> emplace_impl(Args&&... args) {
+    constexpr auto emplace_impl(Args&&... args) -> std::pair<iterator, bool> {
         size_type buckets_size = _buckets.size();
         const size_type threshold = approx_85_percent(buckets_size);
         if (_size > threshold) {
@@ -755,7 +755,7 @@ private:
     }
 
     template<typename... Args>
-    constexpr std::pair<iterator, bool> emplace_or_assign_impl(Args&&... args) {
+    constexpr auto emplace_or_assign_impl(Args&&... args) -> std::pair<iterator, bool> {
         size_type buckets_size = _buckets.size();
         const size_type threshold = approx_85_percent(buckets_size);
         if (_size > threshold) {
@@ -766,7 +766,7 @@ private:
     }
 
     template<typename... Args>
-    constexpr std::pair<iterator, bool> _emplace_or_assign_impl(Args&&... args) {
+    constexpr auto _emplace_or_assign_impl(Args&&... args) -> std::pair<iterator, bool> {
         size_type buckets_size = _buckets.size();
         value_type temp(std::forward<Args>(args)...);
         size_type hash = _hash(get_key(temp));
@@ -810,7 +810,7 @@ private:
     }
 
     template<typename... Args>
-    constexpr decltype(auto) _emplace_impl(Args&&... args) {
+    constexpr auto _emplace_impl(Args&&... args) -> decltype(auto) {
         size_type buckets_size = _buckets.size();
         value_type temp(std::forward<Args>(args)...);
         size_type hash = _hash(get_key(temp));
@@ -852,7 +852,7 @@ private:
         }
     }
 
-    static constexpr decltype(auto) find_impl(auto& self, const key_type& key) {
+    static constexpr auto find_impl(auto& self, const key_type& key) -> decltype(auto) {
         size_type buckets_size = self._buckets.size();
         if (!buckets_size) {
             return self.end();
@@ -875,15 +875,15 @@ private:
         }
     }
 
-    constexpr iterator create_iterator(value_type* ptr, info_iterator info) noexcept {
+    constexpr auto create_iterator(value_type* ptr, info_iterator info) noexcept -> iterator {
         return iterator{ ptr, _buckets.end(), info };
     }
 
-    constexpr const_iterator create_iterator(const value_type* ptr, info_const_iterator info) const noexcept {
+    constexpr auto create_iterator(const value_type* ptr, info_const_iterator info) const noexcept -> const_iterator {
         return const_iterator{ ptr, _buckets.end(), info };
     }
 
-    constexpr static auto& get_key(auto& entry) {
+    constexpr static auto get_key(auto& entry) -> auto& {
         if constexpr (is_map) {
             return entry.first;
         } else {
@@ -891,7 +891,7 @@ private:
         }
     }
 
-    constexpr static auto& get_value(auto& entry) {
+    constexpr static auto get_value(auto& entry) -> auto& {
         if constexpr (is_map) {
             return entry.second;
         } else {

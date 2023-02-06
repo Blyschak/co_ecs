@@ -16,6 +16,8 @@ namespace co_ecs {
 
 // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
 // NOLINTBEGIN(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+// NOLINTBEGIN(cppcoreguidelines-no-malloc)
+// NOLINTBEGIN(hicpp-no-malloc)
 
 /// @brief Block metadata holds pointers where it begins, ends and a component metadata it holds
 struct block_metadata {
@@ -57,7 +59,7 @@ public:
     /// @brief Deleted copy assignment operator
     ///
     /// @param rhs Another chunk
-    chunk& operator=(const chunk& rhs) = delete;
+    auto operator=(const chunk& rhs) -> chunk& = delete;
 
     /// @brief Move constructor
     ///
@@ -71,7 +73,7 @@ public:
     ///
     /// @param rhs Right hand side chunk
     /// @return chunk& Resulting chunk
-    chunk& operator=(chunk&& rhs) noexcept {
+    auto operator=(chunk&& rhs) noexcept -> chunk& {
         _buffer = rhs._buffer;
         _size = rhs._size;
         _max_size = rhs._max_size;
@@ -91,7 +93,7 @@ public:
                 block.meta.type->destruct(_buffer + block.offset + i * block.meta.type->size);
             }
         }
-        std::free(_buffer);
+        std::free(_buffer); // NOLINT(cppcoreguidelines-owning-memory)
     }
 
     /// @brief Emplace back components into blocks
@@ -120,7 +122,7 @@ public:
     /// @param index Index to remove components from
     /// @param other_chunk Other chunk
     /// @return std::optional<entity>
-    std::optional<entity> swap_erase(std::size_t index, chunk& other) noexcept {
+    auto swap_erase(std::size_t index, chunk& other) noexcept -> std::optional<entity> {
         assert((index < _size) && "Entity index exceeds chunk size");
         if (size() == 1 || index == _size - 1) {
             pop_back();
@@ -144,7 +146,7 @@ public:
     /// @param index Index to move from
     /// @param other_chunk Chunk to move to
     /// @return std::size_t Other chunk index
-    std::size_t move(std::size_t index, chunk& other_chunk) {
+    auto move(std::size_t index, chunk& other_chunk) -> std::size_t {
         assert((index < _size) && "Entity index exceeds chunk size");
         assert((!other_chunk.full()) && "Other chunk is full, cannot move entity to it");
         const std::size_t other_chunk_index = other_chunk._size;
@@ -166,7 +168,7 @@ public:
     /// @param index Index
     /// @return const T* Resulting pointer
     template<component T>
-    inline const T* ptr_const(std::size_t index) const {
+    inline auto ptr_const(std::size_t index) const -> const T* {
         return ptr_unchecked_impl<const T*>(*this, index);
     }
 
@@ -176,7 +178,7 @@ public:
     /// @param index Index
     /// @return const T* Resulting pointer
     template<component T>
-    inline T* ptr_mut(std::size_t index) {
+    inline auto ptr_mut(std::size_t index) -> T* {
         static_assert(!std::is_same_v<T, entity>, "Cannot give a mutable pointer/reference to the entity");
         return ptr_unchecked_impl<T*>(*this, index);
     }
@@ -184,14 +186,14 @@ public:
     /// @brief Get max size, how many elements can this chunk hold
     ///
     /// @return std::size_t Max size of this chunk
-    [[nodiscard]] constexpr std::size_t max_size() const noexcept {
+    [[nodiscard]] constexpr auto max_size() const noexcept -> std::size_t {
         return _max_size;
     }
 
     /// @brief Return size
     ///
     /// @return std::size_t Size
-    [[nodiscard]] constexpr std::size_t size() const noexcept {
+    [[nodiscard]] constexpr auto size() const noexcept -> std::size_t {
         return _size;
     }
 
@@ -199,7 +201,7 @@ public:
     ///
     /// @return true If it is full
     /// @return false If it is not full
-    [[nodiscard]] constexpr bool full() const noexcept {
+    [[nodiscard]] constexpr auto full() const noexcept -> bool {
         return size() == max_size();
     }
 
@@ -207,29 +209,29 @@ public:
     ///
     /// @return true If it is empty
     /// @return false If it is not empty
-    [[nodiscard]] constexpr bool empty() const noexcept {
+    [[nodiscard]] constexpr auto empty() const noexcept -> bool {
         return size() == 0;
     }
 
 private:
     template<component T>
-    inline T* ptr_unchecked(std::size_t index) noexcept {
+    [[nodiscard]] inline auto ptr_unchecked(std::size_t index) -> T* {
         return ptr_unchecked_impl<T*>(*this, index);
     }
 
     template<component T>
-    [[nodiscard]] inline const T* ptr_unchecked(std::size_t index) const noexcept {
+    [[nodiscard]] inline auto ptr_unchecked(std::size_t index) const noexcept -> const T* {
         return ptr_unchecked_impl<const T*>(*this, index);
     }
 
     template<typename P>
-    static inline P ptr_unchecked_impl(auto&& self, std::size_t index) {
+    [[nodiscard]] static inline auto ptr_unchecked_impl(auto&& self, std::size_t index) -> P {
         using component_type = std::remove_const_t<std::remove_pointer_t<P>>;
         const auto& block = self.get_block(component_id::value<component_type>);
         return (reinterpret_cast<P>(self._buffer + block.offset) + index);
     }
 
-    [[nodiscard]] const block_metadata& get_block(component_id_t id) const {
+    [[nodiscard]] auto get_block(component_id_t id) const -> const block_metadata& {
         return _blocks->at(id);
     }
 
@@ -252,29 +254,27 @@ struct component_fetch {
     ///
     /// @tparam C Component reference
     template<component_reference C>
-    static const decay_component_t<C>* fetch_pointer(auto&& chunk, std::size_t index)
-        requires(const_component_reference_v<C>)
-    {
-        try {
-            return chunk.template ptr_const<decay_component_t<C>>(index);
-        } catch (const std::out_of_range&) {
-            throw component_not_found{ type_meta::of<decay_component_t<C>>() };
+    static auto fetch_pointer(auto&& chunk, std::size_t index)
+        -> const decay_component_t<C>* requires(const_component_reference_v<C>) {
+            try {
+                return chunk.template ptr_const<decay_component_t<C>>(index);
+            } catch (const std::out_of_range&) {
+                throw component_not_found{ type_meta::of<decay_component_t<C>>() };
+            }
         }
-    }
 
     /// @brief Fetches pointer for mutable component reference
     ///
     /// @tparam C Component reference
     template<component_reference C>
-    static decay_component_t<C>* fetch_pointer(auto&& chunk, std::size_t index)
-        requires(mutable_component_reference_v<C>)
-    {
-        try {
-            return chunk.template ptr_mut<decay_component_t<C>>(index);
-        } catch (const std::out_of_range&) {
-            throw component_not_found{ type_meta::of<decay_component_t<C>>() };
+    static auto fetch_pointer(auto&& chunk, std::size_t index)
+        -> decay_component_t<C>* requires(mutable_component_reference_v<C>) {
+            try {
+                return chunk.template ptr_mut<decay_component_t<C>>(index);
+            } catch (const std::out_of_range&) {
+                throw component_not_found{ type_meta::of<decay_component_t<C>>() };
+            }
         }
-    }
 };
 
 /// @brief A type aware view into a chunk components
@@ -321,7 +321,7 @@ public:
         ///
         /// @param rhs Right hand side iterator
         /// @return iterator& this iterator
-        constexpr iterator& operator=(const iterator& rhs) noexcept = default;
+        constexpr auto operator=(const iterator& rhs) noexcept -> iterator& = default;
 
         /// @brief Default move constructor
         ///
@@ -332,12 +332,12 @@ public:
         ///
         /// @param rhs Right hand side iterator
         /// @return iterator& this iterator
-        constexpr iterator& operator=(iterator&& rhs) noexcept = default;
+        constexpr auto operator=(iterator&& rhs) noexcept -> iterator& = default;
 
         /// @brief Pre-increment iterator
         ///
         /// @return iterator_impl& Incremented iterator
-        constexpr iterator& operator++() noexcept {
+        constexpr auto operator++() noexcept -> iterator& {
             std::apply([](auto&&... args) { (args++, ...); }, _ptrs);
             return *this;
         }
@@ -345,7 +345,7 @@ public:
         /// @brief Post-increment iterator
         ///
         /// @return iterator_impl& Iterator
-        constexpr iterator operator++(int) noexcept {
+        constexpr auto operator++(int) noexcept -> iterator {
             iterator tmp(*this);
             std::apply([](auto&&... args) { (args++, ...); }, _ptrs);
             return tmp;
@@ -354,7 +354,7 @@ public:
         /// @brief Dereference iterator
         ///
         /// @return reference Reference to value
-        constexpr reference operator*() const noexcept {
+        constexpr auto operator*() const noexcept -> reference {
             return std::apply([](auto&&... args) { return std::make_tuple(std::ref(*args)...); }, _ptrs);
         }
 
@@ -377,14 +377,14 @@ public:
     /// @brief Return iterator to the beginning of a chunk
     ///
     /// @return constexpr iterator
-    [[nodiscard]] constexpr iterator begin() noexcept {
+    [[nodiscard]] constexpr auto begin() noexcept -> iterator {
         return iterator(_chunk, 0);
     }
 
     /// @brief Return iterator to the end of a chunk
     ///
     /// @return constexpr iterator
-    [[nodiscard]] constexpr iterator end() noexcept {
+    [[nodiscard]] constexpr auto end() noexcept -> iterator {
         return iterator(_chunk, _chunk.size());
     }
 
@@ -392,6 +392,8 @@ private:
     chunk_type _chunk;
 };
 
+// NOLINTEND(hicpp-no-malloc)
+// NOLINTEND(cppcoreguidelines-no-malloc)
 // NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
 

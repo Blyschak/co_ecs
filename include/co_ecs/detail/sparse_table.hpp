@@ -49,13 +49,13 @@ public:
     ///
     /// @param rhs Sparse container to move from
     /// @return Container data from rhs moved to
-    constexpr sparse_table& operator=(sparse_table&& rhs) noexcept = default;
+    constexpr auto operator=(sparse_table&& rhs) noexcept -> sparse_table& = default;
 
     /// @brief Copy assignment
     ///
     /// @param rhs Sparse container to copy from
     /// @return Container data from rhs copied to
-    constexpr sparse_table& operator=(const sparse_table& rhs) = default;
+    constexpr auto operator=(const sparse_table& rhs) -> sparse_table& = default;
 
     /// @brief Destructor
     constexpr ~sparse_table() = default;
@@ -73,61 +73,61 @@ public:
     /// @brief Return iterator to the beginning of the container
     ///
     /// @return Iterator pointing to the beginning
-    constexpr iterator begin() noexcept {
+    constexpr auto begin() noexcept -> iterator {
         return _dense.begin();
     }
 
     /// @brief Return iterator to the end of the container
     ///
     /// @return Iterator pointing to the end
-    constexpr iterator end() noexcept {
+    constexpr auto end() noexcept -> iterator {
         return _dense.end();
     }
 
     /// @brief Return const iterator to the beginning of the container
     ///
     /// @return Const iterator pointing to the beginning
-    constexpr const_iterator begin() const noexcept {
+    constexpr auto begin() const noexcept -> const_iterator {
         return _dense.begin();
     }
 
     /// @brief Return const iterator to the end of the container
     ///
     /// @return Const iterator pointing to the end
-    constexpr const_iterator end() const noexcept {
+    constexpr auto end() const noexcept -> const_iterator {
         return _dense.end();
     }
 
     /// @brief Return const iterator to the beginning of the container
     ///
     /// @return Const iterator pointing to the beginning
-    constexpr const_iterator cbegin() const noexcept {
+    constexpr auto cbegin() const noexcept -> const_iterator {
         return _dense.cbegin();
     }
 
     /// @brief Return const iterator to the end of the container
     ///
     /// @return Const iterator pointing to the end
-    constexpr const_iterator cend() const noexcept {
+    constexpr auto cend() const noexcept -> const_iterator {
         return _dense.cend();
     }
 
     /// @brief Return the size of the container
     ///
     /// @return Size of the container
-    [[nodiscard]] constexpr std::size_t size() const {
+    [[nodiscard]] constexpr auto size() const -> std::size_t {
         return _size;
     }
 
     /// @brief Return sparse vector capacity
     ///
     /// @return Sparse vector capacity
-    [[nodiscard]] constexpr std::size_t capacity() const {
+    [[nodiscard]] constexpr auto capacity() const -> std::size_t {
         return _sparse_capacity;
     }
 
     /// @brief Return wether container is empty
-    [[nodiscard]] constexpr bool empty() const {
+    [[nodiscard]] constexpr auto empty() const -> bool {
         return size() == 0;
     }
 
@@ -160,7 +160,7 @@ public:
     /// @return Const iterator pointing to found key
     ///         or end of the container if the key is
     ///         not present in the container
-    constexpr const_iterator find(key_type key) const noexcept {
+    constexpr auto find(key_type key) const noexcept -> const_iterator {
         return find_impl(*this, key);
     }
 
@@ -170,7 +170,7 @@ public:
     /// @return Iterator pointing to found key
     ///         or end of the container if the key is
     ///         not present in the container
-    constexpr iterator find(key_type key) noexcept {
+    constexpr auto find(key_type key) noexcept -> iterator {
         return find_impl(*this, key);
     }
 
@@ -178,7 +178,7 @@ public:
     ///
     /// @param key Key to test
     /// @return True if key is found in the container
-    constexpr bool contains(key_type key) const noexcept {
+    constexpr auto contains(key_type key) const noexcept -> bool {
         return find(key) != end();
     }
 
@@ -188,7 +188,7 @@ public:
     /// @return A pair of iterator pointing to the inserted element and a
     /// boolean
     ///         set to true in case the insertion happened
-    constexpr std::pair<iterator, bool> insert(const value_type& entry) {
+    constexpr auto insert(const value_type& entry) -> std::pair<iterator, bool> {
         return emplace(get_key(entry), std::move(get_value(entry)));
     }
 
@@ -201,7 +201,7 @@ public:
     /// boolean
     ///         set to true in case the insertion happened
     template<typename... Args>
-    constexpr std::pair<iterator, bool> emplace(key_type key, Args&&... args) {
+    constexpr auto emplace(key_type key, Args&&... args) -> std::pair<iterator, bool> {
         if (contains(key)) {
             return std::pair(_dense.begin() + _sparse[key], false);
         }
@@ -226,7 +226,7 @@ public:
     /// @return Reference to element found;
     ///         std::out_of_range is thrown if key does not exist in the
     ///         container
-    constexpr mapped_type& at(const key_type& key)
+    constexpr auto at(const key_type& key) -> mapped_type&
         requires(is_map)
     {
         if (!contains(key)) {
@@ -241,7 +241,7 @@ public:
     /// @return Reference to element found;
     ///         std::out_of_range is thrown if key does not exist in the
     ///         container
-    constexpr const mapped_type& at(const key_type& key) const
+    constexpr auto at(const key_type& key) const -> const mapped_type&
         requires(is_map)
     {
         if (!contains(key)) {
@@ -255,7 +255,7 @@ public:
     ///
     /// @param key Key to look for
     /// @return Reference to element found or inserted
-    constexpr mapped_type& operator[](const key_type& key) noexcept
+    constexpr auto operator[](const key_type& key) noexcept -> mapped_type&
         requires(is_map)
     {
         auto [iter, _] = emplace(key);
@@ -267,7 +267,7 @@ public:
     ///
     /// @param key Key to erase
     /// @return Number of elements erased
-    constexpr std::size_t erase(key_type key) noexcept {
+    constexpr auto erase(key_type key) noexcept -> std::size_t {
         if (contains(key)) {
             _dense[_sparse[key]] = std::move(_dense.back());
             _sparse[get_key(_dense[_size - 1])] = _sparse[key];
@@ -279,7 +279,7 @@ public:
     }
 
 private:
-    constexpr static decltype(auto) find_impl(auto& self, auto& key) {
+    constexpr static auto find_impl(auto& self, auto& key) -> decltype(auto) {
         if (key < self._sparse_capacity && self._sparse[key] < self._size
             && get_key(self._dense[self._sparse[key]]) == key) {
             return self.begin() + self._sparse[key];
@@ -287,7 +287,7 @@ private:
         return self.end();
     }
 
-    constexpr static auto& get_key(auto& entry) {
+    constexpr static auto get_key(auto& entry) -> auto& {
         if constexpr (is_map) {
             return entry.first;
         } else {
@@ -295,7 +295,7 @@ private:
         }
     }
 
-    constexpr static auto& get_value(auto& entry) {
+    constexpr static auto get_value(auto& entry) -> auto& {
         if constexpr (is_map) {
             return entry.second;
         } else {

@@ -25,7 +25,7 @@ public:
     /// @brief Message to the client
     ///
     /// @return const char*
-    [[nodiscard]] const char* what() const noexcept override {
+    [[nodiscard]] auto what() const noexcept -> const char* override {
         return _msg.c_str();
     }
 
@@ -48,7 +48,7 @@ public:
     /// @brief Message to the client
     ///
     /// @return const char*
-    [[nodiscard]] const char* what() const noexcept override {
+    [[nodiscard]] auto what() const noexcept -> const char* override {
         return _msg.c_str();
     }
 
@@ -72,7 +72,7 @@ public:
     /// @brief Message to the client
     ///
     /// @return const char*
-    [[nodiscard]] const char* what() const noexcept override {
+    [[nodiscard]] auto what() const noexcept -> const char* override {
         return _msg.c_str();
     }
 

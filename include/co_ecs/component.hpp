@@ -22,7 +22,7 @@ public:
     using id_type = _id_type;
 
 #ifndef CO_ECS_CLIENT
-    CO_ECS_EXPORT static id_type id(std::string_view type_string) {
+    CO_ECS_EXPORT static auto id(std::string_view type_string) -> id_type {
         auto [iter, inserted] = get_id_map().emplace(type_string, get_next_id());
         if (inserted) {
             get_next_id()++;
@@ -31,12 +31,12 @@ public:
         return type_id;
     }
 
-    CO_ECS_EXPORT static hash_map<std::string_view, id_type>& get_id_map() {
+    CO_ECS_EXPORT static auto get_id_map() -> hash_map<std::string_view, id_type>& {
         static hash_map<std::string_view, id_type> id_map{};
         return id_map;
     }
 
-    CO_ECS_EXPORT static id_type& get_next_id() {
+    CO_ECS_EXPORT static auto get_next_id() -> id_type& {
         static id_type next_id{};
         return next_id;
     }
@@ -141,7 +141,7 @@ public:
     /// @tparam T Component type
     /// @return component_meta Component metadata
     template<component T>
-    static component_meta of() noexcept {
+    static auto of() noexcept -> component_meta {
         return component_meta{
             component_id::value<T>,
             type_meta::of<T>(),
@@ -161,7 +161,7 @@ public:
     /// @param rhs Right hand side
     /// @return true If equal
     /// @return false If not equal
-    constexpr bool operator==(const component_meta& rhs) const noexcept {
+    constexpr auto operator==(const component_meta& rhs) const noexcept -> bool {
         return id == rhs.id;
     }
 
@@ -179,7 +179,7 @@ public:
     /// @tparam Args Components type parameter pack
     /// @return component_set Component set
     template<component... Args>
-    static component_set create() {
+    static auto create() -> component_set {
         component_set s;
         (..., s.insert<Args>());
         return s;
@@ -207,7 +207,7 @@ public:
     /// @return true When component type T is present
     /// @return false When component type T is not present
     template<component T>
-    [[nodiscard]] bool contains() const {
+    [[nodiscard]] auto contains() const -> bool {
         return contains(component_id::value<T>);
     }
 
@@ -230,7 +230,7 @@ public:
     /// @param id Component ID
     /// @return true When component ID is present
     /// @return false When component ID is not present
-    [[nodiscard]] bool contains(component_id_t id) const {
+    [[nodiscard]] auto contains(component_id_t id) const -> bool {
         return _bitset.test(id);
     }
 
@@ -243,7 +243,7 @@ public:
     /// @param rhs Right hand side
     /// @return true If equal
     /// @return false If not equal
-    bool operator==(const component_set& rhs) const noexcept {
+    auto operator==(const component_set& rhs) const noexcept -> bool {
         return _bitset == rhs._bitset;
     }
 
@@ -259,7 +259,7 @@ public:
     ///
     /// @param set Component set
     /// @return std::size_t Hash value
-    std::size_t operator()(const component_set& set) const {
+    auto operator()(const component_set& set) const -> std::size_t {
         return std::hash<typename component_set::storage_type>()(set._bitset);
     }
 };
@@ -277,7 +277,7 @@ public:
     /// @tparam Args Components type parameter pack
     /// @return component_meta_set Component set
     template<component... Args>
-    static component_meta_set create() {
+    static auto create() -> component_meta_set {
         component_meta_set s;
         s._components_meta.reserve(sizeof...(Args));
         (..., s.insert<Args>());
@@ -306,7 +306,7 @@ public:
     /// @return true When component type T is present
     /// @return false When component type T is not present
     template<component T>
-    [[nodiscard]] bool contains() const {
+    [[nodiscard]] auto contains() const -> bool {
         return contains(component_id::value<T>);
     }
 
@@ -337,42 +337,42 @@ public:
     /// @param id Component ID
     /// @return true When component ID is present
     /// @return false When component ID is not present
-    [[nodiscard]] bool contains(component_id_t id) const {
+    [[nodiscard]] auto contains(component_id_t id) const -> bool {
         return _component_set.contains(id);
     }
 
     /// @brief Returns how many components in the set
     ///
     /// @return size_type Number of components in the set
-    [[nodiscard]] size_type size() const noexcept {
+    [[nodiscard]] auto size() const noexcept -> size_type {
         return _components_meta.size();
     }
 
     /// @brief Return const iterator to beginning of the set
     ///
     /// @return const_iterator Iterator
-    [[nodiscard]] const_iterator begin() const noexcept {
+    [[nodiscard]] auto begin() const noexcept -> const_iterator {
         return _components_meta.begin();
     }
 
     /// @brief Return const iterator to the end of the set
     ///
     /// @return const_iterator Iterator
-    [[nodiscard]] const_iterator end() const noexcept {
+    [[nodiscard]] auto end() const noexcept -> const_iterator {
         return _components_meta.end();
     }
 
     /// @brief Return const iterator to beginning of the set
     ///
     /// @return const_iterator Iterator
-    [[nodiscard]] const_iterator cbegin() const noexcept {
+    [[nodiscard]] auto cbegin() const noexcept -> const_iterator {
         return begin();
     }
 
     /// @brief Return const iterator to the end of the set
     ///
     /// @return const_iterator Iterator
-    [[nodiscard]] const_iterator cend() const noexcept {
+    [[nodiscard]] auto cend() const noexcept -> const_iterator {
         return end();
     }
 
@@ -381,14 +381,14 @@ public:
     /// @param rhs Right hand side
     /// @return true If equal
     /// @return false If not equal
-    bool operator==(const component_meta_set& rhs) const noexcept {
+    auto operator==(const component_meta_set& rhs) const noexcept -> bool {
         return _component_set == rhs._component_set;
     }
 
     /// @brief Return a bitset of components
     ///
     /// @return const component_set& Component bitset
-    [[nodiscard]] const component_set& ids() const noexcept {
+    [[nodiscard]] auto ids() const noexcept -> const component_set& {
         return _component_set;
     }
 

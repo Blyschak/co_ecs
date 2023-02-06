@@ -35,7 +35,7 @@ public:
     /// @param args components
     /// @return entity Entity to construct
     template<component... Args>
-    entity create(Args&&... args) {
+    auto create(Args&&... args) -> entity {
         // compile-time check to make sure all component types in parameter pack are unique
         [[maybe_unused]] detail::unique_types<Args...> uniqueness_check;
 
@@ -146,7 +146,7 @@ public:
     /// @param ent Entity
     /// @return true Alive
     /// @return false Dead
-    [[nodiscard]] bool alive(entity ent) const noexcept {
+    [[nodiscard]] auto alive(entity ent) const noexcept -> bool {
         return _entity_pool.alive(ent);
     }
 
@@ -156,7 +156,7 @@ public:
     /// @param ent Entity to read component from
     /// @return C& Reference to component C
     template<component C>
-    [[nodiscard]] C& get(entity ent) {
+    [[nodiscard]] auto get(entity ent) -> C& {
         return std::get<0>(get_impl<C&>(*this, ent));
     }
 
@@ -166,7 +166,7 @@ public:
     /// @param ent Entity to read component from
     /// @return const C& Const reference to component C
     template<component C>
-    [[nodiscard]] const C& get(entity ent) const {
+    [[nodiscard]] auto get(entity ent) const -> const C& {
         return std::get<0>(get_impl<const C&>(*this, ent));
     }
 
@@ -176,7 +176,7 @@ public:
     /// @param ent Entity to query
     /// @return value_type Components tuple
     template<component_reference... Args>
-    [[nodiscard]] std::tuple<Args...> get(entity ent)
+    [[nodiscard]] auto get(entity ent) -> std::tuple<Args...>
         requires(const_component_references_v<Args...>)
     {
         return get_impl<Args...>(*this, ent);
@@ -188,7 +188,7 @@ public:
     /// @param ent Entity to query
     /// @return value_type Components tuple
     template<component_reference... Args>
-    [[nodiscard]] std::tuple<Args...> get(entity ent) const
+    [[nodiscard]] auto get(entity ent) const -> std::tuple<Args...>
         requires(!const_component_references_v<Args...>)
     {
         return get_impl<Args...>(*this, ent);
@@ -201,7 +201,7 @@ public:
     /// @return true If entity has component C attached
     /// @return false Otherwise
     template<component C>
-    [[nodiscard]] bool has(entity ent) const {
+    [[nodiscard]] auto has(entity ent) const -> bool {
         ensure_alive(ent);
         auto entity_id = ent.id();
         const auto& location = get_location(entity_id);
@@ -213,7 +213,7 @@ public:
     /// @tparam Args Component references
     /// @return view<Args...> A view
     template<component_reference... Args>
-    co_ecs::view<Args...> view()
+    auto view() -> co_ecs::view<Args...>
         requires(!const_component_references_v<Args...>);
 
     /// @brief Create a const view based on component query in parameter pack
@@ -221,7 +221,7 @@ public:
     /// @tparam Args Component references
     /// @return view<Args...> A view
     template<component_reference... Args>
-    co_ecs::view<Args...> view() const
+    auto view() const -> co_ecs::view<Args...>
         requires const_component_references_v<Args...>;
 
     /// @brief Run func on every entity that matches the Args requirement
@@ -246,16 +246,16 @@ public:
         requires(detail::func_decomposer<F>::is_const);
 
 private:
-    [[nodiscard]] archetypes& get_archetypes() noexcept {
+    [[nodiscard]] auto get_archetypes() noexcept -> archetypes& {
         return _archetypes;
     }
 
-    [[nodiscard]] const archetypes& get_archetypes() const noexcept {
+    [[nodiscard]] auto get_archetypes() const noexcept -> const archetypes& {
         return _archetypes;
     }
 
     template<component_reference... Args>
-    static std::tuple<Args...> get_impl(auto&& self, entity ent) {
+    static auto get_impl(auto&& self, entity ent) -> std::tuple<Args...> {
         self.ensure_alive(ent);
         auto& location = self.get_location(ent.id());
         auto* archetype = location.archetype;
@@ -268,11 +268,11 @@ private:
         }
     }
 
-    [[nodiscard]] const entity_location& get_location(entity_id_t entity_id) const {
+    [[nodiscard]] auto get_location(entity_id_t entity_id) const -> const entity_location& {
         return _entity_archetype_map.at(entity_id);
     }
 
-    [[nodiscard]] entity_location& get_location(entity_id_t id) {
+    [[nodiscard]] auto get_location(entity_id_t id) -> entity_location& {
         return _entity_archetype_map.at(id);
     }
 
