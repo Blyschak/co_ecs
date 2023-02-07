@@ -34,7 +34,10 @@ public:
     /// @param id ID number
     /// @param generation Generation number
     /// @return Handle
-    explicit constexpr entity(id_t id, generation_t generation = 0) noexcept : _id(id), _generation(generation) {
+    explicit constexpr entity(id_t id, generation_t generation = 0) // NOLINT(bugprone-easily-swappable-parameters)
+        noexcept :
+        _id(id),
+        _generation(generation) {
     }
 
     /// @brief Test if handle is valid
