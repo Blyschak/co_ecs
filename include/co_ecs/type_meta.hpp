@@ -1,6 +1,6 @@
 #pragma once
 
-#include <co_ecs/macro.hpp>
+#include <co_ecs/detail/macro.hpp>
 
 #include <memory>
 #include <string_view>
@@ -15,9 +15,10 @@ template<typename T>
 constexpr static auto type_name() noexcept -> std::string_view {
 #if defined CO_ECS_PRETTY_FUNCTION
     std::string_view pretty_function{ CO_ECS_PRETTY_FUNCTION };
-    auto first =
-        pretty_function.find_first_not_of(' ', pretty_function.find_first_of(CO_ECS_PRETTY_FUNCTION_PREFIX) + 1);
-    auto value = pretty_function.substr(first, pretty_function.find_last_of(CO_ECS_PRETTY_FUNCTION_SUFFIX) - first);
+    auto prefix_pos = pretty_function.find_first_of(detail::PrettyFunctionPrefix);
+    auto suffix_pos = pretty_function.find_last_of(detail::prettyFunctionSuffix);
+    auto first = pretty_function.find_first_not_of(' ', prefix_pos + 1);
+    auto value = pretty_function.substr(first, suffix_pos - first);
     return value;
 #else
     return typeid(T).name();

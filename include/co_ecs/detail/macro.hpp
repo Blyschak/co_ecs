@@ -1,14 +1,20 @@
 #pragma once
 
-#if defined __clang__ || defined __GNUC__
+namespace co_ecs::detail {
+#if defined __clang__
 #define CO_ECS_PRETTY_FUNCTION __PRETTY_FUNCTION__
-#define CO_ECS_PRETTY_FUNCTION_PREFIX '='
-#define CO_ECS_PRETTY_FUNCTION_SUFFIX ']'
+constexpr auto PrettyFunctionPrefix = '=';
+constexpr auto prettyFunctionSuffix = ']';
+#elif defined __GNUC__
+#define CO_ECS_PRETTY_FUNCTION __PRETTY_FUNCTION__
+constexpr auto PrettyFunctionPrefix = '=';
+constexpr auto prettyFunctionSuffix = ';';
 #elif defined _MSC_VER
 #define CO_ECS_PRETTY_FUNCTION __FUNCSIG__
-#define CO_ECS_PRETTY_FUNCTION_PREFIX '<'
-#define CO_ECS_PRETTY_FUNCTION_SUFFIX '>'
+constexpr auto PrettyFunctionPrefix = '<';
+constexpr auto prettyFunctionSuffix = '>';
 #endif
+} // namespace co_ecs::detail
 
 #ifndef CO_ECS_EXPORT
 #if defined _WIN32 || defined __CYGWIN__ || defined _MSC_VER
@@ -31,7 +37,7 @@
 #define CO_ECS_API CO_ECS_EXPORT
 #elif defined CO_ECS_API_CLIENT
 #define CO_ECS_API CO_ECS_IMPORT
-#else /* No API */
+#else // No API
 #define CO_ECS_API
 #endif
 #endif
