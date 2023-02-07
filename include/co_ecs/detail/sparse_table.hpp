@@ -9,7 +9,7 @@ namespace co_ecs::detail {
 /// @brief Sparse table implementation.
 /// @details The underlying layout is:
 ///          dense:  |value_type|value_type|value_type|value_type|
-///          sparse: |key_type|          |key_type|key_type|          |key_type|
+///          sparse: |key_type  |          |key_type  |key_type  |
 ///
 /// @tparam K Key type
 /// @tparam T Mapped type type

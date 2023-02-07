@@ -46,7 +46,7 @@ public:
     /// @param set Component metadata set
     chunk(const blocks_type& blocks, std::size_t max_size) :
         _blocks(&blocks), _max_size(max_size),
-        // TODO: we could use std::aligned_alloc with alignment of an enitity type,
+        // TODO: we could use std::aligned_alloc with alignment of an entity type,
         // but it is not available in MSVC. We use std::malloc which uses maximum alignment.
         _buffer(reinterpret_cast<std::byte*>(std::malloc(chunk_bytes))) {
     }

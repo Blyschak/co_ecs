@@ -16,12 +16,20 @@ namespace co_ecs {
 
 namespace detail {
 
+/// @brief Type registry is a container holding a mapping between type to its assigned ID.
+///
+/// @tparam Type it is parametrized over
+/// @tparam _id_type Type used for IDs
 template<typename = void, typename _id_type = std::uint64_t>
 class type_registry {
 public:
     using id_type = _id_type;
 
 #ifndef CO_ECS_CLIENT
+    /// @brief Get ID of for a type
+    ///
+    /// @param type_string Name of the type
+    /// @return id_type ID assigned to a type
     CO_ECS_EXPORT static auto id(std::string_view type_string) -> id_type {
         auto [iter, inserted] = get_id_map().emplace(type_string, get_next_id());
         if (inserted) {
@@ -31,11 +39,17 @@ public:
         return type_id;
     }
 
+    /// @brief Get ID mapping
+    ///
+    /// @return hash_map<std::string_view, id_type>& Reference to a hash map: name -> ID
     CO_ECS_EXPORT static auto get_id_map() -> hash_map<std::string_view, id_type>& {
         static hash_map<std::string_view, id_type> id_map{};
         return id_map;
     }
 
+    /// @brief Get next free ID
+    ///
+    /// @return id_type& Next ID value
     CO_ECS_EXPORT static auto get_next_id() -> id_type& {
         static id_type next_id{};
         return next_id;

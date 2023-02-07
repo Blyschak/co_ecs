@@ -6,7 +6,7 @@
 
 namespace co_ecs {
 
-/// @brief A view lets you get a viewable range over components of Args out of a registry
+/// @brief A view lets you get a range over components of Args out of a registry
 ///
 /// A view isn't invalidated when there are changes made to the registry which lets a create one an re-use over time.
 ///

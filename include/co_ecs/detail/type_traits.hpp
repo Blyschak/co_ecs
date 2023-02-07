@@ -63,24 +63,40 @@ struct function_traits<R (*)(Args...)> {
     static constexpr std::size_t arity = sizeof...(Args);
 };
 
+/// @brief Unique type is a structure that helps to statically check whether all types are unique
+///
+/// @tparam Rest Types to check for uniqueness
 template<typename... Rest>
 struct unique_types;
 
+/// @brief Unique type specialization for 0 types
+template<>
+struct unique_types<> {};
+
+/// @brief Unique type specialization for at least 1 type
+///
+/// @tparam T1 First type
+template<typename T1>
+struct unique_types<T1> {};
+
+/// @brief Unique type specialization for at 2 types
+///
+/// @tparam T1 First type
+/// @tparam T2 Second type
+template<class T1, class T2>
+struct unique_types<T1, T2> {
+    static_assert(!std::is_same<T1, T2>::value, "Types must be unique within parameter pack");
+};
+
+/// @brief Unique type specialization for at least 3 types
+///
+/// @tparam T1 First type
+/// @tparam T2 Second type
+/// @tparam Rest Other types
 template<typename T1, typename T2, typename... Rest>
 struct unique_types<T1, T2, Rest...>
     : unique_types<T1, T2>
     , unique_types<T1, Rest...>
     , unique_types<T2, Rest...> {};
-
-template<>
-struct unique_types<> {};
-
-template<typename T1>
-struct unique_types<T1> {};
-
-template<class T1, class T2>
-struct unique_types<T1, T2> {
-    static_assert(!std::is_same<T1, T2>::value, "Types must be unique within parameter pack");
-};
 
 } // namespace co_ecs::detail
