@@ -102,9 +102,7 @@ private:
     /// @return decltype(auto)
     static auto chunks(auto&& archetypes) -> decltype(auto) {
         auto filter_archetypes = [](auto& archetype) {
-            bool matches{ true };
-            matches = (matches && ... && archetype->template contains<decay_component_t<Args>>());
-            return matches;
+            return (... && archetype->template contains<decay_component_t<Args>>());
         };
         auto into_chunks = [](auto& archetype) -> decltype(auto) { return archetype->chunks(); };
         auto as_typed_chunk = [](auto& chunk) -> decltype(auto) { return chunk_view<Args...>(chunk); };
