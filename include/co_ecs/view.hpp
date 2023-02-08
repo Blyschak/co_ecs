@@ -6,6 +6,19 @@
 
 namespace co_ecs {
 
+namespace detail {
+
+/// @brief Helper function to return true if all of the passed arguments are true
+///
+/// @tparam Args Parameter pack types
+/// @param args Parameter pack
+template<typename... Args>
+inline auto all(Args... args) -> bool {
+    return (... && args);
+}
+
+} // namespace detail
+
 /// @brief A view lets you get a range over components of Args out of a registry
 ///
 /// A view isn't invalidated when there are changes made to the registry which lets a create one an re-use over time.
@@ -101,8 +114,8 @@ private:
     /// @param archetypes Archetypes
     /// @return decltype(auto)
     static auto chunks(auto&& archetypes) -> decltype(auto) {
-        auto filter_archetypes = [](auto& archetype) {
-            return (... && archetype->template contains<decay_component_t<Args>>());
+        auto filter_archetypes = [](auto& archetype) -> bool {
+            return detail::all(archetype->template contains<decay_component_t<Args>>()...);
         };
         auto into_chunks = [](auto& archetype) -> decltype(auto) { return archetype->chunks(); };
         auto as_typed_chunk = [](auto& chunk) -> decltype(auto) { return chunk_view<Args...>(chunk); };
