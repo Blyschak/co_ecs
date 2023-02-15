@@ -1,33 +1,27 @@
 #include <co_ecs/co_ecs.hpp>
 
-#include <iostream>
-
-struct position {
-    float x, y;
+struct s1 {
+    uint32_t i1;
+    uint64_t i2;
 };
 
-struct velocity {
-    float x, y;
+struct s2 {
+    float f1;
+    int i1;
 };
 
-void print_positions(const co_ecs::registry& registry) {
-    registry.each(
-        [](const position& position) { std::cout << "position {" << position.x << ", " << position.y << "}\n"; });
+struct s3 {
+    char c, e;
+};
+
+void test_create(co_ecs::registry& reg) {
+    auto a = reg.create<s1, s3>({1, 2}, {92, 93});
+    auto b = reg.create<s1, s3>({7, 3}, {75, 76});
+    auto c = reg.create<s2>({});
 }
 
 int main() {
-    co_ecs::registry registry;
-
-    for (int i = 0; i < 100; i++) {
-        registry.create<position, velocity>({ i * 1.f, i * 1.5f }, { i * .3f, -i * 5.f });
-    }
-
-    for (auto [position, velocity] : registry.view<position&, const velocity&>().each()) {
-        position.x += velocity.x;
-        position.y += velocity.y;
-    }
-
-    print_positions(registry);
-
+    co_ecs::registry reg;
+    test_create(reg);
     return 0;
 }
