@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: [macos-latest, ARM64]
     strategy:
       matrix:
         os: [macos-latest]
