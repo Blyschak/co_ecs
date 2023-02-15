@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: [macos-latest, ARM64]
+    runs-on: [osx-arm64]
     strategy:
       matrix:
         os: [macos-latest]
