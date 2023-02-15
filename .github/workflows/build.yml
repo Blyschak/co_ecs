@@ -8,7 +8,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-22.04, windows-latest]
+        os: [ubuntu-22.04, windows-latest, macos-latest]
         configs: [Release, Debug]
     steps:
     - name: Checkout
@@ -20,3 +20,6 @@ jobs:
         run_tests: ON
         cmake_args: -DCO_ECS_ENABLE_TESTING=ON -DCO_ECS_CODE_BENCHMARKS=ON -DCO_ECS_ENABLE_EXAMPLES=ON
         config: ${{ matrix.configs }}
+        
+    - name: Run example
+      run: cd build && examples/hello-registry/hello-registry
