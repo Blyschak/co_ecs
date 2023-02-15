@@ -5,10 +5,10 @@ on:
 
 jobs:
   build:
-    runs-on: [osx-x64, osx-arm64]
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest]
+        os: [ linux-x64, linux-arm64, linux-arm, osx-x64, osx-arm64 ]
         configs: [Release, Debug]
     steps:
     - name: Checkout
