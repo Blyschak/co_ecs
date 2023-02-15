@@ -15,7 +15,7 @@ jobs:
       uses: actions/checkout@v2.0.0
       
     - name: Test
-      run: sudo port install gcc12 || true
+      run: brew install gcc@12 || true
 
     - name: Build project
       uses: nicledomaS/cmake_build_action@v1.4
