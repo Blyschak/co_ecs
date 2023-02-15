@@ -15,7 +15,7 @@ jobs:
       uses: actions/checkout@v2.0.0
       
     - name: Test
-      run: brew install gcc@11 g++@11 && which gcc && which g++ && which g++-11
+      run: brew install gcc@11 && which gcc && which g++ && which g++-11
 
     - name: Build project
       uses: nicledomaS/cmake_build_action@v1.4
