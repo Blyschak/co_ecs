@@ -25,4 +25,4 @@ jobs:
         config: ${{ matrix.configs }}
         
     - name: Run example
-      run: cd build && make && examples/hello-registry/hello-registry
+      run: uname -a && cd build && make && examples/hello-registry/hello-registry
