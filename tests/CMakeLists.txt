@@ -7,7 +7,7 @@ endif(CO_ECS_CODE_COVERAGE)
 FetchContent_Declare(
   Catch2
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG v3.0.1 # or a later release
+  GIT_TAG 7ce35799767de7b9c6ba836c72e479c5f70219a3
 )
 
 FetchContent_MakeAvailable(Catch2)
