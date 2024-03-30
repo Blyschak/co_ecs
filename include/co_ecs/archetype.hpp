@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bit>
 #include <ranges>
 
 #include <co_ecs/chunk.hpp>
