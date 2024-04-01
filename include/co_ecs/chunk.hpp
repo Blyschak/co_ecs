@@ -16,8 +16,6 @@ namespace co_ecs {
 
 // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
 // NOLINTBEGIN(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-// NOLINTBEGIN(cppcoreguidelines-no-malloc)
-// NOLINTBEGIN(hicpp-no-malloc)
 
 /// @brief Block metadata holds pointers where it begins, ends and a component metadata it holds
 struct block_metadata {
@@ -41,14 +39,17 @@ public:
     /// @brief Block allocation alignment
     static constexpr std::size_t alloc_alignment = alignof(entity);
 
+    /// @brief Chunk buffer type
+    struct alignas(alloc_alignment) chunk_buffer {
+        std::byte data[chunk_bytes];
+    };
+
     /// @brief Construct a new chunk object
     ///
     /// @param set Component metadata set
     chunk(const blocks_type& blocks, std::size_t max_size) :
         _blocks(&blocks), _max_size(max_size),
-        // TODO: we could use std::aligned_alloc with alignment of an entity type,
-        // but it is not available in MSVC. We use std::malloc which uses maximum alignment.
-        _buffer(reinterpret_cast<std::byte*>(std::malloc(chunk_bytes))) {
+        _buffer((new chunk_buffer)->data) {
     }
 
     /// @brief Deleted copy constructor
@@ -93,7 +94,7 @@ public:
                 block.meta.type->destruct(_buffer + block.offset + i * block.meta.type->size);
             }
         }
-        std::free(_buffer); // NOLINT(cppcoreguidelines-owning-memory)
+        delete _buffer;
     }
 
     /// @brief Emplace back components into blocks
@@ -402,8 +403,6 @@ private:
     chunk_type _chunk;
 };
 
-// NOLINTEND(hicpp-no-malloc)
-// NOLINTEND(cppcoreguidelines-no-malloc)
 // NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
 
