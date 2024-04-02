@@ -89,6 +89,14 @@ public:
         }
     }
 
+    auto chunks() -> decltype(auto) {
+        return chunks(_registry.get_archetypes());
+    }
+
+    auto chunks() const -> decltype(auto) {
+        return chunks(_registry.get_archetypes());
+    }
+
     /// @brief Get components for a single entity
     ///
     /// @param ent Entity to query
