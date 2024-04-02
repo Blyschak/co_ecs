@@ -355,11 +355,21 @@ public:
             return std::apply([](auto&&... args) { return std::make_tuple(std::ref(*args)...); }, _ptrs);
         }
 
+        /// @brief Equality operator
+        ///
+        /// @param rhs Right hand side
+        /// @return auto Result of comparison
+        constexpr auto operator==(const iterator& rhs) const noexcept {
+            return std::get<0>(_ptrs) == std::get<0>(rhs._ptrs);
+        }
+
         /// @brief Spaceship operator
         ///
         /// @param rhs Right hand side
         /// @return auto Result of comparison
-        constexpr auto operator<=>(const iterator& rhs) const noexcept = default;
+        constexpr auto operator<=>(const iterator& rhs) const noexcept {
+            return std::get<0>(_ptrs) <=> std::get<0>(rhs._ptrs);
+        }
 
     private:
         std::tuple<std::add_pointer_t<std::remove_reference_t<Args>>...> _ptrs;
