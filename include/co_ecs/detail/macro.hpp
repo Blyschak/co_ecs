@@ -18,6 +18,7 @@ constexpr auto prettyFunctionSuffix = '>';
 
 #ifndef CO_ECS_EXPORT
 #if defined _WIN32 || defined __CYGWIN__ || defined _MSC_VER
+#define CO_ECS_PLATFORM_WINDOWS
 #define CO_ECS_EXPORT __declspec(dllexport)
 #define CO_ECS_IMPORT __declspec(dllimport)
 #define CO_ECS_HIDDEN
