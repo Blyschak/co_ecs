@@ -33,9 +33,9 @@ constexpr auto prettyFunctionSuffix = '>';
 #endif
 
 #ifndef CO_ECS_API
-#if defined CO_ECS_API_HOST
+#if defined CO_ECS_HOST
 #define CO_ECS_API CO_ECS_EXPORT
-#elif defined CO_ECS_API_CLIENT
+#elif defined CO_ECS_CLIENT
 #define CO_ECS_API CO_ECS_IMPORT
 #else // No API
 #define CO_ECS_API
