@@ -1,7 +1,8 @@
 #pragma once
 
 #include <co_ecs/registry.hpp>
-#include <co_ecs/detail/thread_pool.hpp>
+#include <co_ecs/system.hpp>
+#include <co_ecs/thread_pool/thread_pool.hpp>
 
 #include <latch>
 
@@ -13,7 +14,7 @@ public:
     /// @brief Execute system set
     /// @param work_batch System set
     void execute_batch(auto&& work_batch) {
-        for (auto& work_item: work_batch) {
+        for (auto& work_item : work_batch) {
             work_item->run();
         }
     }
@@ -25,27 +26,20 @@ public:
     /// @brief Execute system set
     /// @param work_batch System set
     void execute_batch(auto&& work_batch) {
-        if (work_batch.size() < 2) {
-            for (auto& work_item: work_batch) {
-                work_item->run();
-            }
-        } else {
-            std::latch work_done{static_cast<ptrdiff_t>(work_batch.size())};
+        auto* parent = _thread_pool.allocate([]() {});
 
-            for (auto& work_item: work_batch) {
-                _thread_pool.submit([&work_item, &work_done]() {
-                    work_item->run();
-                    work_done.count_down(); 
-                });
-            }
+        for (auto& work_item : work_batch) {
+            auto* task = _thread_pool.allocate([&work_item]() { work_item->run(); }, parent);
 
-            _thread_pool.notify_all();
-
-            work_done.wait();
+            _thread_pool.submit(task);
         }
+
+        _thread_pool.submit(parent);
+        _thread_pool.wait(parent);
     }
+
 private:
-    detail::thread_pool _thread_pool;
+    thread_pool _thread_pool;
 };
 
 /// @brief Simple scheduler for systems. Systems are executed in the order they are added
@@ -63,10 +57,10 @@ public:
         std::vector<std::vector<std::unique_ptr<system_executor_interface>>> executors;
         executors.reserve(_systems.size());
 
-        for (auto& system_set: _systems) {
+        for (auto& system_set : _systems) {
             executors.emplace_back();
             executors.back().reserve(system_set.size());
-            for (auto& system: system_set) {
+            for (auto& system : system_set) {
                 executors.back().push_back(system->create_executor(registry, user_context));
             }
         }
@@ -74,7 +68,7 @@ public:
         Executor executor;
 
         while (!exit_flag) {
-            for (auto& executor_set: executors) {
+            for (auto& executor_set : executors) {
                 executor.execute_batch(executor_set);
             }
         }
@@ -87,7 +81,8 @@ public:
     /// @return self_type&
     template<typename F>
     self_type& add_system(F&& func) {
-        if (_systems.empty()) _systems.emplace_back();
+        if (_systems.empty())
+            _systems.emplace_back();
         _systems.back().emplace_back(std::make_unique<system<F>>(std::forward<F>(func)));
         return *this;
     }
@@ -104,4 +99,4 @@ private:
     std::vector<std::vector<std::unique_ptr<system_interface>>> _systems{};
 };
 
-}
+} // namespace co_ecs::experimental

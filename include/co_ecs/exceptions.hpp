@@ -17,8 +17,7 @@ public:
     /// @param ent Entity
     explicit entity_not_found(entity ent) {
         std::stringstream ss;
-        ss << "entity (" << ent.id() << ", " << ent.generation() << ")"
-           << " does not exist";
+        ss << "entity (" << ent.id() << ", " << ent.generation() << ")" << " does not exist";
         _msg = ss.str();
     }
 
