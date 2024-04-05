@@ -91,7 +91,7 @@ public:
     /// @param registry Registry reference
     /// @param func Function object
     explicit system_executor(registry& registry, void* user_context, F func) :
-        _registry(registry), _func(std::move(func)), _state(_registry, user_context) {
+        _func(std::move(func)), _state(registry, user_context) {
     }
 
     /// @brief Execute system
@@ -105,7 +105,6 @@ public:
     }
 
 private:
-    registry& _registry;
     F _func;
     typename system_state_trait<system_arguments>::type _state;
 };
