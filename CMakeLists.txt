@@ -26,6 +26,19 @@ target_include_directories(${PROJECT_NAME}
   INTERFACE $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
+option(CO_ECS_USE_RANGE_V3 "Use range-v3" OFF)
+
+if(CO_ECS_USE_RANGE_V3)
+  FetchContent_Declare(
+    range-v3
+    GIT_REPOSITORY https://github.com/ericniebler/range-v3
+    GIT_TAG 0.12.0
+  )
+  FetchContent_MakeAvailable(range-v3)
+  target_link_libraries(${PROJECT_NAME} INTERFACE range-v3)
+  target_compile_definitions(${PROJECT_NAME} INTERFACE CO_ECS_USE_RANGE_V3)
+endif()
+
 option(CO_ECS_ENABLE_DOCS "Enable documentation build" OFF)
 
 if(CO_ECS_ENABLE_DOCS)

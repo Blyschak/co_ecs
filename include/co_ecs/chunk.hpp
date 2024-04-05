@@ -362,7 +362,7 @@ public:
         ///
         /// @param rhs Right hand side
         /// @return auto Result of comparison
-        constexpr auto operator==(const iterator& rhs) const noexcept {
+        constexpr bool operator==(const iterator& rhs) const noexcept {
             return std::get<0>(_ptrs) == std::get<0>(rhs._ptrs);
         }
 

@@ -1,14 +1,12 @@
 #pragma once
 
-#include <bit>
-#include <ranges>
-
 #include <co_ecs/chunk.hpp>
 #include <co_ecs/component.hpp>
 #include <co_ecs/detail/hash_map.hpp>
 #include <co_ecs/entity.hpp>
 #include <co_ecs/entity_location.hpp>
 
+#include <bit>
 
 namespace co_ecs {
 
