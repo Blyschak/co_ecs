@@ -25,12 +25,11 @@ class type_registry {
 public:
     using id_type = _id_type;
 
-#ifndef CO_ECS_CLIENT
     /// @brief Get ID of for a type
     ///
     /// @param type_string Name of the type
     /// @return id_type ID assigned to a type
-    CO_ECS_EXPORT static auto id(std::string_view type_string) -> id_type {
+    CO_ECS_API static auto id(std::string_view type_string) -> id_type {
         auto [iter, inserted] = get_id_map().emplace(type_string, get_next_id());
         if (inserted) {
             get_next_id()++;
@@ -42,7 +41,7 @@ public:
     /// @brief Get ID mapping
     ///
     /// @return hash_map<std::string_view, id_type>& Reference to a hash map: name -> ID
-    CO_ECS_EXPORT static auto get_id_map() -> hash_map<std::string_view, id_type>& {
+    CO_ECS_API static auto get_id_map() -> hash_map<std::string_view, id_type>& {
         static hash_map<std::string_view, id_type> id_map{};
         return id_map;
     }
@@ -50,15 +49,10 @@ public:
     /// @brief Get next free ID
     ///
     /// @return id_type& Next ID value
-    CO_ECS_EXPORT static auto get_next_id() -> id_type& {
+    CO_ECS_API static auto get_next_id() -> id_type& {
         static id_type next_id{};
         return next_id;
     }
-#else
-    CO_ECS_IMPORT static hash_map<std::string_view, id_type>& get_id_map();
-    CO_ECS_IMPORT static id_type& get_next_id();
-    CO_ECS_IMPORT static id_type id(std::string_view type_string);
-#endif
 };
 
 /// @brief Generate unique sequential IDs for types
