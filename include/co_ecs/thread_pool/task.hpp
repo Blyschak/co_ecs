@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <atomic>
 #include <functional>
 
@@ -59,7 +60,8 @@ private:
 /// @brief Task pool. Tasks are allocated from an circular array.
 /// No deallocation is done explicitelly, task deallocation is run
 /// when a new task replaces it.
-struct task_pool {
+class task_pool {
+public:
     /// @brief Maximum number of tasks that can exists at any given time per worker.
     constexpr static std::size_t max_tasks = 4096;
 
