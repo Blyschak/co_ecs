@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <new>
 #include <optional>
 #include <type_traits>
 
@@ -48,8 +49,7 @@ public:
     ///
     /// @param set Component metadata set
     chunk(const blocks_type& blocks, std::size_t max_size) :
-        _blocks(&blocks), _max_size(max_size),
-        _buffer((new chunk_buffer)->data) {
+        _blocks(&blocks), _max_size(max_size), _buffer((new chunk_buffer)->data) {
     }
 
     /// @brief Deleted copy constructor
@@ -251,6 +251,8 @@ private:
 /// @brief Component fetch is a namespace for routines that figure out based on input component_reference how to fetch
 /// the component from the chunk
 struct component_fetch {
+    // clang-format off
+
     /// @brief Fetches pointer for const component reference
     ///
     /// @tparam C Component reference
@@ -276,6 +278,8 @@ struct component_fetch {
                 throw component_not_found{ type_meta::of<decay_component_t<C>>() };
             }
         }
+
+    // clang-format on
 };
 
 /// @brief A type aware view into a chunk components

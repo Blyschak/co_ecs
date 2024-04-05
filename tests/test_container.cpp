@@ -1,5 +1,6 @@
 #include <catch2/catch_all.hpp>
 #include <co_ecs/co_ecs.hpp>
+#include <co_ecs/detail/work_stealing_queue.hpp>
 
 using namespace co_ecs;
 using namespace co_ecs::detail;
@@ -431,4 +432,23 @@ TEST_CASE("Hash map", "benchmarks") {
         return std::accumulate(
             table.begin(), table.end(), 0, [](const auto& sum, const auto& entry) { return sum + entry.second; });
     };
+}
+
+TEST_CASE("Work stealing queue", "Push/pop/steal") {
+    work_stealing_queue<int> q;
+
+    q.push(1);
+    q.push(2);
+    q.push(3);
+    q.push(4);
+    q.push(5);
+
+    REQUIRE(q.pop() == std::optional{5});
+    REQUIRE(q.pop() == std::optional{4});
+    REQUIRE(q.steal() == std::optional{1});
+    REQUIRE(q.pop() == std::optional{3});
+    REQUIRE(q.pop() == std::optional{2});
+
+    REQUIRE(q.steal() == std::nullopt);
+    REQUIRE(q.pop() == std::nullopt);
 }
