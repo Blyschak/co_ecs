@@ -134,4 +134,47 @@ private:
     F _func;
 };
 
+/// @brief Specialization for registry
+template<>
+class system_argument_state_trait<registry&> {
+public:
+    /// @brief Actual state type for T
+    using state_type = system_registry_state;
+};
+
+/// @brief Registry system state
+///
+class system_const_registry_state {
+public:
+    /// @brief Construct a new system registry state object
+    ///
+    /// @param registry Registry reference
+    /// @param user_context User provided context to fetch data from and provide to the system
+    explicit system_const_registry_state(registry& registry, void* user_context) noexcept : _registry(registry) {
+    }
+
+    /// @brief Returns the actual state inside to pass to the system
+    ///
+    /// @return Registry
+    [[nodiscard]] const registry& get() noexcept {
+        return _registry;
+    }
+
+    /// @brief Run deferred logic
+    void run_deferred() const noexcept {
+    }
+
+private:
+    const registry& _registry;
+};
+
+/// @brief Specialization for registry
+template<>
+class system_argument_state_trait<const registry&> {
+public:
+    /// @brief Actual state type for T
+    using state_type = system_registry_state;
+};
+
+
 } // namespace co_ecs
