@@ -25,7 +25,6 @@ class type_registry {
 public:
     using id_type = _id_type;
 
-#if !(defined CO_ECS_PLATFORM_WINDOWS && defined CO_ECS_CLIENT)
     /// @brief Get ID of for a type
     ///
     /// @param type_string Name of the type
@@ -54,11 +53,6 @@ public:
         static id_type next_id{};
         return next_id;
     }
-#else
-    CO_ECS_IMPORT static hash_map<std::string_view, id_type>& get_id_map();
-    CO_ECS_IMPORT static id_type& get_next_id();
-    CO_ECS_IMPORT static id_type id(std::string_view type_string);
-#endif
 };
 
 /// @brief Generate unique sequential IDs for types
