@@ -10,14 +10,20 @@ jobs:
       matrix:
         os: [ubuntu-22.04, windows-latest]
         configs: [Release, Debug]
-        range-v3: [ON, OFF]
     steps:
     - name: Checkout
       uses: actions/checkout@v2.0.0
 
-    - name: Build project
+    - name: Build
       uses: nicledomaS/cmake_build_action@v1.4
       with:
         run_tests: ON
-        cmake_args: -DCO_ECS_ENABLE_TESTING=ON -DCO_ECS_CODE_BENCHMARKS=ON -DCO_ECS_ENABLE_EXAMPLES=ON -DCO_ECS_USE_RANGE_V3=${{ matrix.range-v3 }}
+        cmake_args: -DCO_ECS_ENABLE_TESTING=ON -DCO_ECS_CODE_BENCHMARKS=ON -DCO_ECS_ENABLE_EXAMPLES=ON
+        config: ${{ matrix.configs }}
+
+    - name: Build (w/ range-v3)
+      uses: nicledomaS/cmake_build_action@v1.4
+      with:
+        run_tests: ON
+        cmake_args: -DCO_ECS_ENABLE_TESTING=ON -DCO_ECS_CODE_BENCHMARKS=ON -DCO_ECS_ENABLE_EXAMPLES=ON -DCO_ECS_USE_RANGE_V3=ON
         config: ${{ matrix.configs }}
