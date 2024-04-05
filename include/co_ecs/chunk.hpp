@@ -40,12 +40,17 @@ public:
     /// @brief Block allocation alignment
     static constexpr std::size_t alloc_alignment = alignof(entity);
 
+    /// @brief Chunk buffer type
+    struct alignas(alloc_alignment) chunk_buffer {
+        std::byte data[chunk_bytes];
+    };
+
     /// @brief Construct a new chunk object
     ///
     /// @param set Component metadata set
     chunk(const blocks_type& blocks, std::size_t max_size) :
         _blocks(&blocks), _max_size(max_size),
-        _buffer(reinterpret_cast<std::byte*>(new (std::align_val_t(alignof(std::max_align_t))) std::byte[chunk_bytes])) {
+        _buffer((new chunk_buffer)->data) {
     }
 
     /// @brief Deleted copy constructor
@@ -359,7 +364,7 @@ public:
         ///
         /// @param rhs Right hand side
         /// @return auto Result of comparison
-        constexpr auto operator==(const iterator& rhs) const noexcept {
+        constexpr bool operator==(const iterator& rhs) const noexcept {
             return std::get<0>(_ptrs) == std::get<0>(rhs._ptrs);
         }
 

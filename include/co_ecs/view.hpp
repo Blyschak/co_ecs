@@ -3,6 +3,8 @@
 #include <co_ecs/registry.hpp>
 #include <co_ecs/system.hpp>
 
+#include <co_ecs/detail/views.hpp>
+
 #include <type_traits>
 
 namespace co_ecs {
@@ -49,7 +51,7 @@ public:
     auto each() -> decltype(auto)
         requires(!is_const)
     {
-        return chunks(_registry.get_archetypes()) | std::views::join; // join all chunks together
+        return chunks(_registry.get_archetypes()) | detail::views::join; // join all chunks together
     }
 
     /// @brief Returns an iterator that yields a std::tuple<Args...>
@@ -58,7 +60,7 @@ public:
     auto each() const -> decltype(auto)
         requires(is_const)
     {
-        return chunks(_registry.get_archetypes()) | std::views::join; // join all chunks together
+        return chunks(_registry.get_archetypes()) | detail::views::join; // join all chunks together
     }
 
     /// @brief Run func on every entity that matches the Args requirement
@@ -129,12 +131,12 @@ private:
         auto into_chunks = [](auto& archetype) -> decltype(auto) { return archetype->chunks(); };
         auto as_typed_chunk = [](auto& chunk) -> decltype(auto) { return chunk_view<Args...>(chunk); };
 
-        return archetypes                               // for each archetype entry in archetype map
-               | std::views::values                     // for each value, a pointer to archetype
-               | std::views::filter(filter_archetypes)  // filter archetype by requested components
-               | std::views::transform(into_chunks)     // fetch chunks vector
-               | std::views::join                       // join chunks together
-               | std::views::transform(as_typed_chunk); // each chunk casted to a typed chunk view range-like type
+        return archetypes                                  // for each archetype entry in archetype map
+               | detail::views::values                     // for each value, a pointer to archetype
+               | detail::views::filter(filter_archetypes)  // filter archetype by requested components
+               | detail::views::transform(into_chunks)     // fetch chunks vector
+               | detail::views::join                       // join chunks together
+               | detail::views::transform(as_typed_chunk); // each chunk casted to a typed chunk view range-like type
     }
 
     registry_type _registry;
