@@ -3,6 +3,8 @@
 #include <co_ecs/detail/work_stealing_queue.hpp>
 #include <co_ecs/thread_pool/task.hpp>
 
+#include <co_ecs/command.hpp>
+
 #include <random>
 #include <thread>
 
@@ -24,6 +26,25 @@ public:
             std::atomic<uint64_t> steal_count;
             std::atomic<uint64_t> yield_count;
             std::atomic<uint64_t> idle_count;
+
+        private:
+            friend class worker;
+
+            void inc_task() {
+                task_count.fetch_add(1, std::memory_order::relaxed);
+            }
+
+            void inc_steal() {
+                steal_count.fetch_add(1, std::memory_order::relaxed);
+            }
+
+            void inc_yield() {
+                yield_count.fetch_add(1, std::memory_order::relaxed);
+            }
+
+            void inc_idle() {
+                idle_count.fetch_add(1, std::memory_order::relaxed);
+            }
         };
 
         /// @brief Create a thread pool worker
@@ -57,11 +78,13 @@ public:
                 auto* next_task = get_task();
                 if (next_task) {
                     next_task->execute();
-                    _stats.task_count.fetch_add(1, std::memory_order::relaxed);
+                    _stats.inc_task();
                 } else {
-                    _stats.idle_count.fetch_add(1, std::memory_order::relaxed);
+                    _stats.inc_idle();
                 }
             }
+
+            // TODO: do I need a thread fence here?
         }
 
         /// @brief Allocate task
@@ -78,6 +101,12 @@ public:
             return _stats;
         }
 
+        /// @brief Get command buffer
+        /// @return Command buffer
+        command_buffer& get_command_buffer() noexcept {
+            return _command_buffer;
+        }
+
     private:
         friend class thread_pool;
 
@@ -89,13 +118,14 @@ public:
             while (true) {
                 task_t* task;
 
+                // fetch and execute tasks while we can
                 do {
                     task = get_task();
                     if (task) {
                         task->execute();
-                        _stats.task_count.fetch_add(1, std::memory_order::relaxed);
+                        _stats.inc_task();
                     } else {
-                        _stats.idle_count.fetch_add(1, std::memory_order::relaxed);
+                        _stats.inc_idle();
                     }
                 } while (task);
 
@@ -119,14 +149,14 @@ public:
                     yield();
                     return nullptr;
                 }
-                _stats.steal_count.fetch_add(1, std::memory_order::relaxed);
+                _stats.inc_steal();
             }
 
             return *maybe_task;
         }
 
         void yield() {
-            _stats.yield_count.fetch_add(1, std::memory_order::relaxed);
+            _stats.inc_yield();
             std::this_thread::yield();
         }
 
@@ -145,10 +175,10 @@ public:
     private:
         std::atomic<bool> _active{ true };
         detail::work_stealing_queue<task_t*> _queue;
+        command_buffer _command_buffer;
         thread_pool& _pool;
         std::thread _thread{};
         std::size_t _id;
-
         worker_stats _stats;
     };
 
@@ -159,8 +189,11 @@ public:
         assert(num_workers > 0 && "Number of workers should be > 0");
         _workers.reserve(num_workers);
 
+        // create main worker that will execute tasks in main thread
         _workers.emplace_back(std::make_unique<worker>(*this, 0));
         worker::current_worker = _workers[0].get();
+
+        // create background workers
         for (auto i = 1; i < num_workers; i++) {
             _workers.emplace_back(std::make_unique<worker>(*this, i));
         }

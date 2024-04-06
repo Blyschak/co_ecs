@@ -41,35 +41,37 @@ void start_frame() {
     frame++;
 }
 
-void end_frame(co_ecs::view<const co_ecs::entity&, const pos&, const rot&> v) {
-    if (frame % 100000 == 0) {
-        v.each([](const auto& entity, const auto& pos, const auto& rot) {
-            std::cout << "Entity {" << entity.id() << ", " << entity.generation() << "} " << "Position {" << pos.x
-                      << " " << pos.y << "} " << "Rotation {" << rot.angle << "}\n";
-        });
+void end_frame(co_ecs::command_buffer& c, co_ecs::view<const co_ecs::entity&, const pos&, const rot&> v) {
+    v.each([&](const auto& entity, const auto& pos, const auto& rot) {
+        std::cout << "Entity {" << entity.id() << ", " << entity.generation() << "} " << "Position {" << pos.x << " "
+                  << pos.y << "} " << "Rotation {" << rot.angle << "}\n";
+        c.destroy(entity);
+    });
 
+    if (frame == 100) {
         exit_flag = true;
     }
+
+    // std::cin.get();
 }
 
-void setup() {
-    for (int i = 0; i < num_entities; i++) {
-        registry.create<pos, rot, vel, tan_vel>(
-            {}, {}, { .x = -1.0f + 0.005f * i, .y = -2.0f + 0.001f * i }, { .speed = 0.0003f * i });
-    }
+void setup(co_ecs::command_buffer& commands) {
+    int i = 0;
+    commands.create<pos, rot, vel, tan_vel>(
+        {}, {}, { .x = -1.0f + 0.005f * i, .y = -2.0f + 0.001f * i }, { .speed = 0.0003f * i });
 }
 
 int main() {
-    setup();
-
-    scheduler.add_system(&start_frame)
+    scheduler.add_system(&setup)
+        .barrier()
+        .add_system(&start_frame)
         .barrier()
         .add_system(&update_pos) // Two systems running in parallel
         .add_system(&update_rot)
         .barrier()
         .add_system(&end_frame);
 
-    scheduler.run<co_ecs::experimental::parallel_executor>(registry, exit_flag);
+    scheduler.run(registry, exit_flag);
 
     return 0;
 }

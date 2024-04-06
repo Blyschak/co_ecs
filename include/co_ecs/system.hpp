@@ -1,5 +1,9 @@
 #pragma once
 
+#include <co_ecs/command.hpp>
+#include <co_ecs/registry.hpp>
+#include <co_ecs/thread_pool/thread_pool.hpp>
+
 namespace co_ecs {
 
 /// @brief System executor interface, a system is a type that implements run() method
@@ -10,9 +14,6 @@ public:
 
     /// @brief Execute system logic
     virtual void run() = 0;
-
-    /// @brief Run deferred system logic
-    virtual void run_deferred() = 0;
 };
 
 /// @brief System interface
@@ -99,11 +100,6 @@ public:
         std::apply([this](auto&&... args) { _func(args.get()...); }, _state.get());
     }
 
-    /// @brief Run deferred logic
-    void run_deferred() override {
-        std::apply([this](auto&&... args) { (..., args.run_deferred()); }, _state.get());
-    }
-
 private:
     F _func;
     typename system_state_trait<system_arguments>::type _state;
@@ -132,6 +128,74 @@ public:
 
 private:
     F _func;
+};
+
+/// @brief Specialization for registry
+template<>
+class system_argument_state_trait<registry&> {
+public:
+    /// @brief Actual state type for T
+    using state_type = system_registry_state;
+};
+
+/// @brief Registry system state
+///
+class system_const_registry_state {
+public:
+    /// @brief Construct a new system registry state object
+    ///
+    /// @param registry Registry reference
+    /// @param user_context User provided context to fetch data from and provide to the system
+    explicit system_const_registry_state(registry& registry, void* user_context) noexcept : _registry(registry) {
+    }
+
+    /// @brief Returns the actual state inside to pass to the system
+    ///
+    /// @return Registry
+    [[nodiscard]] const registry& get() noexcept {
+        return _registry;
+    }
+
+private:
+    const registry& _registry;
+};
+
+/// @brief Specialization for registry
+template<>
+class system_argument_state_trait<const registry&> {
+public:
+    /// @brief Actual state type for T
+    using state_type = system_registry_state;
+};
+
+/// @brief System command buffer state
+///
+class system_command_buffer_state {
+public:
+    /// @brief Construct a new system view state object
+    ///
+    /// @param registry Registry reference
+    /// @param user_context User provided context to fetch data from and provide to the system
+    explicit system_command_buffer_state(registry& registry, void* user_context) noexcept : _registry(registry) {
+    }
+
+    /// @brief Returns the actual state inside to pass to the system
+    ///
+    /// @return Command buffer
+    [[nodiscard]] command_buffer& get() noexcept {
+        return thread_pool::current_worker().get_command_buffer();
+    }
+
+private:
+    registry& _registry;
+};
+
+/// @brief Specialization for command_buffer
+template<>
+class system_argument_state_trait<command_buffer&> {
+public:
+    /// @brief Actual state type for T
+    using state_type = system_command_buffer_state;
 };
 
 } // namespace co_ecs
