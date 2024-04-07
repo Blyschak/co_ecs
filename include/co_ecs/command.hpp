@@ -151,7 +151,7 @@ public:
     }
 
 private:
-    detail::stack_allocator _salloc{ 16ull * 1024 * 1024 * 1024 }; // TODO: Could use linear allocator as well
+    detail::stack_allocator _salloc{ 16ull * 1024 * 1024 }; // TODO: Could use linear allocator as well
     std::vector<command*> _commands;
 };
 
