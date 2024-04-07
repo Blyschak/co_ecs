@@ -130,6 +130,32 @@ private:
     F _func;
 };
 
+/// @brief Registry system state
+///
+class system_registry_state {
+public:
+    /// @brief Construct a new system registry state object
+    ///
+    /// @param registry Registry reference
+    /// @param user_context User provided context to fetch data from and provide to the system
+    explicit system_registry_state(registry& registry, void* user_context) noexcept : _registry(registry) {
+    }
+
+    /// @brief Returns the actual state inside to pass to the system
+    ///
+    /// @return Registry
+    [[nodiscard]] registry& get() noexcept {
+        return _registry;
+    }
+
+    /// @brief Run deferred logic
+    void run_deferred() const noexcept {
+    }
+
+private:
+    registry& _registry;
+};
+
 /// @brief Specialization for registry
 template<>
 class system_argument_state_trait<registry&> {
