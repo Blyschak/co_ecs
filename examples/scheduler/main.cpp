@@ -7,7 +7,6 @@ constexpr auto num_entities = 1000;
 static co_ecs::registry registry;
 static co_ecs::experimental::schedule schedule;
 
-static bool exit_flag;
 static int frame;
 
 struct pos {
@@ -41,21 +40,15 @@ void start_frame() {
     frame++;
 }
 
-void end_frame(co_ecs::command_buffer& c, co_ecs::view<const co_ecs::entity&, const pos&, const rot&> v) {
+void end_frame(co_ecs::command_writer c, co_ecs::view<const co_ecs::entity&, const pos&, const rot&> v) {
     v.each([&](const auto& entity, const auto& pos, const auto& rot) {
         std::cout << "Entity {" << entity.id() << ", " << entity.generation() << "} " << "Position {" << pos.x << " "
                   << pos.y << "} " << "Rotation {" << rot.angle << "}\n";
         c.destroy(entity);
     });
-
-    if (frame == 100) {
-        exit_flag = true;
-    }
-
-    // std::cin.get();
 }
 
-void setup(co_ecs::command_buffer& commands) {
+void setup(co_ecs::command_writer commands) {
     static int i;
     commands.create<pos, rot, vel, tan_vel>(
         {}, {}, { .x = -1.0f + 0.005f * i, .y = -2.0f + 0.001f * i }, { .speed = 0.0003f * i });

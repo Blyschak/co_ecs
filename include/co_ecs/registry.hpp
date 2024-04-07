@@ -40,10 +40,35 @@ public:
         [[maybe_unused]] detail::unique_types<Args...> uniqueness_check;
 
         auto entity = _entity_pool.create();
-        auto archetype = _archetypes.ensure_archetype<Args...>();
-        auto location = archetype->template emplace_back<Args...>(entity, std::forward<Args>(args)...);
-        set_location(entity.id(), location);
+        create_with_entity(entity, std::forward<Args>(args)...);
         return entity;
+    }
+
+    /// @brief Creates a new entity in the world with components Args... attached.
+    /// Thsi call must be used in conjunction with reserve() and flush_reserved().
+    ///
+    /// @tparam Args Component types
+    /// @param args components
+    template<component... Args>
+    auto create_with_entity(entity ent, Args&&... args) {
+        // compile-time check to make sure all component types in parameter pack are unique
+        [[maybe_unused]] detail::unique_types<Args...> uniqueness_check;
+
+        auto archetype = _archetypes.ensure_archetype<Args...>();
+        auto location = archetype->template emplace_back<Args...>(ent, std::forward<Args>(args)...);
+        set_location(ent.id(), location);
+    }
+
+    /// @brief Reserve an entity handle.
+    /// This API is thread safe.
+    /// @return Entity handle.
+    auto reserve() const -> entity {
+        return _entity_pool.reserve();
+    }
+
+    /// @brief Flushes reserved entities.
+    void flush_reserved() {
+        _entity_pool.flush();
     }
 
     /// @brief Destroy an entity
@@ -294,7 +319,7 @@ private:
     friend class view;
 
 private:
-    entity_pool _entity_pool;
+    mutable entity_pool _entity_pool;
     archetypes _archetypes;
     detail::sparse_map<entity_id_t, entity_location> _entity_archetype_map;
 };

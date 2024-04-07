@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <cstdint>
 #include <numeric>
 #include <vector>
@@ -85,7 +86,7 @@ public:
             _free_ids.pop_back();
             return entity{ id, _generations[id] };
         }
-        auto handle = entity{ _next_id++ };
+        auto handle = entity{ _next_id.fetch_add(1, std::memory_order::relaxed) };
         _generations.emplace_back();
         return handle;
     };
@@ -112,8 +113,37 @@ public:
         _free_ids.push_back(handle.id());
     }
 
+    /// @brief Reserve an entity handle
+    /// This call is thread safe.
+    ///
+    /// @return Entity handle
+    auto reserve() -> entity {
+        auto handle = entity{ _next_id.fetch_add(1, std::memory_order::relaxed) };
+        _reserved.fetch_add(1, std::memory_order::relaxed);
+
+        // Synchronize memory consistency with the below flush().
+        // Make sure both atomic changes are visible to another thread.
+        std::atomic_thread_fence(std::memory_order::release);
+
+        return handle;
+    }
+
+    /// @brief Flushes reserved entities.
+    void flush() {
+        // Synchronizes with the above reserve() function.
+        std::atomic_thread_fence(std::memory_order::acquire);
+
+        auto reserved = _reserved.load(std::memory_order::relaxed);
+        while (reserved--) {
+            _generations.emplace_back();
+        }
+
+        _reserved.store(0, std::memory_order::relaxed);
+    }
+
 private:
-    typename entity::id_t _next_id{};
+    typename std::atomic<entity::id_t> _next_id{};
+    typename std::atomic<entity::id_t> _reserved{};
     std::vector<typename entity::generation_t> _generations;
     std::vector<typename entity::id_t> _free_ids;
 };
