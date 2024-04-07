@@ -5,7 +5,7 @@
 constexpr auto num_entities = 1000;
 
 static co_ecs::registry registry;
-static co_ecs::experimental::scheduler scheduler;
+static co_ecs::experimental::schedule schedule;
 
 static bool exit_flag;
 static int frame;
@@ -56,13 +56,14 @@ void end_frame(co_ecs::command_buffer& c, co_ecs::view<const co_ecs::entity&, co
 }
 
 void setup(co_ecs::command_buffer& commands) {
-    int i = 0;
+    static int i;
     commands.create<pos, rot, vel, tan_vel>(
         {}, {}, { .x = -1.0f + 0.005f * i, .y = -2.0f + 0.001f * i }, { .speed = 0.0003f * i });
+    i++;
 }
 
 int main() {
-    scheduler.add_system(&setup)
+    schedule.add_system(&setup)
         .barrier()
         .add_system(&start_frame)
         .barrier()
@@ -71,7 +72,15 @@ int main() {
         .barrier()
         .add_system(&end_frame);
 
-    scheduler.run(registry, exit_flag);
+    co_ecs::experimental::executor executor(schedule, registry);
+
+    executor.run_once();
+    executor.run_once();
+    executor.run_once();
+    executor.run_once();
+    executor.run_once();
+    executor.run_once();
+    executor.run_once();
 
     return 0;
 }
