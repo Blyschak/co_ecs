@@ -84,6 +84,7 @@ public:
         if (!_free_ids.empty()) {
             auto id = _free_ids.back();
             _free_ids.pop_back();
+            _free_cursor.store(_free_ids.size(), std::memory_order::relaxed);
             return entity{ id, _generations[id] };
         }
         auto handle = entity{ _next_id.fetch_add(1, std::memory_order::relaxed) };
@@ -111,6 +112,7 @@ public:
         }
         _generations[handle.id()]++;
         _free_ids.push_back(handle.id());
+        _free_cursor.store(_free_ids.size(), std::memory_order::relaxed);
     }
 
     /// @brief Reserve an entity handle
@@ -118,32 +120,30 @@ public:
     ///
     /// @return Entity handle
     auto reserve() -> entity {
+        auto n = _free_cursor.fetch_sub(1, std::memory_order::relaxed);
+        if (n > 0) {
+            auto id = _free_ids[n - 1];
+            return entity{ id, _generations[id] };
+        }
         auto handle = entity{ _next_id.fetch_add(1, std::memory_order::relaxed) };
-        _reserved.fetch_add(1, std::memory_order::relaxed);
-
-        // Synchronize memory consistency with the below flush().
-        // Make sure both atomic changes are visible to another thread.
-        std::atomic_thread_fence(std::memory_order::release);
-
         return handle;
     }
 
     /// @brief Flushes reserved entities.
     void flush() {
-        // Synchronizes with the above reserve() function.
-        std::atomic_thread_fence(std::memory_order::acquire);
+        auto free_cursor = _free_cursor.load(std::memory_order::relaxed);
 
-        auto reserved = _reserved.load(std::memory_order::relaxed);
-        while (reserved--) {
+        while (free_cursor < 0) {
             _generations.emplace_back();
+            free_cursor++;
         }
 
-        _reserved.store(0, std::memory_order::relaxed);
+        _free_cursor.store(_free_ids.size(), std::memory_order::relaxed);
     }
 
 private:
     typename std::atomic<entity::id_t> _next_id{};
-    typename std::atomic<entity::id_t> _reserved{};
+    typename std::atomic<std::int64_t> _free_cursor{};
     std::vector<typename entity::generation_t> _generations;
     std::vector<typename entity::id_t> _free_ids;
 };
