@@ -21,17 +21,21 @@ struct command {
 /// @tparam ...Args Components
 template<component... Args>
 struct command_create : command {
+    entity ent;
     std::tuple<Args...> args;
 
     /// @brief Construct command
+    /// @param entity Entity handle
     /// @param ...args Components
-    command_create(Args&&... args) : args(std::forward<Args>(args)...) {
+    command_create(entity ent, Args&&... args) : ent(ent), args(std::forward<Args>(args)...) {
     }
 
     /// @brief Execute command on registry
     /// @param registry Registry
     void run(registry& registry) override {
-        std::apply([&registry](auto&&... args) { registry.create<Args...>(std::forward<Args>(args)...); }, args);
+        std::apply([&registry, this](
+                       auto&&... args) { registry.create_with_entity<Args...>(ent, std::forward<Args>(args)...); },
+            args);
     }
 };
 
@@ -99,12 +103,16 @@ public:
 
     /// @brief Create entity
     /// @tparam ...Args Component types
+    /// @param reg Registry
     /// @param ...args Components
+    /// @return Entity handle
     template<component... Args>
-    void create(Args&&... args) {
+    auto create(const registry& reg, Args&&... args) -> entity {
+        auto ent = reg.reserve();
         command* ptr = (command*)_salloc.allocate(sizeof(command_create<Args...>), alignof(command_create<Args...>));
-        new (ptr) command_create<Args...>(std::forward<Args>(args)...);
+        new (ptr) command_create<Args...>(ent, std::forward<Args>(args)...);
         _commands.push_back(ptr);
+        return ent;
     }
 
     /// @brief Set component to an entity
@@ -140,6 +148,8 @@ public:
     /// @brief Flush commands to registry
     /// @param registry Registry
     void flush(registry& registry) {
+        registry.flush_reserved();
+
         while (!_commands.empty()) {
             auto& command = _commands.back();
             command->run(registry);
@@ -153,6 +163,53 @@ public:
 private:
     detail::stack_allocator _salloc{ 16ull * 1024 * 1024 }; // TODO: Could use linear allocator as well
     std::vector<command*> _commands;
+};
+
+/// @brief Command writer used by systems to record commands
+class command_writer {
+public:
+    /// @brief Constructor
+    /// @param reg Registry
+    /// @param cmds Command buffer
+    command_writer(const registry& reg, command_buffer& cmds) : _cmds(cmds), _reg(reg) {
+    }
+
+    /// @brief Create entity
+    /// @tparam ...Args Component types
+    /// @param ...args Components
+    /// @return Entity handle
+    template<component... Args>
+    auto create(Args&&... args) -> entity {
+        return _cmds.create(_reg, std::forward<Args>(args)...);
+    }
+
+    /// @brief Set component to an entity
+    /// @tparam ...Args Arguments
+    /// @tparam C Component types
+    /// @param ent Entity
+    /// @param ...args Components
+    template<component C, typename... Args>
+    void set(entity ent, Args&&... args) {
+        _cmds.set(ent, std::forward<Args>(args)...);
+    }
+
+    /// @brief Remove component
+    /// @tparam C Component type
+    /// @param ent Entity
+    template<component C>
+    void remove(entity ent) {
+        _cmds.remove<C>(ent);
+    }
+
+    /// @brief Destroy entity
+    /// @param ent Entity
+    void destroy(entity ent) {
+        _cmds.destroy(ent);
+    };
+
+private:
+    const registry& _reg;
+    command_buffer& _cmds;
 };
 
 } // namespace co_ecs

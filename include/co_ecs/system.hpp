@@ -172,7 +172,7 @@ public:
 ///
 class system_command_buffer_state {
 public:
-    /// @brief Construct a new system view state object
+    /// @brief Constructor
     ///
     /// @param registry Registry reference
     /// @param user_context User provided context to fetch data from and provide to the system
@@ -196,6 +196,36 @@ class system_argument_state_trait<command_buffer&> {
 public:
     /// @brief Actual state type for T
     using state_type = system_command_buffer_state;
+};
+
+/// @brief System command writer state
+///
+class system_command_writer_state {
+public:
+    /// @brief Constructor
+    ///
+    /// @param registry Registry reference
+    /// @param user_context User provided context to fetch data from and provide to the system
+    explicit system_command_writer_state(registry& registry, void* user_context) noexcept : _registry(registry) {
+    }
+
+    /// @brief Returns the actual state inside to pass to the system
+    ///
+    /// @return Command buffer
+    [[nodiscard]] command_writer get() noexcept {
+        return command_writer(_registry, thread_pool::current_worker().get_command_buffer());
+    }
+
+private:
+    registry& _registry;
+};
+
+/// @brief Specialization for command_buffer
+template<>
+class system_argument_state_trait<command_writer> {
+public:
+    /// @brief Actual state type for T
+    using state_type = system_command_writer_state;
 };
 
 } // namespace co_ecs

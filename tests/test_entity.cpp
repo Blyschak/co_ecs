@@ -1,5 +1,5 @@
-#include <co_ecs/co_ecs.hpp>
 #include <catch2/catch_all.hpp>
+#include <co_ecs/co_ecs.hpp>
 
 using namespace co_ecs;
 
@@ -47,4 +47,13 @@ TEST_CASE("Entity pool", "Test entity pool functionality - allocation and recycl
     auto e3 = pool.create();
     REQUIRE(pool.alive(e3));
     REQUIRE(e3.id() == e1.id());
+
+    auto e4 = pool.reserve();
+    auto e5 = pool.reserve();
+    auto e6 = pool.reserve();
+
+    pool.flush();
+    REQUIRE(pool.alive(e4));
+    REQUIRE(pool.alive(e5));
+    REQUIRE(pool.alive(e6));
 }
