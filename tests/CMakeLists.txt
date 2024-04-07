@@ -19,6 +19,7 @@ add_executable(
   test_component.cpp
   test_entity.cpp
   test_ecs.cpp
+  test_schedule.cpp
 )
 
 target_link_libraries(tests PRIVATE co_ecs PRIVATE Catch2::Catch2WithMain)

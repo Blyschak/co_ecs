@@ -245,6 +245,11 @@ public:
     void each(F&& func) const
         requires(detail::func_decomposer<F>::is_const);
 
+    /// @brief Returns the number of enitites in the registry
+    [[nodiscard]] std::size_t size() const noexcept {
+        return _entity_archetype_map.size();
+    }
+
 private:
     [[nodiscard]] auto get_archetypes() noexcept -> archetypes& {
         return _archetypes;
