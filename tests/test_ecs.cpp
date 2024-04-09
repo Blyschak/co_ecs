@@ -187,7 +187,18 @@ TEST_CASE("ECS Registry insufficient chunk size",
     REQUIRE_THROWS_AS(test_registry.set<second_big_struct>(ent), insufficient_chunk_size);
 }
 
-TEST_CASE("ECS Registry operations", "Move between registries") {
+TEST_CASE("ECS Registry constraints", "Non-copiable components") {
+    registry reg;
+
+    struct test_struct {
+        std::unique_ptr<int> c{};
+    };
+
+    // Just make sure it compiles
+    reg.create<test_struct>({});
+}
+
+TEST_CASE("ECS Registry move entities") {
     registry reg1;
     registry reg2;
 
@@ -220,12 +231,74 @@ TEST_CASE("ECS Registry operations", "Move between registries") {
         REQUIRE_FALSE(reg1.alive(ent));
     }
 
-    for (const auto [i, ent] : moved_entities | co_ecs::detail::views::enumerate) {
-        REQUIRE(reg2.alive(ent));
+    for (auto i = 0; i < moved_entities.size(); i++) {
+        REQUIRE(reg2.alive(moved_entities[i]));
 
-        REQUIRE(reg2.get<foo<0>>(ent).a == 1 * i);
-        REQUIRE(reg2.get<foo<0>>(ent).b == 2 * i);
-        REQUIRE(reg2.get<foo<1>>(ent).a == 3 * i);
-        REQUIRE(reg2.get<foo<1>>(ent).b == 4 * i);
+        REQUIRE(reg2.get<foo<0>>(moved_entities[i]).a == 1 * i);
+        REQUIRE(reg2.get<foo<0>>(moved_entities[i]).b == 2 * i);
+        REQUIRE(reg2.get<foo<1>>(moved_entities[i]).a == 3 * i);
+        REQUIRE(reg2.get<foo<1>>(moved_entities[i]).b == 4 * i);
     }
+}
+
+TEST_CASE("ECS Registry copy entities") {
+    registry reg1;
+    registry reg2;
+
+    const int number_of_entities = GENERATE(2, 100000);
+
+    std::vector<entity> entities;
+    std::vector<entity> copied_entities;
+
+    for (auto i : std::views::iota(0, number_of_entities)) {
+        auto ent = reg1.create<foo<0>, foo<1>>({ 1 * i, 2 * i }, { 3 * i, 4 * i });
+        entities.push_back(ent);
+    }
+
+    REQUIRE(reg1.size() == number_of_entities);
+    REQUIRE(reg2.size() == 0);
+
+    for (const auto& ent : entities) {
+        REQUIRE(reg1.alive(ent));
+    }
+
+    for (const auto& ent : entities) {
+        auto moved_ent = reg1.copy(ent, reg2);
+        copied_entities.push_back(moved_ent);
+    }
+
+    REQUIRE(reg1.size() == number_of_entities);
+    REQUIRE(reg2.size() == number_of_entities);
+
+    for (const auto i : std::views::iota(0, number_of_entities)) {
+        REQUIRE(reg1.alive(entities[i]));
+        REQUIRE(reg2.alive(copied_entities[i]));
+
+        REQUIRE(reg1.get<foo<0>>(entities[i]).a == 1 * i);
+        REQUIRE(reg1.get<foo<0>>(entities[i]).b == 2 * i);
+        REQUIRE(reg1.get<foo<1>>(entities[i]).a == 3 * i);
+        REQUIRE(reg1.get<foo<1>>(entities[i]).b == 4 * i);
+
+        REQUIRE(reg2.get<foo<0>>(copied_entities[i]).a == 1 * i);
+        REQUIRE(reg2.get<foo<0>>(copied_entities[i]).b == 2 * i);
+        REQUIRE(reg2.get<foo<1>>(copied_entities[i]).a == 3 * i);
+        REQUIRE(reg2.get<foo<1>>(copied_entities[i]).b == 4 * i);
+    }
+}
+
+TEST_CASE("ECS Registry clone") {
+    registry reg;
+
+    auto e1 = reg.create<foo<0>, foo<1>>({ 1, 2 }, { 3, 4 });
+    auto e2 = reg.clone(e1);
+
+    REQUIRE(reg.get<foo<0>>(e1).a == 1);
+    REQUIRE(reg.get<foo<0>>(e1).b == 2);
+    REQUIRE(reg.get<foo<1>>(e1).a == 3);
+    REQUIRE(reg.get<foo<1>>(e1).b == 4);
+
+    REQUIRE(reg.get<foo<0>>(e2).a == 1);
+    REQUIRE(reg.get<foo<0>>(e2).b == 2);
+    REQUIRE(reg.get<foo<1>>(e2).a == 3);
+    REQUIRE(reg.get<foo<1>>(e2).b == 4);
 }

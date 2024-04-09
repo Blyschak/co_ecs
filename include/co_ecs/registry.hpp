@@ -196,6 +196,36 @@ public:
         return new_ent;
     }
 
+    /// @brief Copy entity to another registries
+    /// @param ent Entity to copy
+    /// @param dest Destination registry
+    /// @return Entity in the destination registry
+    entity copy(entity ent, registry& dest) const {
+        ensure_alive(ent);
+        auto location = get_location(ent.id());
+        auto* src_archetype = location.archetype;
+        auto* dst_archetype = dest._archetypes.ensure_archetype(src_archetype->components());
+        auto new_location = src_archetype->copy(location, *dst_archetype);
+
+        auto new_ent = dest._entity_pool.create();
+
+        // TODO: handle inside Archetype
+        *dst_archetype
+             ->chunks()                                                  // in dst Archetype chunks
+                 [new_location.chunk_index]                              // find the Chunk the EntityId was moved to
+             .ptr_unchecked<entity>(new_location.entry_index) = new_ent; // update EntityId value in the Chunk
+
+        dest.set_location(new_ent.id(), new_location);
+        return new_ent;
+    }
+
+    /// @brief Clone entity
+    /// @param ent Entity to clone
+    /// @return Entity in the destination registry
+    entity clone(entity ent) {
+        return copy(ent, *this);
+    }
+
     /// @brief Check if an entity is alive or not
     ///
     /// @param ent Entity

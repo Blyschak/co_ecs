@@ -163,6 +163,30 @@ public:
         return other_chunk_index;
     }
 
+    /// @brief Copy components in blocks at position index into other_chunk
+    ///
+    /// @param index Index to move from
+    /// @param other_chunk Chunk to move to
+    /// @return std::size_t Other chunk index
+    auto copy(std::size_t index, chunk& other_chunk) -> std::size_t {
+        assert((index < _size) && "Entity index exceeds chunk size");
+        assert((!other_chunk.full()) && "Other chunk is full, cannot move entity to it");
+        const std::size_t other_chunk_index = other_chunk._size;
+        for (const auto& [id, block] : *_blocks) {
+            const auto* type = block.meta.type;
+            if (!other_chunk._blocks->contains(id)) {
+                continue;
+            }
+            auto* ptr = other_chunk._buffer + other_chunk._blocks->at(id).offset + other_chunk_index * type->size;
+            if (type->copy_construct) {
+                type->copy_construct(ptr, _buffer + block.offset + index * type->size);
+            }
+        }
+        other_chunk._size++;
+        return other_chunk_index;
+    }
+
+
     /// @brief Give a const pointer to a component T at index
     ///
     /// @tparam T Component type

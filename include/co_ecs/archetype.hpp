@@ -108,6 +108,27 @@ public:
         return std::make_pair(new_location, moved);
     }
 
+    /// @brief Copy entity and its components to a different archetype.
+    ///
+    /// @param location Entity location
+    /// @param other Archetype to copy entity and its components to
+    /// @return entity_location
+    auto copy(const entity_location& location, archetype& other) -> entity_location {
+        auto& free_chunk = other.ensure_free_chunk();
+        auto& chunk = get_chunk(location);
+
+        assert((location.entry_index < chunk.size()) && "Entity location index exceeds chunk size");
+
+        auto entry_index = chunk.copy(location.entry_index, free_chunk);
+        auto new_location = entity_location{
+            &other,
+            other._chunks.size() - 1,
+            entry_index,
+        };
+
+        return new_location;
+    }
+
     /// @brief Get component data
     ///
     /// @tparam ComponentRef Component reference type
