@@ -166,6 +166,36 @@ public:
         set_location(entity_id, new_location);
     }
 
+    /// @brief Move entity between registries
+    /// @param ent Entity to move
+    /// @param dest Destination registry
+    /// @return Entity in the destination registry
+    entity move(entity ent, registry& dest) {
+        ensure_alive(ent);
+        auto location = get_location(ent.id());
+        auto* src_archetype = location.archetype;
+        auto* dst_archetype = dest._archetypes.ensure_archetype(src_archetype->components());
+
+        auto [new_location, moved] = src_archetype->move(location, *dst_archetype);
+
+        remove_location(ent.id());
+        if (moved && moved != ent) { // moved entity has been transfered to a different Registry
+            set_location(moved->id(), location);
+        }
+        _entity_pool.recycle(ent);
+
+        auto new_ent = dest._entity_pool.create();
+
+        // TODO: handle inside Archetype
+        *dst_archetype
+             ->chunks()                                                  // in dst Archetype chunks
+                 [new_location.chunk_index]                              // find the Chunk the entity was moved to
+             .ptr_unchecked<entity>(new_location.entry_index) = new_ent; // update entity value in the Chunk
+
+        dest.set_location(new_ent.id(), new_location);
+        return new_ent;
+    }
+
     /// @brief Check if an entity is alive or not
     ///
     /// @param ent Entity
@@ -271,8 +301,15 @@ public:
         requires(detail::func_decomposer<F>::is_const);
 
     /// @brief Returns the number of enitites in the registry
+    /// @return Number of entities present in the registry
     [[nodiscard]] std::size_t size() const noexcept {
         return _entity_archetype_map.size();
+    }
+
+    /// @brief Check whether registry has no entities
+    /// @return Returns true if no entities
+    [[nodiscard]] bool empty() const noexcept {
+        return _entity_archetype_map.empty();
     }
 
 private:

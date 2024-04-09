@@ -92,10 +92,11 @@ public:
     /// @param other Archetype to move entity and its components to
     /// @return std::pair<entity_location, std::optional<entity>>
     auto move(const entity_location& location, archetype& other) -> std::pair<entity_location, std::optional<entity>> {
+        auto& free_chunk = other.ensure_free_chunk();
         auto& chunk = get_chunk(location);
+
         assert((location.entry_index < chunk.size()) && "Entity location index exceeds chunk size");
 
-        auto& free_chunk = other.ensure_free_chunk();
         auto entry_index = chunk.move(location.entry_index, free_chunk);
         auto moved = swap_erase(location);
         auto new_location = entity_location{
@@ -275,6 +276,20 @@ public:
     using key_type = storage_type::key_type;
     using mapped_type = storage_type::mapped_type;
 
+public:
+    /// @brief get or create an archetype given the component meta set
+    /// @param components Components meta set
+    /// @return archetype*
+    auto ensure_archetype(const component_meta_set& components) -> archetype* {
+        auto& archetype = _archetypes[components.ids()];
+        if (!archetype) {
+            archetype = create_archetype(components);
+        }
+        assert((archetype->components().ids() == components.ids())
+               && "Archetype components do not match the search request");
+        return archetype.get();
+    }
+
     /// @brief Get or create an archetype matching the passed Components types
     ///
     /// @tparam Components Component types
@@ -367,22 +382,22 @@ public:
     }
 
 private:
-    static auto create_archetype(auto&& components_meta) -> decltype(auto) {
-        return std::make_unique<co_ecs::archetype>(std::forward<decltype(components_meta)>(components_meta));
+    static auto create_archetype(auto&& components) -> std::unique_ptr<archetype> {
+        return std::make_unique<archetype>(std::forward<decltype(components)>(components));
     }
 
     template<component... Components>
-    static auto create_archetype_added(const archetype* anchor_archetype) -> decltype(auto) {
+    static auto create_archetype_added(const archetype* anchor_archetype) -> std::unique_ptr<archetype> {
         auto components_meta = anchor_archetype->components();
         (..., components_meta.insert<Components>());
-        return std::make_unique<co_ecs::archetype>(std::move(components_meta));
+        return std::make_unique<archetype>(std::move(components_meta));
     }
 
     template<component... Components>
-    static auto create_archetype_removed(const archetype* anchor_archetype) -> decltype(auto) {
+    static auto create_archetype_removed(const archetype* anchor_archetype) -> std::unique_ptr<archetype> {
         auto components_meta = anchor_archetype->components();
         (..., components_meta.erase<Components>());
-        return std::make_unique<co_ecs::archetype>(std::move(components_meta));
+        return std::make_unique<archetype>(std::move(components_meta));
     }
 
     // Member component set is here to speed up archetype lookup.

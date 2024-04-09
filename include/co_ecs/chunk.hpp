@@ -215,6 +215,8 @@ public:
     }
 
 private:
+    friend class registry;
+
     template<component T>
     [[nodiscard]] inline auto ptr_unchecked(std::size_t index) -> T* {
         return ptr_unchecked_impl<T*>(*this, index);

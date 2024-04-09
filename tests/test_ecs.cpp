@@ -186,3 +186,46 @@ TEST_CASE("ECS Registry insufficient chunk size",
     REQUIRE_THROWS_AS((test_registry.create<first_big_struct, second_big_struct>({}, {})), insufficient_chunk_size);
     REQUIRE_THROWS_AS(test_registry.set<second_big_struct>(ent), insufficient_chunk_size);
 }
+
+TEST_CASE("ECS Registry operations", "Move between registries") {
+    registry reg1;
+    registry reg2;
+
+    const int number_of_entities = GENERATE(2, 100000);
+
+    std::vector<entity> entities;
+    std::vector<entity> moved_entities;
+
+    for (auto i : std::views::iota(0, number_of_entities)) {
+        auto ent = reg1.create<foo<0>, foo<1>>({ 1 * i, 2 * i }, { 3 * i, 4 * i });
+        entities.push_back(ent);
+    }
+
+    REQUIRE(reg1.size() == number_of_entities);
+    REQUIRE(reg2.size() == 0);
+
+    for (const auto& ent : entities) {
+        REQUIRE(reg1.alive(ent));
+    }
+
+    for (const auto& ent : entities) {
+        auto moved_ent = reg1.move(ent, reg2);
+        moved_entities.push_back(moved_ent);
+    }
+
+    REQUIRE(reg1.size() == 0);
+    REQUIRE(reg2.size() == number_of_entities);
+
+    for (const auto& ent : entities) {
+        REQUIRE_FALSE(reg1.alive(ent));
+    }
+
+    for (const auto [i, ent] : moved_entities | co_ecs::detail::views::enumerate) {
+        REQUIRE(reg2.alive(ent));
+
+        REQUIRE(reg2.get<foo<0>>(ent).a == 1 * i);
+        REQUIRE(reg2.get<foo<0>>(ent).b == 2 * i);
+        REQUIRE(reg2.get<foo<1>>(ent).a == 3 * i);
+        REQUIRE(reg2.get<foo<1>>(ent).b == 4 * i);
+    }
+}
