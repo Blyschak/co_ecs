@@ -109,7 +109,7 @@ public:
     template<component... Args>
     auto create(const registry& reg, Args&&... args) -> entity {
         auto ent = reg.reserve();
-        command* ptr = (command*)_salloc.allocate(sizeof(command_create<Args...>), alignof(command_create<Args...>));
+        command* ptr = (command*)_stack.allocate(sizeof(command_create<Args...>), alignof(command_create<Args...>));
         new (ptr) command_create<Args...>(ent, std::forward<Args>(args)...);
         _commands.push_back(ptr);
         return ent;
@@ -122,7 +122,7 @@ public:
     /// @param ...args Components
     template<component C, typename... Args>
     void set(entity ent, Args&&... args) {
-        command* ptr = (command*)_salloc.allocate(sizeof(command_set<C>), alignof(command_set<C>));
+        command* ptr = (command*)_stack.allocate(sizeof(command_set<C>), alignof(command_set<C>));
         new (ptr) command_set<C>(ent, C{ std::forward<Args>(args)... });
         _commands.push_back(ptr);
     }
@@ -132,7 +132,7 @@ public:
     /// @param ent Entity
     template<component C>
     void remove(entity ent) {
-        command* ptr = (command*)_salloc.allocate(sizeof(command_remove<C>), alignof(command_remove<C>));
+        command* ptr = (command*)_stack.allocate(sizeof(command_remove<C>), alignof(command_remove<C>));
         new (ptr) command_remove<C>(ent);
         _commands.push_back(ptr);
     }
@@ -140,7 +140,7 @@ public:
     /// @brief Destroy entity
     /// @param ent Entity
     void destroy(entity ent) {
-        command* ptr = (command*)_salloc.allocate(sizeof(command_destroy), alignof(command_destroy));
+        command* ptr = (command*)_stack.allocate(sizeof(command_destroy), alignof(command_destroy));
         new (ptr) command_destroy(ent);
         _commands.push_back(ptr);
     }
@@ -157,11 +157,11 @@ public:
             _commands.pop_back();
         }
 
-        _salloc.free_all();
+        _stack.free_all();
     }
 
 private:
-    detail::stack_allocator _salloc{ 16ull * 1024 * 1024 }; // TODO: Could use linear allocator as well
+    detail::stack_allocator _stack{ 16ull * 1024 * 1024 }; // TODO: Could use linear allocator as well
     std::vector<command*> _commands;
 };
 

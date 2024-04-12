@@ -24,3 +24,16 @@ TEST_CASE("Schedule", "Basic schedule operations") {
     exec.run_once();
     REQUIRE(reg.size() == 6);
 }
+
+TEST_CASE("Parallel for") {
+    std::vector<int> vec;
+    for (int i = 0; i < 1000000; i++) {
+        vec.push_back(i);
+    }
+
+    std::atomic<uint64_t> sum;
+
+    parallel_for(vec, [&sum](auto elem) { sum.fetch_add(elem); });
+
+    REQUIRE(sum.load() == 499999500000);
+}

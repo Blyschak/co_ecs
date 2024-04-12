@@ -107,6 +107,12 @@ public:
             return _command_buffer;
         }
 
+        /// @brief Return stack allocator
+        /// @return Stack allocator reference
+        detail::stack_allocator& get_allocator() noexcept {
+            return _stack;
+        }
+
     private:
         friend class thread_pool;
 
@@ -180,14 +186,55 @@ public:
         std::thread _thread{};
         std::size_t _id;
         worker_stats _stats;
+        detail::stack_allocator _stack{ 16ull * 1024 * 1024 };
     };
 
+    /// @brief Worker allocator, use for temporary allocations
+    /// @tparam T Type
+    template<typename T>
+    class worker_stack_allocator {
+    public:
+        using value_type = T;
+        using size_type = std::size_t;
+        using difference_type = std::ptrdiff_t;
+        using propagate_on_container_move_assignment = std::true_type;
+
+        /// @brief Constructor
+        worker_stack_allocator() = default;
+
+        /// @brief Copy constructor
+        /// @tparam U
+        /// @param Other allocator instance
+        template<class U>
+        constexpr worker_stack_allocator(const worker_stack_allocator<U>&) noexcept {
+        }
+
+        /// @brief Allocate n elements
+        /// @param n Elements to allocate
+        /// @return Pointer to allocated memory
+        [[nodiscard]] constexpr T* allocate(std::size_t n) {
+            return static_cast<T*>(thread_pool::current_worker().get_allocator().allocate(n * sizeof(T), alignof(T)));
+        }
+
+        /// @brief Deallocate storage referenced by p
+        /// @param p Pointer to memory to deallocate
+        /// @param n Number of elements to allocate (must be the same as passed to the corresponding allocate() p is
+        /// obtained from)
+        constexpr void deallocate(T* p, [[maybe_unused]] std::size_t n) {
+            return thread_pool::current_worker().get_allocator().deallocate(p);
+        }
+    };
 
     /// @brief Construct thread pool with num_workers workers
     /// @param num_workers The number of workers to create
     thread_pool(std::size_t num_workers = std::thread::hardware_concurrency()) {
         assert(num_workers > 0 && "Number of workers should be > 0");
         _workers.reserve(num_workers);
+
+        if (_instance) {
+            throw std::logic_error("Thread pool already created");
+        }
+        _instance = this;
 
         // create main worker that will execute tasks in main thread
         _workers.emplace_back(std::make_unique<worker>(*this, 0));
@@ -218,6 +265,19 @@ public:
         for (auto i = 1; i < _workers.size(); i++) {
             _workers[i]->join();
         }
+
+        _instance = nullptr;
+    }
+
+    /// @brief Get thread pool instance
+    /// @return thread_pool
+    static thread_pool& get() {
+        if (!_instance) {
+            static thread_pool tp;
+            _instance = &tp;
+        }
+
+        return *_instance;
     }
 
     /// @brief Allocate a task
@@ -270,7 +330,21 @@ public:
     }
 
 private:
+    static inline thread_pool* _instance;
+
     std::vector<std::unique_ptr<worker>> _workers;
 };
 
 } // namespace co_ecs
+
+template<class T, class U>
+constexpr bool operator==(const co_ecs::thread_pool::worker_stack_allocator<T>&,
+    const co_ecs::thread_pool::worker_stack_allocator<U>&) noexcept {
+    return true;
+}
+
+template<class T, class U>
+constexpr bool operator!=(const co_ecs::thread_pool::worker_stack_allocator<T>&,
+    const co_ecs::thread_pool::worker_stack_allocator<U>&) noexcept {
+    return false;
+}

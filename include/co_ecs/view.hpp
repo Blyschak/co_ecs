@@ -5,6 +5,8 @@
 
 #include <co_ecs/detail/views.hpp>
 
+#include <co_ecs/thread_pool/parallel_for.hpp>
+
 #include <type_traits>
 
 namespace co_ecs {
@@ -89,6 +91,28 @@ public:
                 std::apply(func, entry);
             }
         }
+    }
+
+    /// @brief Run func on every entity that matches the Args requirement in parallel
+    ///
+    /// @param func A callable to run on entity components
+    void par_each(auto&& func)
+        requires(!is_const)
+    {
+        co_ecs::parallel_for(chunks(),
+            [&func](auto chunk) { std::ranges::for_each(chunk, [&](auto&& elem) { std::apply(func, elem); }); });
+    }
+
+    /// @brief Run func on every entity that matches the Args requirement in parallel. Constant version
+    ///
+    /// NOTE: See the note on non-const each()
+    ///
+    /// @param func A callable to run on entity components
+    void par_each(auto&& func) const
+        requires(is_const)
+    {
+        co_ecs::parallel_for(chunks(),
+            [&func](auto chunk) { std::ranges::for_each(chunk, [&](auto&& elem) { std::apply(func, elem); }); });
     }
 
     auto chunks() -> decltype(auto) {
