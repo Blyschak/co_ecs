@@ -66,8 +66,7 @@ public:
     ///
     /// @param rhs Another chunk
     chunk(chunk&& rhs) noexcept :
-        _buffer(rhs._buffer), _size(rhs._size), _max_size(rhs._max_size), _blocks(rhs._blocks) {
-        rhs._buffer = nullptr;
+        _buffer(std::exchange(rhs._buffer, nullptr)), _size(rhs._size), _max_size(rhs._max_size), _blocks(rhs._blocks) {
     }
 
     /// @brief Move assignment operator
@@ -75,12 +74,10 @@ public:
     /// @param rhs Right hand side chunk
     /// @return chunk& Resulting chunk
     auto operator=(chunk&& rhs) noexcept -> chunk& {
-        _buffer = rhs._buffer;
-        _size = rhs._size;
-        _max_size = rhs._max_size;
-        _blocks = rhs._blocks;
-
-        rhs._buffer = nullptr;
+        _buffer = std::exchange(rhs._buffer, _buffer);
+        _size = std::exchange(rhs._size, _size);
+        _max_size = std::exchange(rhs._max_size, _max_size);
+        _blocks = std::exchange(rhs._blocks, _blocks);
         return *this;
     }
 
@@ -94,7 +91,7 @@ public:
                 block.meta.type->destruct(_buffer + block.offset + i * block.meta.type->size);
             }
         }
-        delete _buffer;
+        delete reinterpret_cast<chunk_buffer*>(_buffer);
     }
 
     /// @brief Emplace back components into blocks
