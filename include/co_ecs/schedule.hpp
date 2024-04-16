@@ -66,6 +66,8 @@ public:
             execute_batch(executor_set);
         }
 
+        _registry.flush_reserved();
+
         // flush commands
         for (auto i = 0; i < _thread_pool.num_workers(); i++) {
             _thread_pool.get_worker_by_id(i).get_command_buffer().flush(_registry);
