@@ -112,7 +112,7 @@ public:
         }
         _generations[handle.id()]++;
         _free_ids.push_back(handle.id());
-        _free_cursor.store(_free_ids.size(), std::memory_order::relaxed);
+        _free_cursor.fetch_add(1, std::memory_order::relaxed);
     }
 
     /// @brief Reserve an entity handle
@@ -138,7 +138,11 @@ public:
             free_cursor++;
         }
 
-        _free_cursor.store(_free_ids.size(), std::memory_order::relaxed);
+        while (_free_ids.size() > free_cursor) {
+            _free_ids.pop_back();
+        }
+
+        _free_cursor.store(free_cursor, std::memory_order::relaxed);
     }
 
 private:
