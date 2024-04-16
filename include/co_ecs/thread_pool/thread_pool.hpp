@@ -1,5 +1,6 @@
 #pragma once
 
+#include <co_ecs/detail/allocator/stack_allocator.hpp>
 #include <co_ecs/detail/work_stealing_queue.hpp>
 #include <co_ecs/thread_pool/task.hpp>
 
