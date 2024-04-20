@@ -28,7 +28,7 @@ TEST_CASE("Entity ordering", "Test ordering of entities") {
 
 TEST_CASE("Entity validness", "Test validness of entities") {
     auto e = entity{ 0, 0 };
-    auto invalid = entity::invalid;
+    auto invalid = entity::invalid();
 
     REQUIRE(e.valid());
     REQUIRE_FALSE(invalid.valid());

@@ -5,6 +5,7 @@
 #include <new>
 #include <optional>
 #include <type_traits>
+#include <utility>
 
 #include <co_ecs/component.hpp>
 #include <co_ecs/detail/bits.hpp>
@@ -182,7 +183,6 @@ public:
         other_chunk._size++;
         return other_chunk_index;
     }
-
 
     /// @brief Give a const pointer to a component T at index
     ///

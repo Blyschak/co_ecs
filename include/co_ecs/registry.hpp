@@ -365,19 +365,19 @@ private:
         }
     }
 
-    [[nodiscard]] auto get_location(entity_id_t entity_id) const -> const entity_location& {
+    [[nodiscard]] auto get_location(typename entity::id_t entity_id) const -> const entity_location& {
         return _entity_archetype_map.at(entity_id);
     }
 
-    [[nodiscard]] auto get_location(entity_id_t id) -> entity_location& {
+    [[nodiscard]] auto get_location(typename entity::id_t id) -> entity_location& {
         return _entity_archetype_map.at(id);
     }
 
-    void set_location(entity_id_t entity_id, const entity_location& location) {
+    void set_location(typename entity::id_t entity_id, const entity_location& location) {
         _entity_archetype_map[entity_id] = location;
     }
 
-    void remove_location(entity_id_t entity_id) {
+    void remove_location(typename entity::id_t entity_id) {
         _entity_archetype_map.erase(entity_id);
     }
 
@@ -388,7 +388,7 @@ private:
 private:
     mutable entity_pool _entity_pool;
     archetypes _archetypes;
-    detail::sparse_map<entity_id_t, entity_location> _entity_archetype_map;
+    detail::sparse_map<typename entity::id_t, entity_location> _entity_archetype_map;
 };
 
 } // namespace co_ecs
