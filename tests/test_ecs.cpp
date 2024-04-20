@@ -82,7 +82,7 @@ TEST_CASE("ECS Views", "Iteration over registry") {
     const int number_of_entities = GENERATE(2, 10000);
 
     for (int i = 0; i < number_of_entities / 2; i++) {
-        auto entity = test_registry.create<foo<0>, foo<1>, foo<2>>({ 1, 2 }, { 3, 0 }, { 5, 6 });
+        auto entity = test_registry.create<foo<0>, foo<1>, foo<2>>({ 1, 2 }, { 3, 4 }, { 5, 6 });
         REQUIRE(test_registry.alive(entity));
     }
 
@@ -144,6 +144,16 @@ TEST_CASE("ECS Views", "Iteration over registry") {
 
         REQUIRE(sum_0 == number_of_entities * 1);
         REQUIRE(sum_2 == number_of_entities * 5);
+    }
+
+    SECTION("Single entity") {
+        auto maybe_components = test_registry.single<foo<0>&, foo<2>&>();
+        REQUIRE(maybe_components.has_value());
+        auto [foo_0, foo_2] = *maybe_components;
+        REQUIRE(foo_0.a == 1);
+        REQUIRE(foo_0.b == 2);
+        REQUIRE(foo_2.a == 5);
+        REQUIRE(foo_2.b == 6);
     }
 }
 

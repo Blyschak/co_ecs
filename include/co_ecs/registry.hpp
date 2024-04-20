@@ -309,6 +309,23 @@ public:
     auto view() const -> co_ecs::view<Args...>
         requires const_component_references_v<Args...>;
 
+    /// @brief Returns a single tuple of components matching Args, if available in the view.
+    ///
+    /// @return Optional tuple of components if found, otherwise empty optional
+    template<component_reference... Args>
+    auto single() -> std::optional<std::tuple<Args...>>
+        requires(!const_component_references_v<Args...>);
+
+    /// @brief Returns a single tuple of components matching Args, if available in the view.
+    ///
+    /// This method is available in const registry and allows accessing a single tuple of components matching Args.
+    /// It returns an optional tuple, which is empty if no entities in the view match the component requirements.
+    ///
+    /// @return Optional tuple of components if found, otherwise empty optional
+    template<component_reference... Args>
+    auto single() const -> std::optional<std::tuple<Args...>>
+        requires const_component_references_v<Args...>;
+
     /// @brief Run func on every entity that matches the Args requirement
     ///
     /// NOTE: This kind of iteration might be faster and better optimized by the compiler since the func can operate on

@@ -47,6 +47,37 @@ public:
     explicit view(registry_type registry) noexcept : _registry(registry) {
     }
 
+    /// @brief Returns a single tuple of components matching Args, if available in the view.
+    ///
+    /// @return Optional tuple of components if found, otherwise empty optional
+    auto single() -> std::optional<std::tuple<Args...>>
+        requires(!is_const)
+    {
+        for (auto chunk : chunks(_registry.get_archetypes())) {
+            for (auto entry : chunk) {
+                return entry;
+            }
+        }
+        return {};
+    }
+
+    /// @brief Returns a single tuple of components matching Args, if available in the view.
+    ///
+    /// This method is available in const views and allows accessing a single tuple of components matching Args.
+    /// It returns an optional tuple, which is empty if no entities in the view match the component requirements.
+    ///
+    /// @return Optional tuple of components if found, otherwise empty optional
+    auto single() const -> std::optional<std::tuple<Args...>>
+        requires(is_const)
+    {
+        for (auto chunk : chunks(_registry.get_archetypes())) {
+            for (auto entry : chunk) {
+                return entry;
+            }
+        }
+        return {};
+    }
+
     /// @brief Returns an iterator that yields a std::tuple<Args...>
     ///
     /// @return decltype(auto) Iterator
@@ -180,6 +211,20 @@ auto registry::view() const -> co_ecs::view<Args...>
     requires const_component_references_v<Args...>
 {
     return co_ecs::view<Args...>{ *this };
+}
+
+template<component_reference... Args>
+auto registry::single() -> std::optional<std::tuple<Args...>>
+    requires(!const_component_references_v<Args...>)
+{
+    return view<Args...>().single();
+}
+
+template<component_reference... Args>
+auto registry::single() const -> std::optional<std::tuple<Args...>>
+    requires const_component_references_v<Args...>
+{
+    return view<Args...>().single();
 }
 
 template<typename F>
