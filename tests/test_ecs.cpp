@@ -173,7 +173,7 @@ TEST_CASE("ECS Registry entity not found exception", "Catch exceptions raised on
     REQUIRE_THROWS_AS(test_registry.get<const foo<0>&>(ent), entity_not_found);
     REQUIRE_THROWS_AS(test_registry.has<foo<0>>(ent), entity_not_found);
     REQUIRE_THROWS_AS(test_registry.set<foo<0>>(ent, 0, 0), entity_not_found);
-    REQUIRE_THROWS_AS(test_registry.destroy(ent), entity_not_found);
+    REQUIRE_FALSE(test_registry.destroy(ent));
 }
 
 TEST_CASE("ECS Registry insufficient chunk size",

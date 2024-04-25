@@ -59,23 +59,15 @@ public:
         set_location(ent.id(), location);
     }
 
-    /// @brief Reserve an entity handle.
-    /// This API is thread safe.
-    /// @return Entity handle.
-    auto reserve() const -> entity {
-        return _entity_pool.reserve();
-    }
-
-    /// @brief Flushes reserved entities.
-    void flush_reserved() {
-        _entity_pool.flush();
-    }
-
     /// @brief Destroy an entity
     ///
     /// @param ent Entity to destroy
-    void destroy(entity ent) {
-        ensure_alive(ent);
+    /// @return True if entity was deleted, otherwise false
+    auto destroy(entity ent) -> bool {
+        if (!alive(ent)) {
+            return false;
+        }
+
         auto location = get_location(ent.id());
 
         // returns the entity that has been moved to a new location
@@ -87,6 +79,8 @@ public:
         }
 
         _entity_pool.recycle(ent);
+
+        return true;
     }
 
     /// @brief Set component to an entity. It can either override a component value that is already assigned to an
@@ -291,6 +285,18 @@ public:
         auto entity_id = ent.id();
         const auto& location = get_location(entity_id);
         return location.archetype->template contains<C>();
+    }
+
+    /// @brief Reserve an entity handle.
+    /// This API is thread safe.
+    /// @return Entity handle.
+    auto reserve() const -> entity {
+        return _entity_pool.reserve();
+    }
+
+    /// @brief Flushes reserved entities.
+    void flush_reserved() {
+        _entity_pool.flush();
     }
 
     /// @brief Create a non-const view based on component query in parameter pack
