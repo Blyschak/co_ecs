@@ -254,4 +254,43 @@ public:
     using state_type = system_command_writer_state;
 };
 
+/// @brief System view state, pre-creates a view object needed for components iteration
+///
+/// @tparam view_t View type
+template<typename view>
+class system_view_state {
+public:
+    /// @brief Construct a new system view state object
+    ///
+    /// @param registry Registry reference
+    /// @param user_context User provided context to fetch data from and provide to the system
+    explicit system_view_state(registry& registry, void* user_context) noexcept : _view(registry) {
+    }
+
+    /// @brief Returns the actual state inside to pass to the system
+    ///
+    /// @return view_t&
+    [[nodiscard]] view& get() noexcept {
+        return _view;
+    }
+
+    /// @brief Run deferred logic
+    void run_deferred() const noexcept {
+    }
+
+private:
+    view _view;
+};
+
+/// @brief Specialization for ecs::view<Args...>
+///
+/// @tparam Args View argument types
+template<component_reference... Args>
+class system_argument_state_trait<view<Args...>> {
+public:
+    /// @brief Actual state type for T
+    using state_type = system_view_state<view<Args...>>;
+};
+
+
 } // namespace co_ecs
