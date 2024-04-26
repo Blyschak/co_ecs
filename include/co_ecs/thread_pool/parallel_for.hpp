@@ -1,5 +1,6 @@
 #pragma once
 
+#include <co_ecs/detail/allocator/temp_allocator.hpp>
 #include <co_ecs/thread_pool/thread_pool.hpp>
 
 namespace co_ecs {
@@ -25,7 +26,7 @@ void parallel_for(auto&& range, auto&& func) {
     };
 
     // Using thread pool worker stack allocator to avoid new/delete.
-    std::vector<chunk_data, thread_pool::worker_stack_allocator<chunk_data>> chunks;
+    std::vector<chunk_data, detail::temp_allocator<chunk_data>> chunks;
     chunks.resize(num_workers);
 
     auto chunk_start = range.begin();

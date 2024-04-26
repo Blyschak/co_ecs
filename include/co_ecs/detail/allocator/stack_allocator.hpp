@@ -26,11 +26,6 @@ public:
     stack_allocator(void* ptr, std::size_t size) : _start(static_cast<char*>(ptr)), _size(size) {
     }
 
-    /// @brief Construct
-    /// @param size Size of the underlaying buffer
-    stack_allocator(std::size_t size) : stack_allocator(new char[size], size) {
-    }
-
     stack_allocator(const stack_allocator& rhs) = delete;
     stack_allocator& operator=(const stack_allocator& rhs) = delete;
 
