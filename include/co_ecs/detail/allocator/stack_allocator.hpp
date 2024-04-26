@@ -5,19 +5,30 @@
 #include <memory>
 #include <utility>
 
+#include <co_ecs/detail/bits.hpp>
+
 namespace co_ecs::detail {
 
 /// @brief Stack allocator
 class stack_allocator {
 private:
+    using padding_t = uint8_t;
+
+    /// @brief Allocation header
     struct alloc_header {
-        uint8_t padding;
+        padding_t padding;
     };
 
 public:
+    /// @brief Construct stack allocator
+    /// @param
+    /// @param size Size of the underlaying buffer
+    stack_allocator(void* ptr, std::size_t size) : _start(static_cast<char*>(ptr)), _size(size) {
+    }
+
     /// @brief Construct
     /// @param size Size of the underlaying buffer
-    stack_allocator(std::size_t size) : _start(new char[size]), _size(size) {
+    stack_allocator(std::size_t size) : stack_allocator(new char[size], size) {
     }
 
     stack_allocator(const stack_allocator& rhs) = delete;
@@ -38,33 +49,35 @@ public:
         return *this;
     }
 
-    /// @brief Destructor
-    ~stack_allocator() {
-        delete[] _start;
-    }
-
     /// @brief Allocate bytes given the alignemnt
     /// @param bytes Number of bytes to allocate
     /// @param alignment Alignment
     /// @return Pointer to allocated chunk
-    void* allocate(std::size_t bytes, std::size_t alignment = alignof(std::max_align_t)) noexcept {
-        assert((alignment % 2 == 0) && "Alignment must be a power of two");
-        assert(
-            (alignment <= std::numeric_limits<decltype(alloc_header::padding)>::max()) && "Alignment is out of range");
+    auto allocate(std::size_t bytes, std::size_t alignment = alignof(std::max_align_t)) noexcept -> void* {
+        assert(is_power_of_2(alignment) && "Alignment must be a power of two");
+        assert((alignment <= std::numeric_limits<padding_t>::max()) && "Alignment is out of range");
 
-        auto padding = get_padding(bytes, alignment);
-
-        if (_offset + padding + sizeof(alloc_header) + bytes > _size) {
+        // Get the top of the stack
+        char* top = _start + _offset;
+        // Get the pointer to the top + 1 allocation header
+        void* ptr = top + sizeof(alloc_header);
+        // Calculate remaining space
+        auto remaining_space = _size - _offset - sizeof(alloc_header);
+        // Calculate aligned pointer
+        void* aligned_ptr = std::align(alignment, bytes, ptr, remaining_space);
+        if (!aligned_ptr) {
             return nullptr;
         }
 
-        _offset += padding;
-        auto* hdr_ptr = _start + _offset;
-        _offset += sizeof(alloc_header);
-        new (hdr_ptr) alloc_header{ padding };
-        auto* ptr = _start + _offset;
-        _offset += bytes;
-        return ptr;
+        // Get the required padding from the top of the stack to the allocation
+        auto padding = static_cast<padding_t>(static_cast<char*>(aligned_ptr) - top);
+        // Increment offset by padding and allocation size
+        _offset += padding + bytes;
+
+        // Write header
+        new (static_cast<char*>(aligned_ptr) - sizeof(alloc_header)) alloc_header{ padding };
+
+        return aligned_ptr;
     }
 
     /// @brief Deallocate by pointer (should be top of the stack)
@@ -72,24 +85,23 @@ public:
     void deallocate(void* ptr) noexcept {
         assert((ptr < _start + _size) && (ptr >= _start) && "Outside allocation range");
 
+        // Fetch header
         auto* hdr = reinterpret_cast<alloc_header*>(static_cast<char*>(ptr) - sizeof(alloc_header));
+        // Decrement offset
         _offset = static_cast<char*>(ptr) - hdr->padding - _start;
+
         hdr->~alloc_header(); // no-op
     }
 
-    void free_all() noexcept {
-        _offset = 0;
+    /// @brief Get remaining bytes left
+    /// @return Bytes left
+    [[nodiscard]] auto remaining() const noexcept -> std::size_t {
+        return (_size - _offset);
     }
 
-private:
-    [[nodiscard]]
-    uint8_t get_padding(std::size_t size, std::size_t alignment) const noexcept {
-        void* ptr = _start + _offset + sizeof(alloc_header);
-        std::size_t space = (static_cast<char*>(_start) + _size) - static_cast<char*>(ptr);
-        void* aligned_ptr = std::align(alignment, size, ptr, space);
-        assert(aligned_ptr && "Failed to align");
-        return static_cast<uint8_t>(
-            static_cast<char*>(aligned_ptr) - (static_cast<char*>(_start) + _offset) - sizeof(alloc_header));
+    /// @brief Reset allocator
+    void reset() noexcept {
+        _offset = 0;
     }
 
 private:

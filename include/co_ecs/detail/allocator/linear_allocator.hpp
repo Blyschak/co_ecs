@@ -3,6 +3,8 @@
 #include <cstddef>
 #include <memory>
 
+#include <co_ecs/detail/bits.hpp>
+
 namespace co_ecs::detail {
 
 /// @class Linear Allocator
@@ -33,7 +35,9 @@ public:
     /// @param size Size of memory to allocate in bytes.
     /// @param alignment Alignment requirement for the allocation.
     /// @return Pointer to the allocated memory block, or nullptr if allocation fails.
-    auto allocate(std::size_t size, std::size_t alignment) noexcept -> void* {
+    auto allocate(std::size_t size, std::size_t alignment = alignof(std::max_align_t)) noexcept -> void* {
+        assert(is_power_of_2(alignment) && "Alignment must be a power of two");
+
         auto space_left = _size - (static_cast<char*>(_head) - static_cast<char*>(_ptr));
         auto ptr = std::align(alignment, size, _head, space_left);
         if (!ptr) {

@@ -15,6 +15,7 @@ include(Catch)
 
 add_executable(
   tests
+  test_allocator.cpp
   test_container.cpp
   test_component.cpp
   test_entity.cpp
