@@ -1,12 +1,17 @@
 # CoECS
 
 ![C++](https://img.shields.io/badge/STD-C++20-blue)
+[![Doxygen](https://img.shields.io/badge/Documentation-Doxygen-blue)]()
 [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
 ![Build badge](https://github.com/Blyschak/co_ecs/actions/workflows/build.yml/badge.svg)
 [![codecov](https://codecov.io/gh/Blyschak/co_ecs/branch/main/graph/badge.svg?token=BZ8Z6TXN55)](https://codecov.io/gh/Blyschak/cobalt-ecs)
 ![LoC](https://raw.githubusercontent.com/Blyschak/co_ecs/badges/badge.svg)
 
 ```co_ecs``` is a header-only library implementing an Entity Component System.
+
+## API Documentation
+
+[Doxygen](https://blyschak.github.io/co_ecs/)
 
 ## Build
 
