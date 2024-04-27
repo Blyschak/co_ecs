@@ -1,0 +1,32 @@
+name: Docs
+
+on:
+  push:
+    # Sequence of patterns matched against refs/heads
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2.0.0
+
+    - name: Install doxygen
+      run: sudo apt-get install -y doxygen
+
+    - name: Configure
+      uses: nicledomaS/cmake_build_action@v1.4
+      with:
+        run_tests: ON
+        cmake_args: -DCO_ECS_ENABLE_DOCS=ON
+
+    - name: Build docs
+      run: cd build && make docs
+
+    - name: Publish
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: build/docs/html
