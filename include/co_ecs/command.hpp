@@ -1,14 +1,18 @@
 #pragma once
 
-#include <co_ecs/detail/allocator/stack_allocator.hpp>
+#include <co_ecs/detail/allocator/linear_allocator.hpp>
 #include <co_ecs/registry.hpp>
 
+#include <iostream>
 #include <vector>
 
 namespace co_ecs {
 
 /// @brief Command. TODO: Try to remove vtable usage
 struct command {
+    /// @brief Pointer to the next command in command buffer
+    command* next_command{ nullptr };
+
     /// @brief Destructor
     virtual ~command() = default;
 
@@ -95,10 +99,28 @@ struct command_destroy : command {
 
 /// @brief Command buffer. Record commands on registry and execute then later.
 class command_buffer {
+private:
+    class command_buffer_chunk {
+    public:
+        static const std::size_t chunk_size = 16ull * 1024 * 1024;
+
+        auto allocate(std::size_t size, std::size_t alignment) -> command* {
+            return static_cast<command*>(_arena.allocate(size, alignment));
+        }
+
+        void reset() {
+            _arena.reset();
+        }
+
+    private:
+        std::unique_ptr<uint8_t[]> _buffer{ new uint8_t[chunk_size] };
+        detail::linear_allocator _arena{ _buffer.get(), chunk_size };
+    };
+
 public:
     /// @brief Command buffer constructor
     command_buffer() {
-        _commands.reserve(1024);
+        _chunks.resize(1);
     }
 
     /// @brief Create entity
@@ -109,9 +131,7 @@ public:
     template<component... Args>
     auto create(const registry& reg, Args&&... args) -> entity {
         auto ent = reg.reserve();
-        command* ptr = (command*)_stack.allocate(sizeof(command_create<Args...>), alignof(command_create<Args...>));
-        new (ptr) command_create<Args...>(ent, std::forward<Args>(args)...);
-        _commands.push_back(ptr);
+        push_command<command_create<Args...>>(ent, std::forward<Args>(args)...);
         return ent;
     }
 
@@ -122,9 +142,7 @@ public:
     /// @param ...args Components
     template<component C, typename... Args>
     void set(entity ent, Args&&... args) {
-        command* ptr = (command*)_stack.allocate(sizeof(command_set<C>), alignof(command_set<C>));
-        new (ptr) command_set<C>(ent, C{ std::forward<Args>(args)... });
-        _commands.push_back(ptr);
+        push_command<command_set<C>>(ent, std::forward<Args>(args)...);
     }
 
     /// @brief Remove component
@@ -132,37 +150,78 @@ public:
     /// @param ent Entity
     template<component C>
     void remove(entity ent) {
-        command* ptr = (command*)_stack.allocate(sizeof(command_remove<C>), alignof(command_remove<C>));
-        new (ptr) command_remove<C>(ent);
-        _commands.push_back(ptr);
+        push_command<command_remove<C>>(ent);
     }
 
     /// @brief Destroy entity
     /// @param ent Entity
     void destroy(entity ent) {
-        command* ptr = (command*)_stack.allocate(sizeof(command_destroy), alignof(command_destroy));
-        new (ptr) command_destroy(ent);
-        _commands.push_back(ptr);
+        push_command<command_destroy>(ent);
     }
 
     /// @brief Flush commands to registry
     /// @param registry Registry
     void flush(registry& registry) {
         registry.flush_reserved();
+        flush_commands(registry);
+    }
 
-        while (!_commands.empty()) {
-            auto& command = _commands.back();
-            command->run(registry);
-            command->~command();
-            _commands.pop_back();
+    /// @brief Flush commands to registry, reserved entities are not flushed
+    /// @param registry Registry
+    void flush_commands(registry& registry) {
+        // Iterate the linked list of commands
+        auto* iter = _base;
+
+        while (iter) {
+            iter->run(registry);
+            auto* next = iter->next_command;
+            iter->~command();
+            iter = next;
         }
 
-        _stack.free_all();
+        _base = _top = nullptr;
+
+        for (auto& chunk : _chunks) {
+            chunk.reset();
+            _current_chunk = 0;
+        }
+    }
+
+
+private:
+    command* allocate_command(std::size_t size, std::size_t alignment) {
+        auto ptr = _chunks[_current_chunk].allocate(size, alignment);
+        if (!ptr) {
+            _current_chunk++;
+            if (_current_chunk == _chunks.size()) {
+                _chunks.emplace_back();
+            }
+            ptr = _chunks[_current_chunk].allocate(size, alignment);
+        }
+        return ptr;
+    }
+
+    template<typename C, typename... Args>
+    void push_command(Args&&... args) {
+        command* ptr = allocate_command(sizeof(C), alignof(C));
+        new (ptr) C{ std::forward<Args>(args)... };
+        push_command(ptr);
+    }
+
+    void push_command(command* cmd) {
+        if (_top) {
+            _top->next_command = cmd;
+        } else {
+            _base = cmd;
+        }
+        _top = cmd;
     }
 
 private:
-    detail::stack_allocator _stack{ 16ull * 1024 * 1024 }; // TODO: Could use linear allocator as well
-    std::vector<command*> _commands;
+    std::vector<command_buffer_chunk> _chunks;
+    command* _top{};
+    command* _base{};
+    std::size_t _current_chunk{};
 };
 
 /// @brief Command writer used by systems to record commands
