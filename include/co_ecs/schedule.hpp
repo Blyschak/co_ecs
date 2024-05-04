@@ -70,21 +70,22 @@ public:
 
         // flush commands
         for (auto i = 0; i < _thread_pool.num_workers(); i++) {
-            _thread_pool.get_worker_by_id(i).get_command_buffer().flush(_registry);
+            _thread_pool.get_worker_by_id(i).get_command_buffer().flush_commands(_registry);
         }
     }
 
 private:
     void execute_batch(auto&& work_batch) {
-        auto* parent = _thread_pool.allocate([]() {});
+        task_t* parent{};
+
 
         for (auto& work_item : work_batch) {
-            auto* task = _thread_pool.allocate([&work_item]() { work_item->run(); }, parent);
-
-            _thread_pool.submit(task);
+            auto* task = _thread_pool.submit([&work_item]() { work_item->run(); }, parent);
+            if (!parent) {
+                parent = task;
+            }
         }
 
-        _thread_pool.submit(parent);
         _thread_pool.wait(parent);
     }
 

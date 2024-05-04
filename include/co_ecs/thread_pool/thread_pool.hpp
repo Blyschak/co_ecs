@@ -1,6 +1,5 @@
 #pragma once
 
-#include <co_ecs/detail/allocator/stack_allocator.hpp>
 #include <co_ecs/detail/work_stealing_queue.hpp>
 #include <co_ecs/thread_pool/task.hpp>
 
@@ -67,6 +66,15 @@ public:
         }
 
         /// @brief Submit a task into local workers queue
+        /// @param func Function
+        /// @param parent Parent task pointer
+        task_t* submit(auto&& func, task_t* parent = nullptr) {
+            task_t* task = allocate(std::forward<decltype(func)>(func), parent);
+            submit(task);
+            return task;
+        }
+
+        /// @brief Submit a task into local workers queue
         /// @param task Task
         void submit(task_t* task) {
             _queue.push(task);
@@ -106,12 +114,6 @@ public:
         /// @return Command buffer
         command_buffer& get_command_buffer() noexcept {
             return _command_buffer;
-        }
-
-        /// @brief Return stack allocator
-        /// @return Stack allocator reference
-        detail::stack_allocator& get_allocator() noexcept {
-            return _stack;
         }
 
     private:
@@ -187,43 +189,6 @@ public:
         std::thread _thread{};
         std::size_t _id;
         worker_stats _stats;
-        detail::stack_allocator _stack{ 16ull * 1024 * 1024 };
-    };
-
-    /// @brief Worker allocator, use for temporary allocations
-    /// @tparam T Type
-    template<typename T>
-    class worker_stack_allocator {
-    public:
-        using value_type = T;
-        using size_type = std::size_t;
-        using difference_type = std::ptrdiff_t;
-        using propagate_on_container_move_assignment = std::true_type;
-
-        /// @brief Constructor
-        worker_stack_allocator() = default;
-
-        /// @brief Copy constructor
-        /// @tparam U
-        /// @param Other allocator instance
-        template<class U>
-        constexpr worker_stack_allocator(const worker_stack_allocator<U>&) noexcept {
-        }
-
-        /// @brief Allocate n elements
-        /// @param n Elements to allocate
-        /// @return Pointer to allocated memory
-        [[nodiscard]] constexpr T* allocate(std::size_t n) {
-            return static_cast<T*>(thread_pool::current_worker().get_allocator().allocate(n * sizeof(T), alignof(T)));
-        }
-
-        /// @brief Deallocate storage referenced by p
-        /// @param p Pointer to memory to deallocate
-        /// @param n Number of elements to allocate (must be the same as passed to the corresponding allocate() p is
-        /// obtained from)
-        constexpr void deallocate(T* p, [[maybe_unused]] std::size_t n) {
-            return thread_pool::current_worker().get_allocator().deallocate(p);
-        }
     };
 
     /// @brief Construct thread pool with num_workers workers
@@ -281,17 +246,11 @@ public:
         return *_instance;
     }
 
-    /// @brief Allocate a task
-    /// @param func Callable
-    /// @return Pointer to an allocated task
-    task_t* allocate(auto&& func, task_t* parent = nullptr) {
-        return current_worker().allocate(std::forward<decltype(func)>(func), parent);
-    }
-
     /// @brief Submit a task to a thread pool
-    /// @param task
-    void submit(task_t* task) {
-        current_worker().submit(task);
+    /// @param func Function
+    /// @param parent Parent task pointer
+    task_t* submit(auto&& func, task_t* parent = nullptr) {
+        return current_worker().submit(std::forward<decltype(func)>(func), parent);
     }
 
     /// @brief Wait a task to complete
@@ -337,15 +296,3 @@ private:
 };
 
 } // namespace co_ecs
-
-template<class T, class U>
-constexpr bool operator==(const co_ecs::thread_pool::worker_stack_allocator<T>&,
-    const co_ecs::thread_pool::worker_stack_allocator<U>&) noexcept {
-    return true;
-}
-
-template<class T, class U>
-constexpr bool operator!=(const co_ecs::thread_pool::worker_stack_allocator<T>&,
-    const co_ecs::thread_pool::worker_stack_allocator<U>&) noexcept {
-    return false;
-}

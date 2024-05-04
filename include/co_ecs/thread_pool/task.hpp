@@ -16,6 +16,7 @@ public:
     /// @param func callable object
     /// @param parent task
     task_t(auto&& func, task_t* parent = nullptr) : _func(std::forward<decltype(func)>(func)), _parent(parent) {
+        _unfinishedTasks.store(1, std::memory_order::relaxed);
         if (_parent) {
             _parent->_unfinishedTasks.fetch_add(1, std::memory_order::relaxed);
         }
@@ -54,7 +55,7 @@ private:
     std::function<void()> _func{};
     task_t* _parent{};
     // TODO: insert padding between mutable and immutable data to avoid false sharing
-    std::atomic<uint16_t> _unfinishedTasks{ 1 };
+    std::atomic<uint16_t> _unfinishedTasks;
 };
 
 /// @brief Task pool. Tasks are allocated from an circular array.

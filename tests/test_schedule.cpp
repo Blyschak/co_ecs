@@ -25,6 +25,47 @@ TEST_CASE("Schedule", "Basic schedule operations") {
     REQUIRE(reg.size() == 6);
 }
 
+TEST_CASE("Schedule stress: Entity commands scale") {
+    registry reg;
+    schedule schedule;
+
+    struct singleton {
+        std::size_t entity_count{};
+    };
+
+    auto e = reg.create<singleton>({});
+
+    REQUIRE(reg.size() == 1);
+
+    const int number_of_entities = GENERATE(1, 10, 100, 1000);
+    const int number_of_iterations = GENERATE(1, 10, 100);
+
+    schedule
+        .add_system([number_of_entities](command_writer cmd) {
+            for (auto i : detail::views::iota(0, number_of_entities)) {
+                cmd.create<foo<0>, foo<1>>({}, {});
+            }
+        })
+        .barrier()
+        .add_system([](command_writer cmd,
+                        view<const entity&, const foo<0>&, const foo<1>&> v,
+                        view<singleton&> singleton_view) {
+            v.each([&](const auto& entity, const auto& foo_0, const auto& foo_1) {
+                auto [singleton] = *singleton_view.single();
+                singleton.entity_count++;
+                cmd.destroy(entity);
+            });
+        });
+
+    executor exec{ schedule, reg };
+
+    for (auto i : detail::views::iota(0, number_of_iterations)) {
+        exec.run_once();
+    }
+
+    REQUIRE(reg.get<singleton>(e).entity_count == number_of_entities * (number_of_iterations - 1));
+}
+
 TEST_CASE("Parallel for") {
     std::vector<int> vec;
     for (int i = 0; i < 1000000; i++) {

@@ -44,13 +44,11 @@ void parallel_for(auto&& range, auto&& func) {
 
         auto chunk = chunks.begin() + i;
 
-        auto* task = tp.allocate([chunk, &func]() { std::for_each(chunk->start, chunk->stop, func); }, parent);
+        auto* task = tp.submit([chunk, &func]() { std::for_each(chunk->start, chunk->stop, func); }, parent);
 
         if (!parent) {
             parent = task;
         }
-
-        tp.submit(task);
 
         chunk_start = chunk_stop;
     }
