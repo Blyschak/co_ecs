@@ -146,10 +146,14 @@ public:
             [&func](auto chunk) { std::ranges::for_each(chunk, [&](auto&& elem) { std::apply(func, elem); }); });
     }
 
+    /// @brief Get chunks range
+    /// @return Chunks
     auto chunks() -> decltype(auto) {
         return chunks(_registry.get_archetypes());
     }
 
+    /// @brief Get const chunks range
+    /// @return Chunks
     auto chunks() const -> decltype(auto) {
         return chunks(_registry.get_archetypes());
     }
