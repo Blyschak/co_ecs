@@ -154,6 +154,13 @@ public:
         return chunks(_registry.get_archetypes());
     }
 
+    /// @brief Check if entity is part of the view
+    /// @param ent Entity
+    /// @return True if exists in the view
+    auto has(entity ent) const noexcept -> bool {
+        return _registry.template has<decay_component_t<Args>...>(ent);
+    }
+
     /// @brief Get components for a single entity
     ///
     /// @param ent Entity to query
@@ -161,7 +168,7 @@ public:
     auto get(entity ent) -> value_type
         requires(!is_const)
     {
-        return _registry.template get<Args...>(ent);
+        return _registry.template get<decay_component_t<Args>...>(ent);
     }
 
     /// @brief Get components for a single entity
@@ -171,7 +178,7 @@ public:
     auto get(entity ent) const -> value_type
         requires(is_const)
     {
-        return _registry.template get<Args...>(ent);
+        return _registry.template get<decay_component_t<Args>...>(ent);
     }
 
 private:
