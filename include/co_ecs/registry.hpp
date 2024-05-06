@@ -36,9 +36,6 @@ public:
     /// @return entity Entity to construct
     template<component... Args>
     auto create(Args&&... args) -> entity {
-        // compile-time check to make sure all component types in parameter pack are unique
-        [[maybe_unused]] detail::unique_types<Args...> uniqueness_check;
-
         auto entity = _entity_pool.create();
         create_with_entity(entity, std::forward<Args>(args)...);
         return entity;
@@ -165,6 +162,16 @@ public:
     /// @param dest Destination registry
     /// @return Entity in the destination registry
     entity move(entity ent, registry& dest) {
+        auto dest_entity = dest._entity_pool.create();
+        move_with_entity(ent, dest, dest_entity);
+        return dest_entity;
+    }
+
+    /// @brief Move entity between registries
+    /// @param ent Entity to move
+    /// @param dest Destination registry
+    /// @param dest_entity Reserved destination entity
+    void move_with_entity(entity ent, registry& dest, entity dest_entity) {
         ensure_alive(ent);
         auto location = get_location(ent.id());
         auto* src_archetype = location.archetype;
@@ -178,16 +185,13 @@ public:
         }
         _entity_pool.recycle(ent);
 
-        auto new_ent = dest._entity_pool.create();
-
         // TODO: handle inside Archetype
         *dst_archetype
-             ->chunks()                                                  // in dst Archetype chunks
-                 [new_location.chunk_index]                              // find the Chunk the entity was moved to
-             .ptr_unchecked<entity>(new_location.entry_index) = new_ent; // update entity value in the Chunk
+             ->chunks()                                                      // in dst Archetype chunks
+                 [new_location.chunk_index]                                  // find the Chunk the entity was moved to
+             .ptr_unchecked<entity>(new_location.entry_index) = dest_entity; // update entity value in the Chunk
 
-        dest.set_location(new_ent.id(), new_location);
-        return new_ent;
+        dest.set_location(dest_entity.id(), new_location);
     }
 
     /// @brief Copy entity to another registries
@@ -195,22 +199,29 @@ public:
     /// @param dest Destination registry
     /// @return Entity in the destination registry
     entity copy(entity ent, registry& dest) const {
+        auto dest_entity = dest._entity_pool.create();
+        copy_with_entity(ent, dest, dest_entity);
+        return dest_entity;
+    }
+
+    /// @brief Copy entity to another registries
+    /// @param ent Entity to copy
+    /// @param dest Destination registry
+    /// @param dest_entity Reserved destination entity
+    void copy_with_entity(entity ent, registry& dest, entity dest_entity) const {
         ensure_alive(ent);
         auto location = get_location(ent.id());
         auto* src_archetype = location.archetype;
         auto* dst_archetype = dest._archetypes.ensure_archetype(src_archetype->components());
         auto new_location = src_archetype->copy(location, *dst_archetype);
 
-        auto new_ent = dest._entity_pool.create();
-
         // TODO: handle inside Archetype
         *dst_archetype
-             ->chunks()                                                  // in dst Archetype chunks
-                 [new_location.chunk_index]                              // find the Chunk the EntityId was moved to
-             .ptr_unchecked<entity>(new_location.entry_index) = new_ent; // update EntityId value in the Chunk
+             ->chunks()                                                      // in dst Archetype chunks
+                 [new_location.chunk_index]                                  // find the Chunk the EntityId was moved to
+             .ptr_unchecked<entity>(new_location.entry_index) = dest_entity; // update EntityId value in the Chunk
 
-        dest.set_location(new_ent.id(), new_location);
-        return new_ent;
+        dest.set_location(dest_entity.id(), new_location);
     }
 
     /// @brief Clone entity
