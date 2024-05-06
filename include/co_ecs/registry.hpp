@@ -239,6 +239,59 @@ public:
         return std::get<0>(get_impl<C&>(*this, ent));
     }
 
+    /// @brief Get reference to component C, or construct it if not present.
+    ///
+    /// This function attempts to get a reference to a component of type C associated with the specified entity.
+    /// If the component is not present, it will be default-constructed.
+    ///
+    /// @tparam C Component C, which must be default-constructible.
+    /// @param ent Entity to read or modify the component from.
+    /// @return C& Reference to the component C.
+    template<component C>
+    [[nodiscard]] auto get_or_default(entity ent) -> C&
+        requires(std::is_default_constructible_v<C>)
+    {
+        return get_or_insert<C>(ent);
+    }
+
+    /// @brief Get reference to component C, or insert it with provided arguments if not present.
+    ///
+    /// This function tries to access a component of type C associated with the specified entity.
+    /// If the component does not exist, it is inserted by forwarding the provided arguments to the constructor of C.
+    /// This ensures that the component is initialized according to the arguments passed. After insertion,
+    /// the entity's archetype is updated to include this new component type, and all related entity locations are
+    /// adjusted accordingly to reflect changes in the archetype structure.
+    ///
+    /// @tparam C Component type which must be constructible with the provided arguments.
+    /// @param ent Entity from which to retrieve or insert the component.
+    /// @param args Arguments to forward to the constructor of C if component C needs to be created.
+    /// @return C& Reference to the component C.
+    template<component C>
+    [[nodiscard]] auto get_or_insert(entity ent, auto&&... args) -> C& {
+        ensure_alive(ent);
+        auto& location = get_location(ent.id());
+        auto*& archetype = location.archetype;
+
+        if (archetype->contains<C>()) {
+            return archetype->template get<C&>(location);
+        } else {
+            auto new_archetype = _archetypes.ensure_archetype_added<C>(archetype);
+            auto [new_location, moved] = archetype->move(location, *new_archetype);
+
+            auto ptr = std::addressof(new_archetype->template get<C&>(new_location));
+            std::construct_at(ptr, std::forward<decltype(args)>(args)...);
+
+            if (moved) {
+                set_location(moved->id(), location);
+            }
+
+            archetype = new_archetype;
+            set_location(ent.id(), new_location);
+
+            return *ptr;
+        }
+    }
+
     /// @brief Get const reference to component C
     ///
     /// @tparam C Component C
