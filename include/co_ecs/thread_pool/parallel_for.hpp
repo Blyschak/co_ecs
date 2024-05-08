@@ -6,54 +6,49 @@
 namespace co_ecs {
 
 /// @brief Parallelize func over elements in range
+/// @tparam R Range type
 /// @param range Range to apply func to
 /// @param func Function
-void parallel_for(auto&& range, auto&& func) {
-    auto& tp = thread_pool::get();
-    auto size = std::ranges::distance(range);
-    auto num_workers = tp.num_workers();
+template<typename R>
+void parallel_for(R&& range, auto&& func) {
+    auto& thread_pool = thread_pool::get();
+    auto num_workers = thread_pool.num_workers();
+    auto work_size = std::ranges::distance(range);
+    auto batch_size = work_size / num_workers;
 
-    // Calculate the chunk size, each chunk passed to a worker
-    auto chunk_size = size / num_workers;
+    if (batch_size < 1) {
+        // fast path for small range
+        std::ranges::for_each(range, func);
+    } else {
+        // alias a subrange type that is our batch of work
+        using batch_t = decltype(std::ranges::subrange(range.begin(), range.end()));
 
-    auto begin = range.begin();
-    auto end = range.end();
+        std::vector<batch_t, detail::temp_allocator<batch_t>> batches;
 
-    // Prepare an array of pairs [start, end] from the range each worker will deal with
-    struct chunk_data {
-        decltype(begin) start;
-        decltype(end) stop;
-    };
-
-    // Using thread pool worker stack allocator to avoid new/delete.
-    std::vector<chunk_data, detail::temp_allocator<chunk_data>> chunks;
-    chunks.resize(num_workers);
-
-    auto chunk_start = range.begin();
-    task_t* parent = nullptr; // An anchor task we will wait for
-
-    for (auto i = 0; i < num_workers; i++) {
-        auto chunk_stop = std::next(chunk_start, chunk_size);
-
-        if (i == num_workers - 1) {
-            chunk_stop = end;
+        // prepare batches
+        {
+            batches.reserve(num_workers);
+            auto b = range.begin();
+            auto e = b;
+            for (auto i = 0; i < num_workers; i++) {
+                auto e = (i < num_workers - 1) ? std::next(b, batch_size) : range.end();
+                batches.emplace_back(std::ranges::subrange(b, e));
+                b = e;
+            }
         }
 
-        chunks[i].start = chunk_start;
-        chunks[i].stop = chunk_stop;
-
-        auto chunk = chunks.begin() + i;
-
-        auto* task = tp.submit([chunk, &func]() { std::for_each(chunk->start, chunk->stop, func); }, parent);
-
-        if (!parent) {
-            parent = task;
+        // submit batches
+        {
+            task_t* parent = nullptr;
+            for (auto& batch : batches) {
+                auto* task = thread_pool.submit([&batch, &func]() { std::ranges::for_each(batch, func); }, parent);
+                if (!parent) {
+                    parent = task;
+                }
+            }
+            thread_pool.wait(parent);
         }
-
-        chunk_start = chunk_stop;
     }
-
-    tp.wait(parent);
 }
 
 } // namespace co_ecs

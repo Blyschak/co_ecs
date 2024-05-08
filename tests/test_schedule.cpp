@@ -67,14 +67,17 @@ TEST_CASE("Schedule stress: Entity commands scale") {
 }
 
 TEST_CASE("Parallel for") {
-    std::vector<int> vec;
-    for (int i = 0; i < 1000000; i++) {
+    std::vector<std::uint64_t> vec;
+
+    const std::uint64_t number_of_elements = GENERATE(10, 100, 1000, 1000000);
+
+    std::atomic<uint64_t> sum{ 0 };
+
+    for (int i = 0; i < number_of_elements; i++) {
         vec.push_back(i);
     }
 
-    std::atomic<uint64_t> sum;
-
     parallel_for(vec, [&sum](auto elem) { sum.fetch_add(elem); });
 
-    REQUIRE(sum.load() == 499999500000);
+    REQUIRE(sum.load() == (number_of_elements) * (number_of_elements - 1) / 2);
 }

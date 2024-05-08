@@ -3,9 +3,8 @@
 #include <co_ecs/detail/work_stealing_queue.hpp>
 #include <co_ecs/thread_pool/task.hpp>
 
-#include <co_ecs/command.hpp>
-
 #include <random>
+#include <semaphore>
 #include <thread>
 
 namespace co_ecs {
@@ -17,18 +16,17 @@ namespace co_ecs {
 /// local queue a worker thread tries to steal a task from a random worker.
 class thread_pool {
 public:
+    using thread_t = std::thread;
+
     /// @brief Thread pool worker
     class worker {
     public:
+#ifdef CO_ECS_WORKER_STATS
         /// @brief Worker stats
         struct worker_stats {
             std::atomic<uint64_t> task_count;
             std::atomic<uint64_t> steal_count;
-            std::atomic<uint64_t> yield_count;
             std::atomic<uint64_t> idle_count;
-
-        private:
-            friend class worker;
 
             void inc_task() {
                 task_count.fetch_add(1, std::memory_order::relaxed);
@@ -38,14 +36,11 @@ public:
                 steal_count.fetch_add(1, std::memory_order::relaxed);
             }
 
-            void inc_yield() {
-                yield_count.fetch_add(1, std::memory_order::relaxed);
-            }
-
             void inc_idle() {
                 idle_count.fetch_add(1, std::memory_order::relaxed);
             }
         };
+#endif
 
         /// @brief Create a thread pool worker
         /// @param pool
@@ -69,7 +64,7 @@ public:
         /// @param func Function
         /// @param parent Parent task pointer
         task_t* submit(auto&& func, task_t* parent = nullptr) {
-            task_t* task = allocate(std::forward<decltype(func)>(func), parent);
+            task_t* task = task_pool::allocate(std::forward<decltype(func)>(func), parent);
             submit(task);
             return task;
         }
@@ -77,7 +72,8 @@ public:
         /// @brief Submit a task into local workers queue
         /// @param task Task
         void submit(task_t* task) {
-            _queue.push(task);
+            get_queue().push(task);
+            _pool.wake_worker();
         }
 
         /// @brief Wait for task completion
@@ -86,35 +82,23 @@ public:
             while (!task->is_completed()) {
                 auto* next_task = get_task();
                 if (next_task) {
-                    next_task->execute();
-                    _stats.inc_task();
+                    execute(next_task);
                 } else {
+#ifdef CO_ECS_WORKER_STATS
                     _stats.inc_idle();
+#endif
                 }
+                _pool.wake_worker();
             }
-
-            // TODO: do I need a thread fence here?
         }
 
-        /// @brief Allocate task
-        /// @param func Callable
-        /// @param parent Parent task
-        /// @return Allocated task
-        task_t* allocate(auto&& func, task_t* parent = nullptr) {
-            return task_pool::allocate(std::forward<decltype(func)>(func), parent);
-        }
-
+#ifdef CO_ECS_WORKER_STATS
         /// @brief Get worker stats
         /// @return Stats
         const worker_stats& stats() const noexcept {
             return _stats;
         }
-
-        /// @brief Get command buffer
-        /// @return Command buffer
-        command_buffer& get_command_buffer() noexcept {
-            return _command_buffer;
-        }
+#endif
 
     private:
         friend class thread_pool;
@@ -131,46 +115,20 @@ public:
                 do {
                     task = get_task();
                     if (task) {
-                        task->execute();
-                        _stats.inc_task();
+                        execute(task);
                     } else {
-                        _stats.inc_idle();
+                        idle();
                     }
                 } while (task);
 
-                if (!_active.load(std::memory_order::relaxed)) {
+                if (!is_active()) {
                     break;
                 }
             }
         }
 
-        [[nodiscard]] task_t* get_task() {
-            auto maybe_task = _queue.pop();
-            if (!maybe_task) {
-                auto& random_worker = _pool.random_worker();
-                if (&random_worker == this) {
-                    yield();
-                    return nullptr;
-                }
-
-                maybe_task = random_worker._queue.steal();
-                if (!maybe_task) {
-                    yield();
-                    return nullptr;
-                }
-                _stats.inc_steal();
-            }
-
-            return *maybe_task;
-        }
-
-        void yield() {
-            _stats.inc_yield();
-            std::this_thread::yield();
-        }
-
         void start() {
-            _thread = std::thread([this]() { run(); });
+            _thread = thread_t([this]() { run(); });
         }
 
         void stop() {
@@ -178,17 +136,80 @@ public:
         }
 
         void join() {
-            _thread.join();
+            if (_thread.joinable()) {
+                _thread.join();
+            }
+        }
+
+        auto is_active() const noexcept -> bool {
+            return _active.load(std::memory_order::relaxed);
+        }
+
+        [[nodiscard]] task_t* get_task() {
+            // First, attempt to retrieve a task from the worker's own local queue.
+            if (auto maybe_task = get_queue().pop()) {
+                return *maybe_task;
+            }
+
+            // No tasks in the local queue; attempt to steal from the main worker queue, if not the main worker.
+            if (worker* main_worker = &_pool.main_worker(); main_worker != this) {
+                if (auto maybe_task = steal(*main_worker)) {
+                    return *maybe_task;
+                }
+            }
+
+            // If stealing from the main worker fails, attempt to steal from a random worker.
+            // This method is optimal for smaller numbers of workers (e.g., 4-8).
+            if (worker* random_worker = _pool.random_worker(); random_worker && random_worker != this) {
+                if (auto maybe_task = steal(*random_worker)) {
+                    return *maybe_task;
+                }
+            }
+
+            return nullptr;
+        }
+
+        [[nodiscard]]
+        std::optional<task_t*> steal(worker& worker) {
+            auto maybe_task = worker.get_queue().steal();
+#ifdef CO_ECS_WORKER_STATS
+            if (maybe_task) {
+                _stats.inc_steal();
+            }
+#endif
+            return maybe_task;
+        }
+
+        void execute(task_t* task) {
+            task->execute();
+#ifdef CO_ECS_WORKER_STATS
+            _stats.inc_task();
+#endif
+        }
+
+        void idle() {
+            _pool.wait();
+
+#ifdef CO_ECS_WORKER_STATS
+            _stats.inc_idle();
+#endif
+        }
+
+        [[nodiscard]]
+        detail::work_stealing_queue<task_t*>& get_queue() noexcept {
+            return _queue;
         }
 
     private:
-        std::atomic<bool> _active{ true };
         detail::work_stealing_queue<task_t*> _queue;
-        command_buffer _command_buffer;
         thread_pool& _pool;
-        std::thread _thread{};
+
+        std::atomic<bool> _active{ true };
+        thread_t _thread{};
         std::size_t _id;
+#ifdef CO_ECS_WORKER_STATS
         worker_stats _stats;
+#endif
     };
 
     /// @brief Construct thread pool with num_workers workers
@@ -211,9 +232,25 @@ public:
             _workers.emplace_back(std::make_unique<worker>(*this, i));
         }
 
+        // start workers
         for (auto i = 1; i < num_workers; i++) {
             _workers[i]->start();
         }
+    }
+
+    /// @brief Destroy thread pool, worker threads are notified to exit and joined.
+    ~thread_pool() {
+        // stop workers
+        for (auto i = 1; i < _workers.size(); i++) {
+            _workers[i]->stop();
+        }
+
+        // join worker threads
+        for (auto i = 1; i < _workers.size(); i++) {
+            _workers[i]->join();
+        }
+
+        _instance = nullptr;
     }
 
     thread_pool(const thread_pool&) = delete;
@@ -221,19 +258,6 @@ public:
 
     thread_pool(thread_pool&&) = delete;
     thread_pool& operator=(thread_pool&&) = delete;
-
-    /// @brief Destroy thread pool, worker threads are notified to exit and joined.
-    ~thread_pool() {
-        for (auto i = 1; i < _workers.size(); i++) {
-            _workers[i]->stop();
-        }
-
-        for (auto i = 1; i < _workers.size(); i++) {
-            _workers[i]->join();
-        }
-
-        _instance = nullptr;
-    }
 
     /// @brief Get thread pool instance
     /// @return thread_pool
@@ -259,22 +283,18 @@ public:
         current_worker().wait(task);
     }
 
-    /// @brief Get random worker
-    /// @return Worker
-    worker& random_worker() noexcept {
-        std::uniform_int_distribution<std::size_t> dist{ 0, _workers.size() - 1 };
-        std::default_random_engine random_engine{ std::random_device()() };
-
-        auto random_index = dist(random_engine);
-
-        return *_workers[random_index];
-    }
-
     /// @brief Get worker by ID
     /// @param id Worker ID
     /// @return Worker
     worker& get_worker_by_id(std::size_t id) noexcept {
         return *_workers.at(id);
+    }
+
+    /// @brief Return the number of workers
+    /// @return Number of workers
+    [[nodiscard]]
+    std::size_t num_workers() const noexcept {
+        return _workers.size();
     }
 
     /// @brief Get current worker
@@ -283,16 +303,39 @@ public:
         return worker::current();
     }
 
-    /// @brief Return the number of workers
-    /// @return Number of workers
-    std::size_t num_workers() const noexcept {
-        return _workers.size();
+private:
+    worker& main_worker() noexcept {
+        return *_workers[0];
+    }
+
+    worker* random_worker() noexcept {
+        if (num_workers() == 1) {
+            // no other workers than main
+            return nullptr;
+        }
+
+        std::uniform_int_distribution<std::size_t> dist{ 1, num_workers() - 1 };
+        std::default_random_engine random_engine{ std::random_device()() };
+
+        auto random_index = dist(random_engine);
+
+        return _workers[random_index].get();
+    }
+
+    void wake_worker() {
+        _worker_wait_semaphore.release();
+    }
+
+    void wait() {
+        constexpr auto wait_time = std::chrono::milliseconds(5);
+        _worker_wait_semaphore.try_acquire_for(wait_time);
     }
 
 private:
     static inline thread_pool* _instance;
 
     std::vector<std::unique_ptr<worker>> _workers;
+    std::counting_semaphore<> _worker_wait_semaphore{ 0 };
 };
 
 } // namespace co_ecs
