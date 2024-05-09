@@ -250,6 +250,60 @@ public:
         return std::get<0>(get_impl<C&>(*this, ent));
     }
 
+    /// @brief Get const reference to component C
+    ///
+    /// @tparam C Component C
+    /// @param ent Entity to read component from
+    /// @return const C& Const reference to component C
+    template<component C>
+    [[nodiscard]] auto get(entity ent) const -> const C& {
+        return std::get<0>(get_impl<const C&>(*this, ent));
+    }
+
+    /// @brief Get components for a single entity
+    ///
+    /// @tparam Args Component reference
+    /// @param ent Entity to query
+    /// @return value_type Components tuple
+    template<component_reference... Args>
+    [[nodiscard]] auto get(entity ent) -> std::tuple<Args...>
+        requires(!const_component_references_v<Args...>)
+    {
+        return get_impl<Args...>(*this, ent);
+    }
+
+    /// @brief Get components for a single entity
+    ///
+    /// @tparam Args Component references
+    /// @param ent Entity to query
+    /// @return value_type Components tuple
+    template<component_reference... Args>
+    [[nodiscard]] auto get(entity ent) const -> std::tuple<Args...>
+        requires(const_component_references_v<Args...>)
+    {
+        return get_impl<Args...>(*this, ent);
+    }
+
+    /// @brief Finds components for a single entity
+    /// @param ent Entity
+    /// @return Optional containing references to components
+    template<component_reference... Args>
+    [[nodiscard]] auto find(entity ent) -> std::optional<std::tuple<Args...>>
+        requires(!const_component_references_v<Args...>)
+    {
+        return find_impl<Args...>(*this, ent);
+    }
+
+    /// @brief Finds components for a single entity
+    /// @param ent Entity
+    /// @return Optional containing const references to components
+    template<component_reference... Args>
+    [[nodiscard]] auto find(entity ent) const -> std::optional<std::tuple<Args...>>
+        requires(const_component_references_v<Args...>)
+    {
+        return find_impl<Args...>(*this, ent);
+    }
+
     /// @brief Get reference to component C, or construct it if not present.
     ///
     /// This function attempts to get a reference to a component of type C associated with the specified entity.
@@ -303,52 +357,18 @@ public:
         }
     }
 
-    /// @brief Get const reference to component C
-    ///
-    /// @tparam C Component C
-    /// @param ent Entity to read component from
-    /// @return const C& Const reference to component C
-    template<component C>
-    [[nodiscard]] auto get(entity ent) const -> const C& {
-        return std::get<0>(get_impl<const C&>(*this, ent));
-    }
-
-    /// @brief Get components for a single entity
-    ///
-    /// @tparam Args Component reference
-    /// @param ent Entity to query
-    /// @return value_type Components tuple
-    template<component_reference... Args>
-    [[nodiscard]] auto get(entity ent) -> std::tuple<Args...>
-        requires(const_component_references_v<Args...>)
-    {
-        return get_impl<Args...>(*this, ent);
-    }
-
-    /// @brief Get components for a single entity
-    ///
-    /// @tparam Args Component references
-    /// @param ent Entity to query
-    /// @return value_type Components tuple
-    template<component_reference... Args>
-    [[nodiscard]] auto get(entity ent) const -> std::tuple<Args...>
-        requires(!const_component_references_v<Args...>)
-    {
-        return get_impl<Args...>(*this, ent);
-    }
-
     /// @brief Check if entity has component attached or not
     ///
     /// @tparam C Component type
     /// @param ent Entity to check
     /// @return true If entity has component C attached
     /// @return false Otherwise
-    template<component C>
+    template<component... C>
     [[nodiscard]] auto has(entity ent) const -> bool {
         ensure_alive(ent);
         auto entity_id = ent.id();
         const auto& location = get_location(entity_id);
-        return location.archetype->template contains<C>();
+        return (location.archetype->template contains<C>() && ...);
     }
 
     /// @brief Reserve an entity handle.
@@ -443,7 +463,20 @@ private:
         self.ensure_alive(ent);
         auto& location = self.get_location(ent.id());
         auto* archetype = location.archetype;
-        return std::tuple<Args...>(std::ref(archetype->template get<Args>(location))...);
+        return std::tuple<Args...>(archetype->template get<Args>(location)...);
+    }
+
+    template<component_reference... Args>
+    static auto find_impl(auto&& self, entity ent) -> std::optional<std::tuple<Args...>> {
+        self.ensure_alive(ent);
+        auto& location = self.get_location(ent.id());
+        auto* archetype = location.archetype;
+
+        if (!(archetype->template contains<decay_component_t<Args>>() && ...)) {
+            return std::nullopt;
+        }
+
+        return std::tuple<Args...>(archetype->template get<Args>(location)...);
     }
 
     inline void ensure_alive(const entity& ent) const {

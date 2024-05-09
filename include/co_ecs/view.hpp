@@ -165,6 +165,24 @@ public:
         return _registry.template has<decay_component_t<Args>...>(ent);
     }
 
+    /// @brief Finds components for a single entity
+    /// @param ent Entity
+    /// @return Optional containing references to components
+    auto find(entity ent) noexcept -> std::optional<value_type>
+        requires(!is_const)
+    {
+        return _registry.template find<Args...>(ent);
+    }
+
+    /// @brief Finds components for a single entity
+    /// @param ent Entity
+    /// @return Optional containing references to components
+    auto find(entity ent) const noexcept -> std::optional<value_type>
+        requires(is_const)
+    {
+        return _registry.template find<Args...>(ent);
+    }
+
     /// @brief Get components for a single entity
     ///
     /// @param ent Entity to query
@@ -172,7 +190,7 @@ public:
     auto get(entity ent) -> value_type
         requires(!is_const)
     {
-        return _registry.template get<decay_component_t<Args>...>(ent);
+        return _registry.template get<Args...>(ent);
     }
 
     /// @brief Get components for a single entity
@@ -182,7 +200,7 @@ public:
     auto get(entity ent) const -> value_type
         requires(is_const)
     {
-        return _registry.template get<decay_component_t<Args>...>(ent);
+        return _registry.template get<Args...>(ent);
     }
 
 private:
