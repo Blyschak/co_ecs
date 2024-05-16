@@ -324,12 +324,12 @@ $(document).ready(function(){initNavTree('chunk_8hpp_source.html',''); initResiz
 <div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;    }</div>
 <div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160; </div>
 <div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;    <span class="keyword">template</span>&lt;component T&gt;</div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;    [[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> ptr_unchecked(std::size_t index) -&gt; T* {</div>
+<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> ptr_unchecked(std::size_t index) -&gt; T* {</div>
 <div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;        <span class="keywordflow">return</span> ptr_unchecked_impl&lt;T*&gt;(*<span class="keyword">this</span>, index);</div>
 <div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;    }</div>
 <div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160; </div>
 <div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;    <span class="keyword">template</span>&lt;component T&gt;</div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;    [[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> ptr_unchecked(std::size_t index) <span class="keyword">const</span> noexcept -&gt; <span class="keyword">const</span> T* {</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> ptr_unchecked(std::size_t index) <span class="keyword">const</span> noexcept -&gt; <span class="keyword">const</span> T* {</div>
 <div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;        <span class="keywordflow">return</span> ptr_unchecked_impl&lt;const T*&gt;(*<span class="keyword">this</span>, index);</div>
 <div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;    }</div>
 <div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160; </div>
@@ -461,7 +461,7 @@ $(document).ready(function(){initNavTree('chunk_8hpp_source.html',''); initResiz
 <div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160; </div>
 <div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;} <span class="comment">// namespace co_ecs</span></div>
 <div class="ttc" id="abits_8hpp_html"><div class="ttname"><a href="bits_8hpp.html">bits.hpp</a></div></div>
-<div class="ttc" id="aclassco__ecs_1_1base__registry_html"><div class="ttname"><a href="classco__ecs_1_1base__registry.html">co_ecs::base_registry</a></div><div class="ttdef"><b>Definition:</b> base_registry.hpp:32</div></div>
+<div class="ttc" id="aclassco__ecs_1_1base__registry_html"><div class="ttname"><a href="classco__ecs_1_1base__registry.html">co_ecs::base_registry</a></div><div class="ttdef"><b>Definition:</b> base_registry.hpp:35</div></div>
 <div class="ttc" id="aclassco__ecs_1_1chunk__view_1_1iterator_html"><div class="ttname"><a href="classco__ecs_1_1chunk__view_1_1iterator.html">co_ecs::chunk_view::iterator</a></div><div class="ttdoc">Chunk view iterator.</div><div class="ttdef"><b>Definition:</b> chunk.hpp:352</div></div>
 <div class="ttc" id="aclassco__ecs_1_1chunk__view_1_1iterator_html_a11694e90d53c1d1b24beb0aa7de7d9ea"><div class="ttname"><a href="classco__ecs_1_1chunk__view_1_1iterator.html#a11694e90d53c1d1b24beb0aa7de7d9ea">co_ecs::chunk_view::iterator::iterator</a></div><div class="ttdeci">constexpr iterator(const iterator &amp;rhs) noexcept=default</div><div class="ttdoc">Default copy constructor.</div></div>
 <div class="ttc" id="aclassco__ecs_1_1chunk__view_1_1iterator_html_a29fbf4390bce4057897ff7b139b82e4d"><div class="ttname"><a href="classco__ecs_1_1chunk__view_1_1iterator.html#a29fbf4390bce4057897ff7b139b82e4d">co_ecs::chunk_view::iterator::operator++</a></div><div class="ttdeci">constexpr auto operator++(int) noexcept -&gt; iterator</div><div class="ttdoc">Post-increment iterator.</div><div class="ttdef"><b>Definition:</b> chunk.hpp:408</div></div>

@@ -166,18 +166,18 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a8e5b70392e211010128aa9fb3bdc2159"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#a8e5b70392e211010128aa9fb3bdc2159">emplace</a> (<a class="el" href="namespaceco__ecs.html#a2da96f6ca4426a42b949e7803a4627a6">entity</a> ent, Components &amp;&amp;... <a class="el" href="classco__ecs_1_1archetype.html#a02c832f2ce966928e00cb7d5c958cca2">components</a>) -&gt; <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a></td></tr>
 <tr class="memdesc:a8e5b70392e211010128aa9fb3bdc2159"><td class="mdescLeft">&#160;</td><td class="mdescRight">Emplace new entity and assign given components to it, return entities location.  <a href="classco__ecs_1_1archetype.html#a8e5b70392e211010128aa9fb3bdc2159">More...</a><br /></td></tr>
 <tr class="separator:a8e5b70392e211010128aa9fb3bdc2159"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1187daa3d71cab4c74110863788d7008"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#a1187daa3d71cab4c74110863788d7008">swap_erase</a> (const <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a> &amp;location) noexcept -&gt; std::optional&lt; <a class="el" href="namespaceco__ecs.html#a2da96f6ca4426a42b949e7803a4627a6">entity</a> &gt;</td></tr>
-<tr class="memdesc:a1187daa3d71cab4c74110863788d7008"><td class="mdescLeft">&#160;</td><td class="mdescRight">Swap erase an entity at given location, returns an entity that has been moved as a result of this operation or std::nullopt if no entities were moved.  <a href="classco__ecs_1_1archetype.html#a1187daa3d71cab4c74110863788d7008">More...</a><br /></td></tr>
-<tr class="separator:a1187daa3d71cab4c74110863788d7008"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9889187b1b424925d8955d6476967edc"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#a9889187b1b424925d8955d6476967edc">move</a> (const <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a> &amp;location, <a class="el" href="classco__ecs_1_1archetype.html">archetype</a> &amp;other) -&gt; std::pair&lt; <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a>, std::optional&lt; <a class="el" href="namespaceco__ecs.html#a2da96f6ca4426a42b949e7803a4627a6">entity</a> &gt;&gt;</td></tr>
-<tr class="memdesc:a9889187b1b424925d8955d6476967edc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Move entity and its components to a different archetype and returns a pair where the first element is moved entity location in a new archetype and the second is the entity that has been moved in this archetype or std::nullopt if no entities were moved.  <a href="classco__ecs_1_1archetype.html#a9889187b1b424925d8955d6476967edc">More...</a><br /></td></tr>
-<tr class="separator:a9889187b1b424925d8955d6476967edc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a649f9d10f90c76ed4900e018b563752d"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#a649f9d10f90c76ed4900e018b563752d">copy</a> (const <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a> &amp;location, <a class="el" href="classco__ecs_1_1archetype.html">archetype</a> &amp;other) -&gt; <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a></td></tr>
-<tr class="memdesc:a649f9d10f90c76ed4900e018b563752d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy entity and its components to a different archetype.  <a href="classco__ecs_1_1archetype.html#a649f9d10f90c76ed4900e018b563752d">More...</a><br /></td></tr>
-<tr class="separator:a649f9d10f90c76ed4900e018b563752d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa0ec373ecdd363e1582cc29fbdaf0406"><td class="memItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#aa0ec373ecdd363e1582cc29fbdaf0406">visit</a> (const <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a> &amp;location, auto &amp;&amp;func)</td></tr>
-<tr class="memdesc:aa0ec373ecdd363e1582cc29fbdaf0406"><td class="mdescLeft">&#160;</td><td class="mdescRight">Visit all components of an entity.  <a href="classco__ecs_1_1archetype.html#aa0ec373ecdd363e1582cc29fbdaf0406">More...</a><br /></td></tr>
-<tr class="separator:aa0ec373ecdd363e1582cc29fbdaf0406"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acb588ca226de4f728501e6f338ff2d73"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#acb588ca226de4f728501e6f338ff2d73">swap_erase</a> (const <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a> &amp;location) noexcept -&gt; std::optional&lt; <a class="el" href="namespaceco__ecs.html#a2da96f6ca4426a42b949e7803a4627a6">entity</a> &gt;</td></tr>
+<tr class="memdesc:acb588ca226de4f728501e6f338ff2d73"><td class="mdescLeft">&#160;</td><td class="mdescRight">Swap erase an entity at given location, returns an entity that has been moved as a result of this operation or std::nullopt if no entities were moved.  <a href="classco__ecs_1_1archetype.html#acb588ca226de4f728501e6f338ff2d73">More...</a><br /></td></tr>
+<tr class="separator:acb588ca226de4f728501e6f338ff2d73"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac84f9713c601bef4f17e9f068d071984"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#ac84f9713c601bef4f17e9f068d071984">move</a> (const <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a> &amp;location, <a class="el" href="classco__ecs_1_1archetype.html">archetype</a> &amp;other) -&gt; std::pair&lt; <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a>, std::optional&lt; <a class="el" href="namespaceco__ecs.html#a2da96f6ca4426a42b949e7803a4627a6">entity</a> &gt;&gt;</td></tr>
+<tr class="memdesc:ac84f9713c601bef4f17e9f068d071984"><td class="mdescLeft">&#160;</td><td class="mdescRight">Move entity and its components to a different archetype and returns a pair where the first element is moved entity location in a new archetype and the second is the entity that has been moved in this archetype or std::nullopt if no entities were moved.  <a href="classco__ecs_1_1archetype.html#ac84f9713c601bef4f17e9f068d071984">More...</a><br /></td></tr>
+<tr class="separator:ac84f9713c601bef4f17e9f068d071984"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0188320bc2749657cd8572d871109a66"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#a0188320bc2749657cd8572d871109a66">copy</a> (const <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a> &amp;location, <a class="el" href="classco__ecs_1_1archetype.html">archetype</a> &amp;other) -&gt; <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a></td></tr>
+<tr class="memdesc:a0188320bc2749657cd8572d871109a66"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy entity and its components to a different archetype.  <a href="classco__ecs_1_1archetype.html#a0188320bc2749657cd8572d871109a66">More...</a><br /></td></tr>
+<tr class="separator:a0188320bc2749657cd8572d871109a66"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa2acf58ea78a7187e13a95a15beb8ade"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#aa2acf58ea78a7187e13a95a15beb8ade">visit</a> (const <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a> &amp;location, auto &amp;&amp;func)</td></tr>
+<tr class="memdesc:aa2acf58ea78a7187e13a95a15beb8ade"><td class="mdescLeft">&#160;</td><td class="mdescRight">Visit all components of an entity.  <a href="classco__ecs_1_1archetype.html#aa2acf58ea78a7187e13a95a15beb8ade">More...</a><br /></td></tr>
+<tr class="separator:aa2acf58ea78a7187e13a95a15beb8ade"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0a49ce183ac431011125823d68d8dd16"><td class="memItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#a0a49ce183ac431011125823d68d8dd16">visit</a> (const <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a> &amp;location, auto &amp;&amp;func) const</td></tr>
 <tr class="memdesc:a0a49ce183ac431011125823d68d8dd16"><td class="mdescLeft">&#160;</td><td class="mdescRight">Visit all components of an entity (const variant).  <a href="classco__ecs_1_1archetype.html#a0a49ce183ac431011125823d68d8dd16">More...</a><br /></td></tr>
 <tr class="separator:a0a49ce183ac431011125823d68d8dd16"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -398,8 +398,8 @@ false If this archetype does not have component C </dd></dl>
 
 </div>
 </div>
-<a id="a649f9d10f90c76ed4900e018b563752d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a649f9d10f90c76ed4900e018b563752d">&#9670;&nbsp;</a></span>copy()</h2>
+<a id="a0188320bc2749657cd8572d871109a66"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0188320bc2749657cd8572d871109a66">&#9670;&nbsp;</a></span>copy()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -408,7 +408,7 @@ false If this archetype does not have component C </dd></dl>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">constexpr auto co_ecs::archetype::copy </td>
+          <td class="memname">auto co_ecs::archetype::copy </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a> &amp;&#160;</td>
           <td class="paramname"><em>location</em>, </td>
@@ -427,7 +427,7 @@ false If this archetype does not have component C </dd></dl>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -584,8 +584,8 @@ template&lt;component C&gt; </div>
 
 </div>
 </div>
-<a id="a9889187b1b424925d8955d6476967edc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9889187b1b424925d8955d6476967edc">&#9670;&nbsp;</a></span>move()</h2>
+<a id="ac84f9713c601bef4f17e9f068d071984"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac84f9713c601bef4f17e9f068d071984">&#9670;&nbsp;</a></span>move()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -594,7 +594,7 @@ template&lt;component C&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">constexpr auto co_ecs::archetype::move </td>
+          <td class="memname">auto co_ecs::archetype::move </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a> &amp;&#160;</td>
           <td class="paramname"><em>location</em>, </td>
@@ -613,7 +613,7 @@ template&lt;component C&gt; </div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -630,8 +630,8 @@ template&lt;component C&gt; </div>
 
 </div>
 </div>
-<a id="a1187daa3d71cab4c74110863788d7008"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1187daa3d71cab4c74110863788d7008">&#9670;&nbsp;</a></span>swap_erase()</h2>
+<a id="acb588ca226de4f728501e6f338ff2d73"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acb588ca226de4f728501e6f338ff2d73">&#9670;&nbsp;</a></span>swap_erase()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -640,7 +640,7 @@ template&lt;component C&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">constexpr auto co_ecs::archetype::swap_erase </td>
+          <td class="memname">auto co_ecs::archetype::swap_erase </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a> &amp;&#160;</td>
           <td class="paramname"><em>location</em></td><td>)</td>
@@ -649,7 +649,7 @@ template&lt;component C&gt; </div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span><span class="mlabel">noexcept</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">noexcept</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -665,8 +665,8 @@ template&lt;component C&gt; </div>
 
 </div>
 </div>
-<a id="aa0ec373ecdd363e1582cc29fbdaf0406"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa0ec373ecdd363e1582cc29fbdaf0406">&#9670;&nbsp;</a></span>visit() <span class="overload">[1/2]</span></h2>
+<a id="aa2acf58ea78a7187e13a95a15beb8ade"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa2acf58ea78a7187e13a95a15beb8ade">&#9670;&nbsp;</a></span>visit() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -675,7 +675,7 @@ template&lt;component C&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">constexpr void co_ecs::archetype::visit </td>
+          <td class="memname">void co_ecs::archetype::visit </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a> &amp;&#160;</td>
           <td class="paramname"><em>location</em>, </td>
@@ -694,7 +694,7 @@ template&lt;component C&gt; </div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
