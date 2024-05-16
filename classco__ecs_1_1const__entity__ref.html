@@ -116,11 +116,15 @@ $(function(){initNavTree('classco__ecs_1_1const__entity__ref.html',''); initResi
 </div><!--header-->
 <div class="contents">
 
+<p>Represents a reference to an entity within a registry.  
+ <a href="#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="entity__ref_8hpp_source.html">entity_ref.hpp</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a2de990addaca5930ef9596d4430758a6" id="r_a2de990addaca5930ef9596d4430758a6"><td class="memItemLeft" align="right" valign="top">constexpr&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2de990addaca5930ef9596d4430758a6">const_entity_ref</a> (const <a class="el" href="classco__ecs_1_1base__registry.html">base_registry</a> &amp;<a class="el" href="classco__ecs_1_1registry.html">registry</a>, <a class="el" href="namespaceco__ecs.html#acb6f48f6f56ae34f433899ff614ca321">entity</a> <a class="el" href="namespaceco__ecs.html#acb6f48f6f56ae34f433899ff614ca321">entity</a>)</td></tr>
+<tr class="memdesc:a2de990addaca5930ef9596d4430758a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a const entity reference for a specific entity in the given registry.  <br /></td></tr>
 <tr class="separator:a2de990addaca5930ef9596d4430758a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8f4f1209852a26c047c283a810ad2203" id="r_a8f4f1209852a26c047c283a810ad2203"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8f4f1209852a26c047c283a810ad2203">archetype</a> () const noexcept -&gt; const <a class="el" href="classco__ecs_1_1archetype.html">archetype</a> &amp;</td></tr>
 <tr class="memdesc:a8f4f1209852a26c047c283a810ad2203"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves a constant reference to the archetype of the entity.  <br /></td></tr>
@@ -150,13 +154,16 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a2a5a36983ea4777b9b1b5f0cb40c8e0b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copies the current entity to another registry into a placeholder entity.  <br /></td></tr>
 <tr class="separator:a2a5a36983ea4777b9b1b5f0cb40c8e0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a56aa68e12cdce5a251a56e024e5a2b1f" id="r_a56aa68e12cdce5a251a56e024e5a2b1f"><td class="memItemLeft" align="right" valign="top">constexpr&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a56aa68e12cdce5a251a56e024e5a2b1f">operator entity</a> () const noexcept</td></tr>
-<tr class="memdesc:a56aa68e12cdce5a251a56e024e5a2b1f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts this <code><a class="el" href="classco__ecs_1_1const__entity__ref.html">const_entity_ref</a></code> to its underlying <code>entity</code>.  <br /></td></tr>
+<tr class="memdesc:a56aa68e12cdce5a251a56e024e5a2b1f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts this <code><a class="el" href="classco__ecs_1_1const__entity__ref.html" title="Represents a reference to an entity within a registry.">const_entity_ref</a></code> to its underlying <code>entity</code>.  <br /></td></tr>
 <tr class="separator:a56aa68e12cdce5a251a56e024e5a2b1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae6b00de818c486d9fe4d20f50cb0bd13" id="r_ae6b00de818c486d9fe4d20f50cb0bd13"><td class="memItemLeft" align="right" valign="top">constexpr&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae6b00de818c486d9fe4d20f50cb0bd13">operator bool</a> () const noexcept</td></tr>
 <tr class="memdesc:ae6b00de818c486d9fe4d20f50cb0bd13"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the underlying entity is valid.  <br /></td></tr>
 <tr class="separator:ae6b00de818c486d9fe4d20f50cb0bd13"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Represents a reference to an entity within a registry. </p>
+<p>This class provides read only access to entity. </p>
+</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a2de990addaca5930ef9596d4430758a6" name="a2de990addaca5930ef9596d4430758a6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2de990addaca5930ef9596d4430758a6">&#9670;&#160;</a></span>const_entity_ref()</h2>
 
@@ -183,6 +190,15 @@ Public Member Functions</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+<p>Constructs a const entity reference for a specific entity in the given registry. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">registry</td><td>Reference to the <code><a class="el" href="classco__ecs_1_1base__registry.html">base_registry</a></code> that manages the entity. </td></tr>
+    <tr><td class="paramname">entity</td><td>The <code>entity</code> that this reference will encapsulate. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -491,9 +507,9 @@ template&lt;component... C&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Converts this <code><a class="el" href="classco__ecs_1_1const__entity__ref.html">const_entity_ref</a></code> to its underlying <code>entity</code>. </p>
-<p>This conversion operator allows <code><a class="el" href="classco__ecs_1_1const__entity__ref.html">const_entity_ref</a></code> to be treated as its underlying <code>entity</code> type directly. Useful in contexts where the entity's identifier is needed without explicit method calls.</p>
-<dl class="section return"><dt>Returns</dt><dd>entity The underlying entity associated with this <code><a class="el" href="classco__ecs_1_1const__entity__ref.html">const_entity_ref</a></code>. </dd></dl>
+<p>Converts this <code><a class="el" href="classco__ecs_1_1const__entity__ref.html" title="Represents a reference to an entity within a registry.">const_entity_ref</a></code> to its underlying <code>entity</code>. </p>
+<p>This conversion operator allows <code><a class="el" href="classco__ecs_1_1const__entity__ref.html" title="Represents a reference to an entity within a registry.">const_entity_ref</a></code> to be treated as its underlying <code>entity</code> type directly. Useful in contexts where the entity's identifier is needed without explicit method calls.</p>
+<dl class="section return"><dt>Returns</dt><dd>entity The underlying entity associated with this <code><a class="el" href="classco__ecs_1_1const__entity__ref.html" title="Represents a reference to an entity within a registry.">const_entity_ref</a></code>. </dd></dl>
 
 </div>
 </div>
