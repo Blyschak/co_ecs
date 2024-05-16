@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['linear_247',['Linear',['../classLinear.html',1,'']]]
+  ['linear_0',['Linear',['../classLinear.html',1,'']]]
 ];

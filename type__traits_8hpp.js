@@ -1,6 +1,6 @@
 var type__traits_8hpp =
 [
-    [ "first_type_t", "type__traits_8hpp.html#a9f1b9da5f8160e4ea6d68faffe9034fd", null ],
-    [ "nth_type_t", "type__traits_8hpp.html#a27af8ee87ea0ce74442ed2fdbfb56bad", null ],
-    [ "second_type_t", "type__traits_8hpp.html#aaa855403ae5bd59a58ce3120acc0e312", null ]
+    [ "first_type_t", "type__traits_8hpp.html#affa57c313f494d3685529b5b4143133f", null ],
+    [ "nth_type_t", "type__traits_8hpp.html#a4fb93fbad2ac6309509c6bbd2e9d8102", null ],
+    [ "second_type_t", "type__traits_8hpp.html#aeb89ba75eb97285371c811976e68b099", null ]
 ];
