@@ -3,6 +3,7 @@
 #include <co_ecs/command.hpp>
 #include <co_ecs/registry.hpp>
 #include <co_ecs/thread_pool/thread_pool.hpp>
+#include <co_ecs/view.hpp>
 
 namespace co_ecs {
 
@@ -29,6 +30,8 @@ public:
     /// @return std::unique_ptr<system_executor_interface>
     virtual std::unique_ptr<system_executor_interface> create_executor(registry& registry, void* user_context) = 0;
 };
+
+/// @cond
 
 /// @brief System argument state trait primary template trait. Helps to get corresponding state class type based on the
 /// input type
@@ -148,10 +151,6 @@ public:
         return _registry;
     }
 
-    /// @brief Run deferred logic
-    void run_deferred() const noexcept {
-    }
-
 private:
     registry& _registry;
 };
@@ -194,36 +193,6 @@ public:
     using state_type = system_registry_state;
 };
 
-/// @brief System command buffer state
-///
-class system_command_buffer_state {
-public:
-    /// @brief Constructor
-    ///
-    /// @param registry Registry reference
-    /// @param user_context User provided context to fetch data from and provide to the system
-    explicit system_command_buffer_state(registry& registry, void* user_context) noexcept : _registry(registry) {
-    }
-
-    /// @brief Returns the actual state inside to pass to the system
-    ///
-    /// @return Command buffer
-    [[nodiscard]] command_buffer& get() noexcept {
-        return thread_pool::current_worker().get_command_buffer();
-    }
-
-private:
-    registry& _registry;
-};
-
-/// @brief Specialization for command_buffer
-template<>
-class system_argument_state_trait<command_buffer&> {
-public:
-    /// @brief Actual state type for T
-    using state_type = system_command_buffer_state;
-};
-
 /// @brief System command writer state
 ///
 class system_command_writer_state {
@@ -239,7 +208,7 @@ public:
     ///
     /// @return Command buffer
     [[nodiscard]] command_writer get() noexcept {
-        return command_writer(_registry, thread_pool::current_worker().get_command_buffer());
+        return command_writer(_registry);
     }
 
 private:
@@ -274,10 +243,6 @@ public:
         return _view;
     }
 
-    /// @brief Run deferred logic
-    void run_deferred() const noexcept {
-    }
-
 private:
     view _view;
 };
@@ -292,5 +257,6 @@ public:
     using state_type = system_view_state<view<Args...>>;
 };
 
+/// @endcond
 
 } // namespace co_ecs

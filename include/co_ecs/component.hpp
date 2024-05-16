@@ -296,7 +296,7 @@ public:
     ///
     /// @tparam T Component type
     template<component T>
-    void insert() {
+    constexpr void insert() {
         insert(component_meta::of<T>());
     }
 
@@ -304,7 +304,7 @@ public:
     ///
     /// @tparam T Component type
     template<component T>
-    void erase() {
+    constexpr void erase() {
         erase(component_id::value<T>);
     }
 

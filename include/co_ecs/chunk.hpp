@@ -10,6 +10,7 @@
 #include <co_ecs/component.hpp>
 #include <co_ecs/detail/bits.hpp>
 #include <co_ecs/detail/sparse_map.hpp>
+#include <co_ecs/detail/views.hpp>
 #include <co_ecs/entity.hpp>
 #include <co_ecs/exceptions.hpp>
 
@@ -48,7 +49,8 @@ public:
 
     /// @brief Construct a new chunk object
     ///
-    /// @param set Component metadata set
+    /// @param blocks Component blocks
+    /// @param max_size Maxium size of entries this chunk can hold
     chunk(const blocks_type& blocks, std::size_t max_size) :
         _blocks(&blocks), _max_size(max_size), _buffer((new chunk_buffer)->data) {
     }
@@ -98,12 +100,13 @@ public:
     /// @brief Emplace back components into blocks
     ///
     /// @tparam Args Parameter pack
+    /// @param ent Entity to emplace
     /// @param args component arguments
     template<component... Args>
     void emplace_back(entity ent, Args&&... args) {
         assert((!full()) && "Chunk is full, cannot add more entities");
         std::construct_at(ptr_unchecked<entity>(size()), ent);
-        (..., std::construct_at(ptr_mut<Args>(size()), std::move(args)));
+        (..., std::construct_at(ptr_mut<Args>(size()), std::forward<Args>(args)));
         _size++;
     }
 
@@ -115,11 +118,11 @@ public:
     }
 
     /// @brief Swap end removes a components in blocks at position index and swaps it with the last element from
-    /// other_chunk chunk. Returns std::optional of entity that has been moved or std::nullopt if no entities were
+    /// other chunk. Returns std::optional of entity that has been moved or std::nullopt if no entities were
     /// moved
     ///
     /// @param index Index to remove components from
-    /// @param other_chunk Other chunk
+    /// @param other Other chunk
     /// @return std::optional<entity>
     auto swap_erase(std::size_t index, chunk& other) noexcept -> std::optional<entity> {
         assert((index < _size) && "Entity index exceeds chunk size");
@@ -184,6 +187,20 @@ public:
         return other_chunk_index;
     }
 
+    /// @brief Visit components at given index
+    /// @param index Index of an entity
+    /// @param func Func to apply to components
+    constexpr void visit(std::size_t index, auto&& func) noexcept {
+        visit_impl(*this, index, std::forward<decltype(func)>(func));
+    }
+
+    /// @brief Visit components at given index
+    /// @param index Index of an entity
+    /// @param func Func to apply to components
+    constexpr void visit(std::size_t index, auto&& func) const noexcept {
+        visit_impl(*this, index, std::forward<decltype(func)>(func));
+    }
+
     /// @brief Give a const pointer to a component T at index
     ///
     /// @tparam T Component type
@@ -236,15 +253,30 @@ public:
     }
 
 private:
-    friend class registry;
+    friend class base_registry;
+
+    constexpr static void visit_impl(auto&& self, std::size_t index, auto&& func) noexcept {
+        assert((index < self._size) && "Entity index exceeds chunk size");
+
+        constexpr auto is_const = std::is_const_v<std::remove_reference_t<decltype(self)>>;
+        using ptr_t = std::conditional_t<is_const, const void*, void*>;
+
+        for (const auto& [id, block] :
+            *self._blocks | detail::views::drop(1)) // skip first block - it's an entity handle
+        {
+            const auto* type = block.meta.type;
+            ptr_t ptr = self._buffer + block.offset + index * type->size;
+            func(block.meta, ptr);
+        }
+    }
 
     template<component T>
-    [[nodiscard]] inline auto ptr_unchecked(std::size_t index) -> T* {
+    [[nodiscard]] constexpr auto ptr_unchecked(std::size_t index) -> T* {
         return ptr_unchecked_impl<T*>(*this, index);
     }
 
     template<component T>
-    [[nodiscard]] inline auto ptr_unchecked(std::size_t index) const noexcept -> const T* {
+    [[nodiscard]] constexpr auto ptr_unchecked(std::size_t index) const noexcept -> const T* {
         return ptr_unchecked_impl<const T*>(*this, index);
     }
 

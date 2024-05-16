@@ -57,7 +57,7 @@ public:
     /// @param components Components parameter pack
     /// @return entity_location
     template<component... Components>
-    auto emplace_back(entity ent, Components&&... components) -> entity_location {
+    auto emplace(entity ent, Components&&... components) -> entity_location {
         auto& free_chunk = ensure_free_chunk();
         auto entry_index = free_chunk.size();
         auto chunk_index = _chunks.size() - 1;
@@ -129,28 +129,38 @@ public:
         return new_location;
     }
 
-    /// @brief Get component data
-    ///
-    /// @tparam ComponentRef Component reference type
-    /// @param id Component ID
+    /// @brief Visit all components of an entity.
     /// @param location Entity location
-    /// @return Component& Component reference
-    template<component_reference ComponentRef>
-    auto get(entity_location location) -> ComponentRef {
-        return read_impl<ComponentRef>(*this, location);
+    /// @param func Function, a visitor, to apply components to.
+    void visit(const entity_location& location, auto&& func) {
+        get_chunk(location).visit(location.entry_index, std::forward<decltype(func)>(func));
+    }
+
+    /// @brief Visit all components of an entity (const variant).
+    /// @param location Entity location
+    /// @param func Function, a visitor, to apply components to.
+    void visit(const entity_location& location, auto&& func) const {
+        get_chunk(location).visit(location.entry_index, std::forward<decltype(func)>(func));
     }
 
     /// @brief Get component data
     ///
-    /// @tparam ComponentRef Component reference type
-    /// @param id Component ID
+    /// @tparam C Component type
     /// @param location Entity location
-    /// @return ComponentRef Component reference
-    template<component_reference ComponentRef>
-    auto get(entity_location location) const -> ComponentRef {
-        static_assert(
-            const_component_reference_v<ComponentRef>, "Can only get a non-const reference on const archetype");
-        return read_impl<ComponentRef>(*this, location);
+    /// @return C& Component reference
+    template<component C>
+    auto get(entity_location location) -> C& {
+        return read_impl<C&>(*this, location);
+    }
+
+    /// @brief Get component data, const variant.
+    ///
+    /// @tparam C Component type
+    /// @param location Entity location
+    /// @return const C& Component reference
+    template<component C>
+    auto get(entity_location location) const -> const C& {
+        return read_impl<const C&>(*this, location);
     }
 
     /// @brief Check if archetype has component C
@@ -160,24 +170,7 @@ public:
     /// @return false If this archetype does not have component C
     template<component C>
     [[nodiscard]] auto contains() const noexcept -> bool {
-        if constexpr (std::is_same_v<C, entity>) {
-            return true;
-        } else {
-            return components().contains<C>();
-        }
-    }
-
-    /// @brief Check if archetype has component ID
-    ///
-    /// @param id Component ID
-    /// @return true If this archetype has component C
-    /// @return false If this archetype does not have component C
-    [[nodiscard]] auto contains(component_id_t component_id) const noexcept -> bool {
-        if (component_id == component_id::value<entity>) {
-            return true;
-        } else {
-            return components().contains(component_id);
-        }
+        return components().contains<C>();
     }
 
 private:
@@ -258,17 +251,25 @@ private:
     }
 
     template<component_reference ComponentRef>
-    inline static auto read_impl(auto&& self, entity_location location) -> ComponentRef {
+    static auto read_impl(auto&& self, entity_location location) -> ComponentRef {
         auto& chunk = self.get_chunk(location);
         assert((location.entry_index < chunk.size()) && "Entity location index exceeds chunk size");
         return *component_fetch::fetch_pointer<ComponentRef>(chunk, location.entry_index);
     }
 
-    inline auto get_chunk(entity_location location) noexcept -> chunk& {
-        assert((location.archetype == this) && "Location archetype pointer does not point to this archetype");
-        assert((location.chunk_index < _chunks.size()) && "Location chunk index exceeds the chunks vector size");
-        auto& chunk = _chunks[location.chunk_index];
-        return chunk;
+    static auto get_chunk_impl(auto&& self, entity_location location) noexcept -> decltype(auto) {
+        assert((location.archetype == std::addressof(self))
+               && "Location archetype pointer does not point to this archetype");
+        assert((location.chunk_index < self._chunks.size()) && "Location chunk index exceeds the chunks vector size");
+        return self._chunks[location.chunk_index];
+    }
+
+    auto get_chunk(entity_location location) noexcept -> chunk& {
+        return get_chunk_impl(*this, location);
+    }
+
+    auto get_chunk(entity_location location) const noexcept -> const chunk& {
+        return get_chunk_impl(*this, location);
     }
 
     auto ensure_free_chunk() -> chunk& {
@@ -280,6 +281,7 @@ private:
         return _chunks.back();
     }
 
+private:
     std::size_t _max_size{};
     blocks_type _blocks{};
     component_meta_set _components{};
@@ -298,7 +300,7 @@ public:
     using mapped_type = storage_type::mapped_type;
 
 public:
-    /// @brief get or create an archetype given the component meta set
+    /// @brief Get or create an archetype given the component meta set
     /// @param components Components meta set
     /// @return archetype*
     auto ensure_archetype(const component_meta_set& components) -> archetype* {

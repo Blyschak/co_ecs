@@ -13,4 +13,5 @@ add_executable(
   main.cpp
 )
 
+target_include_directories(benchmarks PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(benchmarks co_ecs benchmark::benchmark)

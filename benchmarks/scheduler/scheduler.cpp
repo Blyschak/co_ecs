@@ -1,3 +1,5 @@
+#include "bench.hpp"
+
 #include <co_ecs/co_ecs.hpp>
 
 #include <benchmark/benchmark.h>
@@ -7,9 +9,7 @@ using namespace co_ecs::experimental;
 
 using namespace std::chrono_literals;
 
-constexpr std::size_t operator"" _workers(unsigned long long int number) {
-    return number;
-}
+bench_prefix(workers);
 
 struct read_component_a {
     float value;
@@ -31,7 +31,7 @@ struct parallel_iter {};
 struct serial_iter {};
 
 template<std::size_t N, typename P>
-static void bm_schedule(benchmark::State& state) {
+static void schedule_execution(benchmark::State& state) {
     thread_pool tp{ N };
     registry reg;
 
@@ -68,12 +68,12 @@ static void bm_schedule(benchmark::State& state) {
 }
 
 
-BENCHMARK(bm_schedule<1_workers, serial_iter>)->Unit(benchmark::kMillisecond);
-BENCHMARK(bm_schedule<2_workers, serial_iter>)->Unit(benchmark::kMillisecond);
-BENCHMARK(bm_schedule<4_workers, serial_iter>)->Unit(benchmark::kMillisecond);
-BENCHMARK(bm_schedule<8_workers, serial_iter>)->Unit(benchmark::kMillisecond);
+BENCHMARK(schedule_execution<1_workers, serial_iter>)->Unit(benchmark::kMillisecond);
+BENCHMARK(schedule_execution<2_workers, serial_iter>)->Unit(benchmark::kMillisecond);
+BENCHMARK(schedule_execution<4_workers, serial_iter>)->Unit(benchmark::kMillisecond);
+BENCHMARK(schedule_execution<8_workers, serial_iter>)->Unit(benchmark::kMillisecond);
 
-BENCHMARK(bm_schedule<1_workers, parallel_iter>)->Unit(benchmark::kMillisecond);
-BENCHMARK(bm_schedule<2_workers, parallel_iter>)->Unit(benchmark::kMillisecond);
-BENCHMARK(bm_schedule<4_workers, parallel_iter>)->Unit(benchmark::kMillisecond);
-BENCHMARK(bm_schedule<8_workers, parallel_iter>)->Unit(benchmark::kMillisecond);
+BENCHMARK(schedule_execution<1_workers, parallel_iter>)->Unit(benchmark::kMillisecond);
+BENCHMARK(schedule_execution<2_workers, parallel_iter>)->Unit(benchmark::kMillisecond);
+BENCHMARK(schedule_execution<4_workers, parallel_iter>)->Unit(benchmark::kMillisecond);
+BENCHMARK(schedule_execution<8_workers, parallel_iter>)->Unit(benchmark::kMillisecond);

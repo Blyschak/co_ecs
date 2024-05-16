@@ -8,16 +8,16 @@ namespace co_ecs {
 template<component_reference... Args>
 class view;
 
-/// @brief view_arguments metadata, like a flag whether all references are const, etc.
+namespace detail {
+
+// Help to convert std::tuple<Args...> into view<Args...>
+
+/// view_arguments metadata, like a flag whether all references are const, etc.
 template<component_reference... Args>
 struct view_arguments {
     /// @brief Const when all component references are const
     static constexpr bool is_const = const_component_references_v<Args...>;
 };
-
-namespace detail {
-
-// Help to convert std::tuple<Args...> into view<Args...>
 
 template<typename T>
 struct view_converter {};

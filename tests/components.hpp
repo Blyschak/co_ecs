@@ -14,6 +14,11 @@ struct foo {
     foo() = default;
     foo(int a, int b) noexcept : a(a), b(b) {
     }
+
+    [[nodiscard]]
+    auto operator==(const foo& rhs) const noexcept -> bool {
+        return (rhs.a == a) && (rhs.b == b);
+    }
 };
 
 template<std::size_t I>
@@ -23,6 +28,11 @@ struct bar {
 
     bar() = default;
     bar(int a, int b) noexcept : a(a), b(b) {
+    }
+
+    [[nodiscard]]
+    auto operator==(const bar& rhs) const noexcept -> bool {
+        return (rhs.a == a) && (rhs.b == b);
     }
 };
 

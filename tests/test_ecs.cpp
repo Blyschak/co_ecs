@@ -12,22 +12,25 @@ TEST_CASE("ECS Registry", "Creation and destruction of entities") {
         auto entity = test_registry.create();
 
         REQUIRE(test_registry.alive(entity));
-        test_registry.destroy(entity);
+        entity.destroy();
         REQUIRE_FALSE(test_registry.alive(entity));
     }
 
     SECTION("Test non empty entities creation") {
-        std::vector<co_ecs::entity> entities;
+        std::vector<entity_ref> entities;
         const int number_of_entities = GENERATE(1, 10000);
 
         for (int i = 0; i < number_of_entities; i++) {
             auto entity = test_registry.create<foo<0>, foo<1>, foo<2>>({}, {}, {});
             REQUIRE(test_registry.alive(entity));
+            REQUIRE(test_registry.has<foo<0>>(entity));
+            REQUIRE(test_registry.has<foo<1>>(entity));
+            REQUIRE(test_registry.has<foo<2>>(entity));
             entities.emplace_back(entity);
         }
 
         for (auto& entity : entities) {
-            test_registry.destroy(entity);
+            entity.destroy();
             REQUIRE_FALSE(test_registry.alive(entity));
         }
     }
@@ -35,7 +38,7 @@ TEST_CASE("ECS Registry", "Creation and destruction of entities") {
 
 TEST_CASE("ECS Archetypes", "Set and remove components") {
     co_ecs::registry registry;
-    std::vector<co_ecs::entity> entities;
+    std::vector<entity_ref> entities;
 
     const int number_of_entities = GENERATE(1, 10000);
 
@@ -46,32 +49,32 @@ TEST_CASE("ECS Archetypes", "Set and remove components") {
     }
 
     for (auto entity : entities) {
-        auto foo_0 = registry.get<foo<0>>(entity);
+        auto foo_0 = registry.get_entity(entity).get<foo<0>>();
         REQUIRE(foo_0.a == 1);
         REQUIRE(foo_0.b == 2);
 
-        registry.set<foo<2>>(entity, 4, 5);
+        registry.get_entity(entity).set<foo<2>>(4, 5);
 
-        auto foo_2 = registry.get<foo<2>>(entity);
+        auto foo_2 = registry.get_entity(entity).get<foo<2>>();
         REQUIRE(foo_2.a == 4);
         REQUIRE(foo_2.b == 5);
 
-        auto& ref_foo_0 = registry.get<foo<0>>(entity);
+        auto& ref_foo_0 = registry.get_entity(entity).get<foo<0>>();
         ref_foo_0.a = 10;
 
-        foo_0 = registry.get<foo<0>>(entity);
+        foo_0 = registry.get_entity(entity).get<foo<0>>();
         REQUIRE(foo_0.a == 10);
         REQUIRE(foo_0.b == 2);
 
-        registry.remove<foo<2>>(entity);
+        registry.get_entity(entity).remove<foo<2>>();
 
-        foo_0 = registry.get<foo<0>>(entity);
+        foo_0 = registry.get_entity(entity).get<foo<0>>();
         REQUIRE(foo_0.a == 10);
         REQUIRE(foo_0.b == 2);
     }
 
     for (auto entity : entities) {
-        registry.destroy(entity);
+        entity.destroy();
         REQUIRE_FALSE(registry.alive(entity));
     }
 }
@@ -161,19 +164,18 @@ TEST_CASE("ECS Registry component not found exception", "Catch exceptions raised
     registry test_registry;
     auto ent = test_registry.create<foo<0>>({ 2, 2 });
 
-    REQUIRE_THROWS_AS(test_registry.get<foo<1>>(ent), component_not_found);
-    REQUIRE_THROWS_AS((test_registry.template get<const foo<0>&, const foo<1>&>(ent)), component_not_found);
+    REQUIRE_THROWS_AS(test_registry.get_entity(ent).get<foo<1>>(), component_not_found);
+    REQUIRE_THROWS_AS((test_registry.get_entity(ent).get<foo<0>, foo<1>>()), component_not_found);
 }
 
 TEST_CASE("ECS Registry entity not found exception", "Catch exceptions raised on invalid entity queries") {
     registry test_registry;
     auto ent = test_registry.create<foo<0>>({ 2, 2 });
-    test_registry.destroy(ent);
+    ent.destroy();
 
-    REQUIRE_THROWS_AS(test_registry.get<const foo<0>&>(ent), entity_not_found);
+    REQUIRE_THROWS_AS(test_registry.get_entity(ent).get<foo<0>>(), entity_not_found);
     REQUIRE_THROWS_AS(test_registry.has<foo<0>>(ent), entity_not_found);
-    REQUIRE_THROWS_AS(test_registry.set<foo<0>>(ent, 0, 0), entity_not_found);
-    REQUIRE_FALSE(test_registry.destroy(ent));
+    REQUIRE_THROWS_AS(test_registry.get_entity(ent).set<foo<0>>(0, 0), entity_not_found);
 }
 
 TEST_CASE("ECS Registry insufficient chunk size",
@@ -194,7 +196,7 @@ TEST_CASE("ECS Registry insufficient chunk size",
     auto ent = test_registry.create<first_big_struct>({});
 
     REQUIRE_THROWS_AS((test_registry.create<first_big_struct, second_big_struct>({}, {})), insufficient_chunk_size);
-    REQUIRE_THROWS_AS(test_registry.set<second_big_struct>(ent), insufficient_chunk_size);
+    REQUIRE_THROWS_AS(test_registry.get_entity(ent).set<second_big_struct>(), insufficient_chunk_size);
 }
 
 TEST_CASE("ECS Registry constraints", "Non-copiable components") {
@@ -214,8 +216,8 @@ TEST_CASE("ECS Registry move entities") {
 
     const int number_of_entities = GENERATE(2, 100000);
 
-    std::vector<entity> entities;
-    std::vector<entity> moved_entities;
+    std::vector<entity_ref> entities;
+    std::vector<entity_ref> moved_entities;
 
     for (auto i : std::views::iota(0, number_of_entities)) {
         auto ent = reg1.create<foo<0>, foo<1>>({ 1 * i, 2 * i }, { 3 * i, 4 * i });
@@ -229,8 +231,8 @@ TEST_CASE("ECS Registry move entities") {
         REQUIRE(reg1.alive(ent));
     }
 
-    for (const auto& ent : entities) {
-        auto moved_ent = reg1.move(ent, reg2);
+    for (auto& ent : entities) {
+        auto moved_ent = ent.move(reg2);
         moved_entities.push_back(moved_ent);
     }
 
@@ -244,10 +246,8 @@ TEST_CASE("ECS Registry move entities") {
     for (auto i = 0; i < moved_entities.size(); i++) {
         REQUIRE(reg2.alive(moved_entities[i]));
 
-        REQUIRE(reg2.get<foo<0>>(moved_entities[i]).a == 1 * i);
-        REQUIRE(reg2.get<foo<0>>(moved_entities[i]).b == 2 * i);
-        REQUIRE(reg2.get<foo<1>>(moved_entities[i]).a == 3 * i);
-        REQUIRE(reg2.get<foo<1>>(moved_entities[i]).b == 4 * i);
+        REQUIRE(reg2.get_entity(moved_entities[i]).get<foo<0>>() == foo<0>{ 1 * i, 2 * i });
+        REQUIRE(reg2.get_entity(moved_entities[i]).get<foo<1>>() == foo<1>{ 3 * i, 4 * i });
     }
 }
 
@@ -257,8 +257,8 @@ TEST_CASE("ECS Registry copy entities") {
 
     const int number_of_entities = GENERATE(2, 100000);
 
-    std::vector<entity> entities;
-    std::vector<entity> copied_entities;
+    std::vector<entity_ref> entities;
+    std::vector<entity_ref> copied_entities;
 
     for (auto i : std::views::iota(0, number_of_entities)) {
         auto ent = reg1.create<foo<0>, foo<1>>({ 1 * i, 2 * i }, { 3 * i, 4 * i });
@@ -273,8 +273,8 @@ TEST_CASE("ECS Registry copy entities") {
     }
 
     for (const auto& ent : entities) {
-        auto moved_ent = reg1.copy(ent, reg2);
-        copied_entities.push_back(moved_ent);
+        auto copied_ent = ent.copy(reg2);
+        copied_entities.push_back(copied_ent);
     }
 
     REQUIRE(reg1.size() == number_of_entities);
@@ -284,15 +284,10 @@ TEST_CASE("ECS Registry copy entities") {
         REQUIRE(reg1.alive(entities[i]));
         REQUIRE(reg2.alive(copied_entities[i]));
 
-        REQUIRE(reg1.get<foo<0>>(entities[i]).a == 1 * i);
-        REQUIRE(reg1.get<foo<0>>(entities[i]).b == 2 * i);
-        REQUIRE(reg1.get<foo<1>>(entities[i]).a == 3 * i);
-        REQUIRE(reg1.get<foo<1>>(entities[i]).b == 4 * i);
-
-        REQUIRE(reg2.get<foo<0>>(copied_entities[i]).a == 1 * i);
-        REQUIRE(reg2.get<foo<0>>(copied_entities[i]).b == 2 * i);
-        REQUIRE(reg2.get<foo<1>>(copied_entities[i]).a == 3 * i);
-        REQUIRE(reg2.get<foo<1>>(copied_entities[i]).b == 4 * i);
+        REQUIRE(reg1.get_entity(entities[i]).get<foo<0>>() == foo<0>{ 1 * i, 2 * i });
+        REQUIRE(reg1.get_entity(entities[i]).get<foo<1>>() == foo<1>{ 3 * i, 4 * i });
+        REQUIRE(reg2.get_entity(copied_entities[i]).get<foo<0>>() == foo<0>{ 1 * i, 2 * i });
+        REQUIRE(reg2.get_entity(copied_entities[i]).get<foo<1>>() == foo<1>{ 3 * i, 4 * i });
     }
 }
 
@@ -300,15 +295,11 @@ TEST_CASE("ECS Registry clone") {
     registry reg;
 
     auto e1 = reg.create<foo<0>, foo<1>>({ 1, 2 }, { 3, 4 });
-    auto e2 = reg.clone(e1);
+    auto e2 = e1.clone();
 
-    REQUIRE(reg.get<foo<0>>(e1).a == 1);
-    REQUIRE(reg.get<foo<0>>(e1).b == 2);
-    REQUIRE(reg.get<foo<1>>(e1).a == 3);
-    REQUIRE(reg.get<foo<1>>(e1).b == 4);
+    REQUIRE(reg.get_entity(e1).get<foo<0>>() == foo<0>{ 1, 2 });
+    REQUIRE(reg.get_entity(e1).get<foo<1>>() == foo<1>{ 3, 4 });
 
-    REQUIRE(reg.get<foo<0>>(e2).a == 1);
-    REQUIRE(reg.get<foo<0>>(e2).b == 2);
-    REQUIRE(reg.get<foo<1>>(e2).a == 3);
-    REQUIRE(reg.get<foo<1>>(e2).b == 4);
+    REQUIRE(reg.get_entity(e2).get<foo<0>>() == foo<0>{ 1, 2 });
+    REQUIRE(reg.get_entity(e2).get<foo<1>>() == foo<1>{ 3, 4 });
 }

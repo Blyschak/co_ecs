@@ -1,3 +1,5 @@
+#include "bench.hpp"
+
 #include <co_ecs/co_ecs.hpp>
 
 #include <benchmark/benchmark.h>
@@ -51,19 +53,11 @@ public:
     using type = typename impl<>::type;
 };
 
-constexpr std::size_t operator"" _components(unsigned long long int number) {
-    return number;
-}
-
-constexpr std::size_t operator"" _bytes_each(unsigned long long int number) {
-    return number;
-}
-
 std::uint64_t sum{ 0 };
 
 // Creates an entity with the given number of components
 template<std::size_t N, std::size_t S = 0>
-static void bm_entity_creation_with(benchmark::State& state) {
+static void entity_creation_with(benchmark::State& state) {
     using components_tuple = typename components_generator<foo_creator<S>, N>::type;
 
     auto registry = co_ecs::registry();
@@ -84,11 +78,11 @@ static void bm_entity_creation_with(benchmark::State& state) {
     state.SetBytesProcessed(int64_t(state.iterations()) * size);
 }
 
-// Iterate 1M entity with given number of components
-template<std::size_t N, std::size_t S>
-static void bm_1M_entities_iteration(benchmark::State& state) {
-    const auto entities_count = 1000000;
-    using components_tuple = typename components_generator<foo_creator<S>, N>::type;
+// Iterate N entities with M number of components, S bytes each
+template<std::size_t N, std::size_t M, std::size_t S>
+static void iterate_entities(benchmark::State& state) {
+    const auto entities_count = N;
+    using components_tuple = typename components_generator<foo_creator<S>, M>::type;
 
     auto registry = co_ecs::registry();
 
@@ -97,7 +91,7 @@ static void bm_1M_entities_iteration(benchmark::State& state) {
             components_tuple{});
     };
 
-    for (auto _ : std::ranges::iota_view{ 0, entities_count }) {
+    for (auto _ : std::ranges::iota_view{ 0ull, entities_count }) {
         create_entity();
     }
 
@@ -120,12 +114,11 @@ static void bm_1M_entities_iteration(benchmark::State& state) {
     state.SetBytesProcessed(int64_t(state.iterations()) * size * entities_count);
 }
 
-
 // Iterate 1M entity with given number of components
-template<std::size_t N, std::size_t S>
-static void bm_1M_entities_iteration_with_system(benchmark::State& state) {
-    const auto entities_count = 1000000;
-    using components_tuple = typename components_generator<foo_creator<S>, N>::type;
+template<std::size_t N, std::size_t M, std::size_t S>
+static void iterate_entities_with_system(benchmark::State& state) {
+    const auto entities_count = N;
+    using components_tuple = typename components_generator<foo_creator<S>, M>::type;
 
     auto registry = co_ecs::registry();
 
@@ -134,7 +127,7 @@ static void bm_1M_entities_iteration_with_system(benchmark::State& state) {
             components_tuple{});
     };
 
-    for (auto _ : std::ranges::iota_view{ 0, entities_count }) {
+    for (auto _ : std::ranges::iota_view{ 0ull, entities_count }) {
         create_entity();
     }
 
@@ -160,18 +153,28 @@ static void bm_1M_entities_iteration_with_system(benchmark::State& state) {
     state.SetBytesProcessed(int64_t(state.iterations()) * size * entities_count);
 }
 
-BENCHMARK(bm_entity_creation_with<0_components>);
-BENCHMARK(bm_entity_creation_with<1_components, 64_bytes_each>);
-BENCHMARK(bm_entity_creation_with<2_components, 64_bytes_each>);
-BENCHMARK(bm_entity_creation_with<4_components, 64_bytes_each>);
-BENCHMARK(bm_entity_creation_with<8_components, 64_bytes_each>);
+BENCHMARK(entity_creation_with<0_components>);
+BENCHMARK(entity_creation_with<1_components, 64_bytes_each>);
+BENCHMARK(entity_creation_with<2_components, 64_bytes_each>);
+BENCHMARK(entity_creation_with<4_components, 64_bytes_each>);
+BENCHMARK(entity_creation_with<8_components, 64_bytes_each>);
 
-BENCHMARK(bm_1M_entities_iteration<1_components, 64_bytes_each>)->Unit(benchmark::kMillisecond);
-BENCHMARK(bm_1M_entities_iteration<2_components, 64_bytes_each>)->Unit(benchmark::kMillisecond);
-BENCHMARK(bm_1M_entities_iteration<4_components, 64_bytes_each>)->Unit(benchmark::kMillisecond);
-BENCHMARK(bm_1M_entities_iteration<8_components, 64_bytes_each>)->Unit(benchmark::kMillisecond);
+BENCHMARK(iterate_entities<10_entities, 1_components, 64_bytes_each>);
+BENCHMARK(iterate_entities<10_entities, 2_components, 64_bytes_each>);
+BENCHMARK(iterate_entities<10_entities, 4_components, 64_bytes_each>);
+BENCHMARK(iterate_entities<10_entities, 8_components, 64_bytes_each>);
 
-BENCHMARK(bm_1M_entities_iteration_with_system<1_components, 64_bytes_each>)->Unit(benchmark::kMillisecond);
-BENCHMARK(bm_1M_entities_iteration_with_system<2_components, 64_bytes_each>)->Unit(benchmark::kMillisecond);
-BENCHMARK(bm_1M_entities_iteration_with_system<4_components, 64_bytes_each>)->Unit(benchmark::kMillisecond);
-BENCHMARK(bm_1M_entities_iteration_with_system<8_components, 64_bytes_each>)->Unit(benchmark::kMillisecond);
+BENCHMARK(iterate_entities<1000000_entities, 1_components, 64_bytes_each>)->Unit(benchmark::kMillisecond);
+BENCHMARK(iterate_entities<1000000_entities, 2_components, 64_bytes_each>)->Unit(benchmark::kMillisecond);
+BENCHMARK(iterate_entities<1000000_entities, 4_components, 64_bytes_each>)->Unit(benchmark::kMillisecond);
+BENCHMARK(iterate_entities<1000000_entities, 8_components, 64_bytes_each>)->Unit(benchmark::kMillisecond);
+
+BENCHMARK(iterate_entities_with_system<10_entities, 1_components, 64_bytes_each>);
+BENCHMARK(iterate_entities_with_system<10_entities, 2_components, 64_bytes_each>);
+BENCHMARK(iterate_entities_with_system<10_entities, 4_components, 64_bytes_each>);
+BENCHMARK(iterate_entities_with_system<10_entities, 8_components, 64_bytes_each>);
+
+BENCHMARK(iterate_entities_with_system<1000000_entities, 1_components, 64_bytes_each>)->Unit(benchmark::kMillisecond);
+BENCHMARK(iterate_entities_with_system<1000000_entities, 2_components, 64_bytes_each>)->Unit(benchmark::kMillisecond);
+BENCHMARK(iterate_entities_with_system<1000000_entities, 4_components, 64_bytes_each>)->Unit(benchmark::kMillisecond);
+BENCHMARK(iterate_entities_with_system<1000000_entities, 8_components, 64_bytes_each>)->Unit(benchmark::kMillisecond);

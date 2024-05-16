@@ -443,11 +443,11 @@ TEST_CASE("Work stealing queue", "Push/pop/steal") {
     q.push(4);
     q.push(5);
 
-    REQUIRE(q.pop() == std::optional{5});
-    REQUIRE(q.pop() == std::optional{4});
-    REQUIRE(q.steal() == std::optional{1});
-    REQUIRE(q.pop() == std::optional{3});
-    REQUIRE(q.pop() == std::optional{2});
+    REQUIRE(q.pop() == std::optional{ 5 });
+    REQUIRE(q.pop() == std::optional{ 4 });
+    REQUIRE(q.steal() == std::optional{ 1 });
+    REQUIRE(q.pop() == std::optional{ 3 });
+    REQUIRE(q.pop() == std::optional{ 2 });
 
     REQUIRE(q.steal() == std::nullopt);
     REQUIRE(q.pop() == std::nullopt);

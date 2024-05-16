@@ -283,8 +283,7 @@ public:
         const Hash& hash = Hash(),
         const key_equal& equal = key_equal(),
         const Allocator& alloc = Allocator()) :
-        _buckets(alloc, bucket_count),
-        _info(bucket_count), _hash(hash), _equal(equal) {
+        _buckets(alloc, bucket_count), _info(bucket_count), _hash(hash), _equal(equal) {
         assert((bucket_count % 2 == 0) && "Bucket count must be a power of two");
     }
 
@@ -327,8 +326,7 @@ public:
         const Hash& hash = Hash(),
         const key_equal& equal = key_equal(),
         const Allocator& alloc = Allocator()) :
-        _buckets(alloc, bucket_count),
-        _info(default_bucket_count), _equal(equal), _hash(hash) {
+        _buckets(alloc, bucket_count), _info(default_bucket_count), _equal(equal), _hash(hash) {
         assert((bucket_count % 2 == 0) && "Bucket count must be a power of two");
         for (; first != last; ++first) {
             emplace_or_assign_impl(std::move(*first));
@@ -347,8 +345,7 @@ public:
     constexpr hash_table(input_iterator first,
         input_iterator last,
         size_type bucket_count,
-        const Allocator& alloc = Allocator()) :
-        hash_table(first, last, bucket_count, Hash(), key_equal(), alloc) {
+        const Allocator& alloc = Allocator()) : hash_table(first, last, bucket_count, Hash(), key_equal(), alloc) {
     }
 
     /// @brief Construct hash table from iterator pair
@@ -365,8 +362,7 @@ public:
         input_iterator last,
         size_type bucket_count,
         const Hash& hash,
-        const Allocator& alloc = Allocator()) :
-        hash_table(first, last, bucket_count, hash, key_equal(), alloc) {
+        const Allocator& alloc = Allocator()) : hash_table(first, last, bucket_count, hash, key_equal(), alloc) {
     }
 
     /// @brief Construct hash table from initializer list
@@ -379,8 +375,7 @@ public:
         size_type bucket_count = default_bucket_count,
         const Hash& hash = Hash(),
         const KeyEqual& equal = KeyEqual(),
-        const Allocator& alloc = Allocator()) :
-        hash_table(init.begin(), init.end(), bucket_count, hash, equal, alloc) {
+        const Allocator& alloc = Allocator()) : hash_table(init.begin(), init.end(), bucket_count, hash, equal, alloc) {
     }
 
     /// @brief Copy constructor
@@ -443,7 +438,7 @@ public:
     ///
     /// @param key Key to insert
     /// @return mapped_type& Reference to the mapped type
-    auto operator[](const key_type& key) -> mapped_type&
+    constexpr auto operator[](const key_type& key) -> mapped_type&
         requires(is_map)
     {
         if (auto iter = find(key); iter != end()) {

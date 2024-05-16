@@ -72,7 +72,7 @@ class handle_pool {
 public:
     /// @brief Creates a new handle.
     /// @return Handle
-    [[nodiscard]] auto create() -> H {
+    [[nodiscard]] constexpr auto create() -> H {
         if (!_free_ids.empty()) {
             auto id = _free_ids.back();
             _free_ids.pop_back();
@@ -87,7 +87,7 @@ public:
     /// @brief Checks if a handle is still alive.
     /// @param handle Handle to check
     /// @return True if the handle is alive
-    [[nodiscard]] auto alive(H handle) const noexcept -> bool {
+    [[nodiscard]] constexpr auto alive(H handle) const noexcept -> bool {
         if (handle.id() < _generations.size()) {
             return _generations[handle.id()] == handle.generation();
         }
@@ -96,7 +96,7 @@ public:
 
     /// @brief Recycles a handle for reuse in future creations.
     /// @param handle Handle to recycle
-    void recycle(H handle) {
+    constexpr void recycle(H handle) {
         if (!alive(handle)) {
             return;
         }
@@ -108,7 +108,7 @@ public:
     /// @brief Reserves a handle.
     /// @details This call is thread-safe.
     /// @return Reserved handle
-    auto reserve() -> H {
+    constexpr auto reserve() -> H {
         auto n = _free_cursor.fetch_sub(1, std::memory_order::relaxed);
         if (n > 0) {
             auto id = _free_ids[n - 1];
@@ -119,7 +119,7 @@ public:
     }
 
     /// @brief Flushes reserved handles.
-    void flush() {
+    constexpr void flush() {
         auto free_cursor = _free_cursor.load(std::memory_order::relaxed);
 
         while (free_cursor < 0) {

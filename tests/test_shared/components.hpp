@@ -7,3 +7,7 @@ using namespace co_ecs;
 struct My_1_component {};
 struct My_2_component {};
 struct My_3_component {};
+
+struct foo {
+    int value{ 42 };
+};

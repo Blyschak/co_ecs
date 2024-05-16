@@ -20,6 +20,7 @@ add_executable(
   test_component.cpp
   test_entity.cpp
   test_ecs.cpp
+  test_command.cpp
   test_schedule.cpp
 )
 
@@ -27,6 +28,7 @@ target_link_libraries(tests PRIVATE co_ecs PRIVATE Catch2::Catch2WithMain)
 
 catch_discover_tests(tests)
 
+add_subdirectory(test_compile_failures)
 add_subdirectory(test_shared)
 
 if(CO_ECS_CODE_COVERAGE)

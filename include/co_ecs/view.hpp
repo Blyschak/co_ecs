@@ -1,76 +1,70 @@
 #pragma once
 
-#include <co_ecs/registry.hpp>
-#include <co_ecs/system.hpp>
-
 #include <co_ecs/detail/views.hpp>
-
+#include <co_ecs/registry.hpp>
 #include <co_ecs/thread_pool/parallel_for.hpp>
 
 #include <type_traits>
 
 namespace co_ecs {
 
-namespace detail {
-
-/// @brief Helper function to return true if all of the passed arguments are true
+/// @brief A view lets you get a range over components of Args out of a registry.
 ///
-/// @tparam Args Parameter pack types
-/// @param args Parameter pack
-template<typename... Args>
-inline auto all(Args... args) -> bool {
-    return (... && args);
-}
-
-} // namespace detail
-
-/// @brief A view lets you get a range over components of Args out of a registry
+/// Views represent a slice of a registry restricting the access to a particular components.
 ///
-/// A view isn't invalidated when there are changes made to the registry which lets a create one an re-use over time.
+/// @code
+/// co_ecs::view<position&, const velocity&> view{ registry };
 ///
-/// @tparam Args Component references types
+/// // Iterate using iterators:
+/// for (auto [pos, vel] : view.each()) {
+///     pos.x += vel.x;
+///     pos.y += vel.y;
+/// }
+///
+/// // Alternativelly, iterate using a callback
+/// view.each([](auto& pos, const auto& vel) {
+///     pos.x += vel.x;
+///     pos.y += vel.y;
+/// });
+/// @endcode
+///
+/// @note A view isn't invalidated when there are changes made to the registry, which allows creating one and re-using
+/// it over time.
+///
+/// @tparam Args Component reference types
 template<component_reference... Args>
 class view {
-public:
-    /// @brief Const when all component references are const
-    static constexpr bool is_const = view_arguments<Args...>::is_const;
+private:
+    /// @brief Indicates if the view is const when all component references are const.
+    static constexpr bool is_const = detail::view_arguments<Args...>::is_const;
 
-    /// @brief Iteration value type
+    /// @brief The type of values iterated over by the view.
     using value_type = std::tuple<Args...>;
 
-    /// @brief Registry type deduced based on input component reference types
+    /// @brief The type of the registry, deduced based on the input component reference types.
     using registry_type = std::conditional_t<is_const, const registry&, registry&>;
 
-    /// @brief Construct a new view object
-    ///
-    /// @param registry Reference to the registry
+public:
+    /// @brief Constructs a new view object.
+    /// @param registry Reference to the registry.
     explicit view(registry_type registry) noexcept : _registry(registry) {
-    }
-
-    /// @brief Returns a single tuple of components matching Args, if available in the view.
-    ///
-    /// @return Optional tuple of components if found, otherwise empty optional
-    auto single() -> std::optional<std::tuple<Args...>>
-        requires(!is_const)
-    {
-        for (auto chunk : chunks(_registry.get_archetypes())) {
-            for (auto entry : chunk) {
-                return entry;
-            }
-        }
-        return {};
     }
 
     /// @brief Returns a single tuple of components matching Args, if available in the view.
     ///
     /// This method is available in const views and allows accessing a single tuple of components matching Args.
     /// It returns an optional tuple, which is empty if no entities in the view match the component requirements.
+    /// @code
+    /// co_ecs::view<directional_light&> view{ registry };
+    /// // Only one instance with directional_light component is supported
+    /// auto [dir_light] = *view.single();
+    /// @endcode
     ///
-    /// @return Optional tuple of components if found, otherwise empty optional
-    auto single() const -> std::optional<std::tuple<Args...>>
-        requires(is_const)
+    /// @return Optional tuple of components if found, otherwise empty optional.
+    auto single() -> std::optional<std::tuple<Args...>>
+        requires(!is_const)
     {
-        for (auto chunk : chunks(_registry.get_archetypes())) {
+        for (auto chunk : chunks(_registry.archetypes())) {
             for (auto entry : chunk) {
                 return entry;
             }
@@ -78,55 +72,63 @@ public:
         return {};
     }
 
-    /// @brief Returns an iterator that yields a std::tuple<Args...>
-    ///
-    /// @return decltype(auto) Iterator
+    /// @brief Returns a single tuple of components matching Args, if available in the view (const version).
+    /// @return Optional tuple of components if found, otherwise empty optional.
+    auto single() const -> std::optional<std::tuple<Args...>>
+        requires(is_const)
+    {
+        for (auto chunk : chunks(_registry.archetypes())) {
+            for (auto entry : chunk) {
+                return entry;
+            }
+        }
+        return {};
+    }
+
+    /// @brief Returns an iterator that yields a std::tuple<Args...>.
+    /// @return decltype(auto) Iterator.
     auto each() -> decltype(auto)
         requires(!is_const)
     {
-        return chunks(_registry.get_archetypes()) | detail::views::join; // join all chunks together
+        return chunks(_registry.archetypes()) | detail::views::join; // join all chunks together
     }
 
-    /// @brief Returns an iterator that yields a std::tuple<Args...>
-    ///
-    /// @return decltype(auto) Iterator
+    /// @brief Returns an iterator that yields a std::tuple<Args...> (const version).
+    /// @return decltype(auto) Iterator.
     auto each() const -> decltype(auto)
         requires(is_const)
     {
-        return chunks(_registry.get_archetypes()) | detail::views::join; // join all chunks together
+        return chunks(_registry.archetypes()) | detail::views::join; // join all chunks together
     }
 
-    /// @brief Run func on every entity that matches the Args requirement
-    ///
-    /// @param func A callable to run on entity components
+    /// @brief Runs a function on every entity that matches the Args requirement.
+    /// @param func A callable to run on entity components.
     void each(auto&& func)
         requires(!is_const)
     {
-        for (auto chunk : chunks(_registry.get_archetypes())) {
+        for (auto chunk : chunks(_registry.archetypes())) {
             for (auto entry : chunk) {
                 std::apply(func, entry);
             }
         }
     }
 
-    /// @brief Run func on every entity that matches the Args requirement. Constant version
+    /// @brief Runs a function on every entity that matches the Args requirement (const version).
     ///
-    /// NOTE: See the note on non-const each()
-    ///
-    /// @param func A callable to run on entity components
+    /// @param func A callable to run on entity components.
+    /// @note This method is similar to the non-const each() but is available in const views.
     void each(auto&& func) const
         requires(is_const)
     {
-        for (auto chunk : chunks(_registry.get_archetypes())) {
+        for (auto chunk : chunks(_registry.archetypes())) {
             for (auto entry : chunk) {
                 std::apply(func, entry);
             }
         }
     }
 
-    /// @brief Run func on every entity that matches the Args requirement in parallel
-    ///
-    /// @param func A callable to run on entity components
+    /// @brief Runs a function on every entity that matches the Args requirement in parallel.
+    /// @param func A callable to run on entity components.
     void par_each(auto&& func)
         requires(!is_const)
     {
@@ -134,11 +136,10 @@ public:
             [&func](auto chunk) { std::ranges::for_each(chunk, [&](auto&& elem) { std::apply(func, elem); }); });
     }
 
-    /// @brief Run func on every entity that matches the Args requirement in parallel. Constant version
+    /// @brief Runs a function on every entity that matches the Args requirement in parallel (const version).
     ///
-    /// NOTE: See the note on non-const each()
-    ///
-    /// @param func A callable to run on entity components
+    /// @param func A callable to run on entity components.
+    /// @note This method is similar to the non-const par_each() but is available in const views.
     void par_each(auto&& func) const
         requires(is_const)
     {
@@ -146,71 +147,31 @@ public:
             [&func](auto chunk) { std::ranges::for_each(chunk, [&](auto&& elem) { std::apply(func, elem); }); });
     }
 
-    /// @brief Get chunks range
-    /// @return Chunks
+    /// @brief Gets the chunks range.
+    /// @return Chunks.
     auto chunks() -> decltype(auto) {
-        return chunks(_registry.get_archetypes());
+        return chunks(_registry.archetypes());
     }
 
-    /// @brief Get const chunks range
-    /// @return Chunks
+    /// @brief Gets the const chunks range.
+    /// @return Chunks.
     auto chunks() const -> decltype(auto) {
-        return chunks(_registry.get_archetypes());
-    }
-
-    /// @brief Check if entity is part of the view
-    /// @param ent Entity
-    /// @return True if exists in the view
-    auto has(entity ent) const noexcept -> bool {
-        return _registry.template has<decay_component_t<Args>...>(ent);
-    }
-
-    /// @brief Finds components for a single entity
-    /// @param ent Entity
-    /// @return Optional containing references to components
-    auto find(entity ent) noexcept -> std::optional<value_type>
-        requires(!is_const)
-    {
-        return _registry.template find<Args...>(ent);
-    }
-
-    /// @brief Finds components for a single entity
-    /// @param ent Entity
-    /// @return Optional containing references to components
-    auto find(entity ent) const noexcept -> std::optional<value_type>
-        requires(is_const)
-    {
-        return _registry.template find<Args...>(ent);
-    }
-
-    /// @brief Get components for a single entity
-    ///
-    /// @param ent Entity to query
-    /// @return value_type Components tuple
-    auto get(entity ent) -> value_type
-        requires(!is_const)
-    {
-        return _registry.template get<Args...>(ent);
-    }
-
-    /// @brief Get components for a single entity
-    ///
-    /// @param ent Entity to query
-    /// @return value_type Components tuple
-    auto get(entity ent) const -> value_type
-        requires(is_const)
-    {
-        return _registry.template get<Args...>(ent);
+        return chunks(_registry.archetypes());
     }
 
 private:
-    /// @brief Return a range of chunks that match given component set in Args
-    ///
-    /// @param archetypes Archetypes
-    /// @return decltype(auto)
-    static auto chunks(auto&& archetypes) -> decltype(auto) {
+    template<component C>
+    constexpr static bool match(auto& archetype) {
+        if constexpr (std::is_same_v<C, entity>) {
+            return true;
+        } else {
+            return archetype->template contains<C>();
+        }
+    }
+
+    constexpr static auto chunks(auto&& archetypes) -> decltype(auto) {
         auto filter_archetypes = [](auto& archetype) -> bool {
-            return detail::all(archetype->template contains<decay_component_t<Args>>()...);
+            return (match<decay_component_t<Args>>(archetype) && ...);
         };
         auto into_chunks = [](auto& archetype) -> decltype(auto) { return archetype->chunks(); };
         auto as_typed_chunk = [](auto& chunk) -> decltype(auto) { return chunk_view<Args...>(chunk); };
@@ -223,53 +184,8 @@ private:
                | detail::views::transform(as_typed_chunk); // each chunk casted to a typed chunk view range-like type
     }
 
-    registry_type _registry;
+    registry_type _registry; ///< Reference to the registry.
 };
 
-// Implement registry methods after we have view class defined
-
-template<component_reference... Args>
-auto registry::view() -> co_ecs::view<Args...>
-    requires(!const_component_references_v<Args...>)
-{
-    return co_ecs::view<Args...>{ *this };
-}
-
-template<component_reference... Args>
-auto registry::view() const -> co_ecs::view<Args...>
-    requires const_component_references_v<Args...>
-{
-    return co_ecs::view<Args...>{ *this };
-}
-
-template<component_reference... Args>
-auto registry::single() -> std::optional<std::tuple<Args...>>
-    requires(!const_component_references_v<Args...>)
-{
-    return view<Args...>().single();
-}
-
-template<component_reference... Args>
-auto registry::single() const -> std::optional<std::tuple<Args...>>
-    requires const_component_references_v<Args...>
-{
-    return view<Args...>().single();
-}
-
-template<typename F>
-void registry::each(F&& func)
-    requires(!detail::func_decomposer<F>::is_const)
-{
-    using view_t = typename detail::func_decomposer<F>::view_t;
-    view_t{ *this }.each(std::forward<F>(func));
-}
-
-template<typename F>
-void registry::each(F&& func) const
-    requires(detail::func_decomposer<F>::is_const)
-{
-    using view_t = typename detail::func_decomposer<F>::view_t;
-    view_t{ *this }.each(std::forward<F>(func));
-}
 
 } // namespace co_ecs
