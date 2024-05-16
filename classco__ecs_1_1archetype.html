@@ -150,22 +150,22 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a51d3d48ea090ab0962b1ee07b5cd544c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#a51d3d48ea090ab0962b1ee07b5cd544c">archetype</a> ()=default</td></tr>
 <tr class="memdesc:a51d3d48ea090ab0962b1ee07b5cd544c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new archetype object without components.  <a href="classco__ecs_1_1archetype.html#a51d3d48ea090ab0962b1ee07b5cd544c">More...</a><br /></td></tr>
 <tr class="separator:a51d3d48ea090ab0962b1ee07b5cd544c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab3083a71ad2e899f4df8117a19a6be8e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#ab3083a71ad2e899f4df8117a19a6be8e">archetype</a> (<a class="el" href="classco__ecs_1_1component__meta__set.html">component_meta_set</a> <a class="el" href="classco__ecs_1_1archetype.html#a02c832f2ce966928e00cb7d5c958cca2">components</a>)</td></tr>
+<tr class="memitem:ab3083a71ad2e899f4df8117a19a6be8e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#ab3083a71ad2e899f4df8117a19a6be8e">archetype</a> (<a class="el" href="classco__ecs_1_1component__meta__set.html">component_meta_set</a> <a class="el" href="classco__ecs_1_1archetype.html#a95a474d877c495ca6c6aa74ed18c2bc0">components</a>)</td></tr>
 <tr class="memdesc:ab3083a71ad2e899f4df8117a19a6be8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new archetype object.  <a href="classco__ecs_1_1archetype.html#ab3083a71ad2e899f4df8117a19a6be8e">More...</a><br /></td></tr>
 <tr class="separator:ab3083a71ad2e899f4df8117a19a6be8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a02c832f2ce966928e00cb7d5c958cca2"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#a02c832f2ce966928e00cb7d5c958cca2">components</a> () const noexcept -&gt; const <a class="el" href="classco__ecs_1_1component__meta__set.html">component_meta_set</a> &amp;</td></tr>
-<tr class="memdesc:a02c832f2ce966928e00cb7d5c958cca2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return components set.  <a href="classco__ecs_1_1archetype.html#a02c832f2ce966928e00cb7d5c958cca2">More...</a><br /></td></tr>
-<tr class="separator:a02c832f2ce966928e00cb7d5c958cca2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a16b053ace8531739039056a39cc0159c"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#a16b053ace8531739039056a39cc0159c">chunks</a> () noexcept -&gt; <a class="el" href="classco__ecs_1_1archetype.html#a0a311a178261f58e333967355662cae6">chunks_storage_t</a> &amp;</td></tr>
-<tr class="memdesc:a16b053ace8531739039056a39cc0159c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return reference to chunks vector.  <a href="classco__ecs_1_1archetype.html#a16b053ace8531739039056a39cc0159c">More...</a><br /></td></tr>
-<tr class="separator:a16b053ace8531739039056a39cc0159c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae3c12bc1d19a6920134c3a9dfdfd7fc0"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#ae3c12bc1d19a6920134c3a9dfdfd7fc0">chunks</a> () const noexcept -&gt; const <a class="el" href="classco__ecs_1_1archetype.html#a0a311a178261f58e333967355662cae6">chunks_storage_t</a> &amp;</td></tr>
-<tr class="memdesc:ae3c12bc1d19a6920134c3a9dfdfd7fc0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return const reference to chunks vector.  <a href="classco__ecs_1_1archetype.html#ae3c12bc1d19a6920134c3a9dfdfd7fc0">More...</a><br /></td></tr>
-<tr class="separator:ae3c12bc1d19a6920134c3a9dfdfd7fc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8e5b70392e211010128aa9fb3bdc2159"><td class="memTemplParams" colspan="2">template&lt;component... Components&gt; </td></tr>
-<tr class="memitem:a8e5b70392e211010128aa9fb3bdc2159"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#a8e5b70392e211010128aa9fb3bdc2159">emplace</a> (<a class="el" href="namespaceco__ecs.html#a2da96f6ca4426a42b949e7803a4627a6">entity</a> ent, Components &amp;&amp;... <a class="el" href="classco__ecs_1_1archetype.html#a02c832f2ce966928e00cb7d5c958cca2">components</a>) -&gt; <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a></td></tr>
-<tr class="memdesc:a8e5b70392e211010128aa9fb3bdc2159"><td class="mdescLeft">&#160;</td><td class="mdescRight">Emplace new entity and assign given components to it, return entities location.  <a href="classco__ecs_1_1archetype.html#a8e5b70392e211010128aa9fb3bdc2159">More...</a><br /></td></tr>
-<tr class="separator:a8e5b70392e211010128aa9fb3bdc2159"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a95a474d877c495ca6c6aa74ed18c2bc0"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#a95a474d877c495ca6c6aa74ed18c2bc0">components</a> () const noexcept -&gt; const <a class="el" href="classco__ecs_1_1component__meta__set.html">component_meta_set</a> &amp;</td></tr>
+<tr class="memdesc:a95a474d877c495ca6c6aa74ed18c2bc0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return components set.  <a href="classco__ecs_1_1archetype.html#a95a474d877c495ca6c6aa74ed18c2bc0">More...</a><br /></td></tr>
+<tr class="separator:a95a474d877c495ca6c6aa74ed18c2bc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad5e76fbe89e5cd32ce44ea577e9dc60d"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#ad5e76fbe89e5cd32ce44ea577e9dc60d">chunks</a> () noexcept -&gt; <a class="el" href="classco__ecs_1_1archetype.html#a0a311a178261f58e333967355662cae6">chunks_storage_t</a> &amp;</td></tr>
+<tr class="memdesc:ad5e76fbe89e5cd32ce44ea577e9dc60d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return reference to chunks vector.  <a href="classco__ecs_1_1archetype.html#ad5e76fbe89e5cd32ce44ea577e9dc60d">More...</a><br /></td></tr>
+<tr class="separator:ad5e76fbe89e5cd32ce44ea577e9dc60d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad9de5105853d5432172d9737d6776131"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#ad9de5105853d5432172d9737d6776131">chunks</a> () const noexcept -&gt; const <a class="el" href="classco__ecs_1_1archetype.html#a0a311a178261f58e333967355662cae6">chunks_storage_t</a> &amp;</td></tr>
+<tr class="memdesc:ad9de5105853d5432172d9737d6776131"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return const reference to chunks vector.  <a href="classco__ecs_1_1archetype.html#ad9de5105853d5432172d9737d6776131">More...</a><br /></td></tr>
+<tr class="separator:ad9de5105853d5432172d9737d6776131"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8fbb687feba906e045e5685d8a7bde91"><td class="memTemplParams" colspan="2">template&lt;component... Components&gt; </td></tr>
+<tr class="memitem:a8fbb687feba906e045e5685d8a7bde91"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#a8fbb687feba906e045e5685d8a7bde91">emplace</a> (<a class="el" href="namespaceco__ecs.html#a2da96f6ca4426a42b949e7803a4627a6">entity</a> ent, Components &amp;&amp;... <a class="el" href="classco__ecs_1_1archetype.html#a95a474d877c495ca6c6aa74ed18c2bc0">components</a>) -&gt; <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a></td></tr>
+<tr class="memdesc:a8fbb687feba906e045e5685d8a7bde91"><td class="mdescLeft">&#160;</td><td class="mdescRight">Emplace new entity and assign given components to it, return entities location.  <a href="classco__ecs_1_1archetype.html#a8fbb687feba906e045e5685d8a7bde91">More...</a><br /></td></tr>
+<tr class="separator:a8fbb687feba906e045e5685d8a7bde91"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acb588ca226de4f728501e6f338ff2d73"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#acb588ca226de4f728501e6f338ff2d73">swap_erase</a> (const <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a> &amp;location) noexcept -&gt; std::optional&lt; <a class="el" href="namespaceco__ecs.html#a2da96f6ca4426a42b949e7803a4627a6">entity</a> &gt;</td></tr>
 <tr class="memdesc:acb588ca226de4f728501e6f338ff2d73"><td class="mdescLeft">&#160;</td><td class="mdescRight">Swap erase an entity at given location, returns an entity that has been moved as a result of this operation or std::nullopt if no entities were moved.  <a href="classco__ecs_1_1archetype.html#acb588ca226de4f728501e6f338ff2d73">More...</a><br /></td></tr>
 <tr class="separator:acb588ca226de4f728501e6f338ff2d73"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -178,21 +178,21 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aa2acf58ea78a7187e13a95a15beb8ade"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#aa2acf58ea78a7187e13a95a15beb8ade">visit</a> (const <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a> &amp;location, auto &amp;&amp;func)</td></tr>
 <tr class="memdesc:aa2acf58ea78a7187e13a95a15beb8ade"><td class="mdescLeft">&#160;</td><td class="mdescRight">Visit all components of an entity.  <a href="classco__ecs_1_1archetype.html#aa2acf58ea78a7187e13a95a15beb8ade">More...</a><br /></td></tr>
 <tr class="separator:aa2acf58ea78a7187e13a95a15beb8ade"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0a49ce183ac431011125823d68d8dd16"><td class="memItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#a0a49ce183ac431011125823d68d8dd16">visit</a> (const <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a> &amp;location, auto &amp;&amp;func) const</td></tr>
-<tr class="memdesc:a0a49ce183ac431011125823d68d8dd16"><td class="mdescLeft">&#160;</td><td class="mdescRight">Visit all components of an entity (const variant).  <a href="classco__ecs_1_1archetype.html#a0a49ce183ac431011125823d68d8dd16">More...</a><br /></td></tr>
-<tr class="separator:a0a49ce183ac431011125823d68d8dd16"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a339ff003dd434cd9fb96b29dd651b79f"><td class="memTemplParams" colspan="2">template&lt;component C&gt; </td></tr>
-<tr class="memitem:a339ff003dd434cd9fb96b29dd651b79f"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#a339ff003dd434cd9fb96b29dd651b79f">get</a> (<a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a> location) -&gt; C &amp;</td></tr>
-<tr class="memdesc:a339ff003dd434cd9fb96b29dd651b79f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get component data.  <a href="classco__ecs_1_1archetype.html#a339ff003dd434cd9fb96b29dd651b79f">More...</a><br /></td></tr>
-<tr class="separator:a339ff003dd434cd9fb96b29dd651b79f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac7f6fd18429e1b152014e24d7fa1cb9c"><td class="memTemplParams" colspan="2">template&lt;component C&gt; </td></tr>
-<tr class="memitem:ac7f6fd18429e1b152014e24d7fa1cb9c"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#ac7f6fd18429e1b152014e24d7fa1cb9c">get</a> (<a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a> location) const -&gt; const C &amp;</td></tr>
-<tr class="memdesc:ac7f6fd18429e1b152014e24d7fa1cb9c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get component data, const variant.  <a href="classco__ecs_1_1archetype.html#ac7f6fd18429e1b152014e24d7fa1cb9c">More...</a><br /></td></tr>
-<tr class="separator:ac7f6fd18429e1b152014e24d7fa1cb9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2cbf0ccdaef9887b2144e377ef6f2177"><td class="memTemplParams" colspan="2">template&lt;component C&gt; </td></tr>
-<tr class="memitem:a2cbf0ccdaef9887b2144e377ef6f2177"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#a2cbf0ccdaef9887b2144e377ef6f2177">contains</a> () const noexcept -&gt; bool</td></tr>
-<tr class="memdesc:a2cbf0ccdaef9887b2144e377ef6f2177"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if archetype has component C.  <a href="classco__ecs_1_1archetype.html#a2cbf0ccdaef9887b2144e377ef6f2177">More...</a><br /></td></tr>
-<tr class="separator:a2cbf0ccdaef9887b2144e377ef6f2177"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ab41dc9cf3a1b955f9a207cce6d28f4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#a4ab41dc9cf3a1b955f9a207cce6d28f4">visit</a> (const <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a> &amp;location, auto &amp;&amp;func) const</td></tr>
+<tr class="memdesc:a4ab41dc9cf3a1b955f9a207cce6d28f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Visit all components of an entity (const variant).  <a href="classco__ecs_1_1archetype.html#a4ab41dc9cf3a1b955f9a207cce6d28f4">More...</a><br /></td></tr>
+<tr class="separator:a4ab41dc9cf3a1b955f9a207cce6d28f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae861bba5fa902301a587495b118b93eb"><td class="memTemplParams" colspan="2">template&lt;component C&gt; </td></tr>
+<tr class="memitem:ae861bba5fa902301a587495b118b93eb"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#ae861bba5fa902301a587495b118b93eb">get</a> (<a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a> location) -&gt; C &amp;</td></tr>
+<tr class="memdesc:ae861bba5fa902301a587495b118b93eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get component data.  <a href="classco__ecs_1_1archetype.html#ae861bba5fa902301a587495b118b93eb">More...</a><br /></td></tr>
+<tr class="separator:ae861bba5fa902301a587495b118b93eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ebae2f514e22173ab8f520b47ddeb25"><td class="memTemplParams" colspan="2">template&lt;component C&gt; </td></tr>
+<tr class="memitem:a4ebae2f514e22173ab8f520b47ddeb25"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#a4ebae2f514e22173ab8f520b47ddeb25">get</a> (<a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a> location) const -&gt; const C &amp;</td></tr>
+<tr class="memdesc:a4ebae2f514e22173ab8f520b47ddeb25"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get component data, const variant.  <a href="classco__ecs_1_1archetype.html#a4ebae2f514e22173ab8f520b47ddeb25">More...</a><br /></td></tr>
+<tr class="separator:a4ebae2f514e22173ab8f520b47ddeb25"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ed0066b2b5f6e5dd9aaafb06ea5eadd"><td class="memTemplParams" colspan="2">template&lt;component C&gt; </td></tr>
+<tr class="memitem:a2ed0066b2b5f6e5dd9aaafb06ea5eadd"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html#a2ed0066b2b5f6e5dd9aaafb06ea5eadd">contains</a> () const noexcept -&gt; bool</td></tr>
+<tr class="memdesc:a2ed0066b2b5f6e5dd9aaafb06ea5eadd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if archetype has component C.  <a href="classco__ecs_1_1archetype.html#a2ed0066b2b5f6e5dd9aaafb06ea5eadd">More...</a><br /></td></tr>
+<tr class="separator:a2ed0066b2b5f6e5dd9aaafb06ea5eadd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Archetype groups entities that share the same types of components. Archetype has a list of fixed size chunks where entities and their components are stored in a packed arrays, in a so called SoA fashion. </p>
@@ -276,8 +276,8 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="ae3c12bc1d19a6920134c3a9dfdfd7fc0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae3c12bc1d19a6920134c3a9dfdfd7fc0">&#9670;&nbsp;</a></span>chunks() <span class="overload">[1/2]</span></h2>
+<a id="ad9de5105853d5432172d9737d6776131"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad9de5105853d5432172d9737d6776131">&#9670;&nbsp;</a></span>chunks() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -286,7 +286,7 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">constexpr auto co_ecs::archetype::chunks </td>
+          <td class="memname">auto co_ecs::archetype::chunks </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const -&gt; const <a class="el" href="classco__ecs_1_1archetype.html#a0a311a178261f58e333967355662cae6">chunks_storage_t</a>&amp; </td>
@@ -294,7 +294,7 @@ Public Member Functions</h2></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span><span class="mlabel">noexcept</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">noexcept</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -304,8 +304,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a16b053ace8531739039056a39cc0159c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a16b053ace8531739039056a39cc0159c">&#9670;&nbsp;</a></span>chunks() <span class="overload">[2/2]</span></h2>
+<a id="ad5e76fbe89e5cd32ce44ea577e9dc60d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad5e76fbe89e5cd32ce44ea577e9dc60d">&#9670;&nbsp;</a></span>chunks() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -314,7 +314,7 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">constexpr auto co_ecs::archetype::chunks </td>
+          <td class="memname">auto co_ecs::archetype::chunks </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> -&gt; <a class="el" href="classco__ecs_1_1archetype.html#a0a311a178261f58e333967355662cae6">chunks_storage_t</a>&amp; </td>
@@ -322,7 +322,7 @@ Public Member Functions</h2></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span><span class="mlabel">noexcept</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">noexcept</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -332,8 +332,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a02c832f2ce966928e00cb7d5c958cca2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a02c832f2ce966928e00cb7d5c958cca2">&#9670;&nbsp;</a></span>components()</h2>
+<a id="a95a474d877c495ca6c6aa74ed18c2bc0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a95a474d877c495ca6c6aa74ed18c2bc0">&#9670;&nbsp;</a></span>components()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -342,7 +342,7 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">constexpr auto co_ecs::archetype::components </td>
+          <td class="memname">auto co_ecs::archetype::components </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const -&gt; const <a class="el" href="classco__ecs_1_1component__meta__set.html">component_meta_set</a>&amp; </td>
@@ -350,7 +350,7 @@ Public Member Functions</h2></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span><span class="mlabel">noexcept</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">noexcept</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -360,8 +360,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a2cbf0ccdaef9887b2144e377ef6f2177"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2cbf0ccdaef9887b2144e377ef6f2177">&#9670;&nbsp;</a></span>contains()</h2>
+<a id="a2ed0066b2b5f6e5dd9aaafb06ea5eadd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2ed0066b2b5f6e5dd9aaafb06ea5eadd">&#9670;&nbsp;</a></span>contains()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -372,7 +372,7 @@ template&lt;component C&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">constexpr auto co_ecs::archetype::contains </td>
+          <td class="memname">auto co_ecs::archetype::contains </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const -&gt; bool </td>
@@ -380,7 +380,7 @@ template&lt;component C&gt; </div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span><span class="mlabel">noexcept</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">noexcept</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -444,8 +444,8 @@ false If this archetype does not have component C </dd></dl>
 
 </div>
 </div>
-<a id="a8e5b70392e211010128aa9fb3bdc2159"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8e5b70392e211010128aa9fb3bdc2159">&#9670;&nbsp;</a></span>emplace()</h2>
+<a id="a8fbb687feba906e045e5685d8a7bde91"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8fbb687feba906e045e5685d8a7bde91">&#9670;&nbsp;</a></span>emplace()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -456,7 +456,7 @@ template&lt;component... Components&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">constexpr auto co_ecs::archetype::emplace </td>
+          <td class="memname">auto co_ecs::archetype::emplace </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="namespaceco__ecs.html#a2da96f6ca4426a42b949e7803a4627a6">entity</a>&#160;</td>
           <td class="paramname"><em>ent</em>, </td>
@@ -475,7 +475,7 @@ template&lt;component... Components&gt; </div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -498,8 +498,8 @@ template&lt;component... Components&gt; </div>
 
 </div>
 </div>
-<a id="a339ff003dd434cd9fb96b29dd651b79f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a339ff003dd434cd9fb96b29dd651b79f">&#9670;&nbsp;</a></span>get() <span class="overload">[1/2]</span></h2>
+<a id="ae861bba5fa902301a587495b118b93eb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae861bba5fa902301a587495b118b93eb">&#9670;&nbsp;</a></span>get() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -510,7 +510,7 @@ template&lt;component C&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">constexpr auto co_ecs::archetype::get </td>
+          <td class="memname">auto co_ecs::archetype::get </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a>&#160;</td>
           <td class="paramname"><em>location</em></td><td>)</td>
@@ -519,7 +519,7 @@ template&lt;component C&gt; </div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -541,8 +541,8 @@ template&lt;component C&gt; </div>
 
 </div>
 </div>
-<a id="ac7f6fd18429e1b152014e24d7fa1cb9c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac7f6fd18429e1b152014e24d7fa1cb9c">&#9670;&nbsp;</a></span>get() <span class="overload">[2/2]</span></h2>
+<a id="a4ebae2f514e22173ab8f520b47ddeb25"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4ebae2f514e22173ab8f520b47ddeb25">&#9670;&nbsp;</a></span>get() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -553,7 +553,7 @@ template&lt;component C&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">constexpr auto co_ecs::archetype::get </td>
+          <td class="memname">auto co_ecs::archetype::get </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a>&#160;</td>
           <td class="paramname"><em>location</em></td><td>)</td>
@@ -562,7 +562,7 @@ template&lt;component C&gt; </div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -710,8 +710,8 @@ template&lt;component C&gt; </div>
 
 </div>
 </div>
-<a id="a0a49ce183ac431011125823d68d8dd16"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0a49ce183ac431011125823d68d8dd16">&#9670;&nbsp;</a></span>visit() <span class="overload">[2/2]</span></h2>
+<a id="a4ab41dc9cf3a1b955f9a207cce6d28f4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4ab41dc9cf3a1b955f9a207cce6d28f4">&#9670;&nbsp;</a></span>visit() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -720,7 +720,7 @@ template&lt;component C&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">constexpr void co_ecs::archetype::visit </td>
+          <td class="memname">void co_ecs::archetype::visit </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="classco__ecs_1_1entity__location.html">entity_location</a> &amp;&#160;</td>
           <td class="paramname"><em>location</em>, </td>
@@ -739,7 +739,7 @@ template&lt;component C&gt; </div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
