@@ -1,27 +1,7 @@
 var searchData=
 [
-  ['schedule_352',['schedule',['../classco__ecs_1_1experimental_1_1schedule.html',1,'co_ecs::experimental']]],
-  ['sparse_5ftable_353',['sparse_table',['../classco__ecs_1_1detail_1_1sparse__table.html',1,'co_ecs::detail']]],
-  ['sparse_5ftable_3c_20component_5fid_5ft_2c_20block_5fmetadata_20_3e_354',['sparse_table&lt; component_id_t, block_metadata &gt;',['../classco__ecs_1_1detail_1_1sparse__table.html',1,'co_ecs::detail']]],
-  ['sparse_5ftable_3c_20entity_5fid_5ft_2c_20co_5fecs_3a_3aentity_5flocation_20_3e_355',['sparse_table&lt; entity_id_t, co_ecs::entity_location &gt;',['../classco__ecs_1_1detail_1_1sparse__table.html',1,'co_ecs::detail']]],
-  ['stack_5fallocator_356',['stack_allocator',['../classco__ecs_1_1detail_1_1stack__allocator.html',1,'co_ecs::detail']]],
-  ['system_357',['system',['../classco__ecs_1_1system.html',1,'co_ecs']]],
-  ['system_5fargument_5fstate_5ftrait_358',['system_argument_state_trait',['../classco__ecs_1_1system__argument__state__trait.html',1,'co_ecs']]],
-  ['system_5fargument_5fstate_5ftrait_3c_20command_5fbuffer_20_26_20_3e_359',['system_argument_state_trait&lt; command_buffer &amp; &gt;',['../classco__ecs_1_1system__argument__state__trait_3_01command__buffer_01_6_01_4.html',1,'co_ecs']]],
-  ['system_5fargument_5fstate_5ftrait_3c_20command_5fwriter_20_3e_360',['system_argument_state_trait&lt; command_writer &gt;',['../classco__ecs_1_1system__argument__state__trait_3_01command__writer_01_4.html',1,'co_ecs']]],
-  ['system_5fargument_5fstate_5ftrait_3c_20const_20registry_20_26_20_3e_361',['system_argument_state_trait&lt; const registry &amp; &gt;',['../classco__ecs_1_1system__argument__state__trait_3_01const_01registry_01_6_01_4.html',1,'co_ecs']]],
-  ['system_5fargument_5fstate_5ftrait_3c_20registry_20_26_20_3e_362',['system_argument_state_trait&lt; registry &amp; &gt;',['../classco__ecs_1_1system__argument__state__trait_3_01registry_01_6_01_4.html',1,'co_ecs']]],
-  ['system_5fargument_5fstate_5ftrait_3c_20view_3c_20args_2e_2e_2e_20_3e_20_3e_363',['system_argument_state_trait&lt; view&lt; Args... &gt; &gt;',['../classco__ecs_1_1system__argument__state__trait_3_01view_3_01Args_8_8_8_01_4_01_4.html',1,'co_ecs']]],
-  ['system_5fcommand_5fbuffer_5fstate_364',['system_command_buffer_state',['../classco__ecs_1_1system__command__buffer__state.html',1,'co_ecs']]],
-  ['system_5fcommand_5fwriter_5fstate_365',['system_command_writer_state',['../classco__ecs_1_1system__command__writer__state.html',1,'co_ecs']]],
-  ['system_5fconst_5fregistry_5fstate_366',['system_const_registry_state',['../classco__ecs_1_1system__const__registry__state.html',1,'co_ecs']]],
-  ['system_5fexecutor_367',['system_executor',['../classco__ecs_1_1system__executor.html',1,'co_ecs']]],
-  ['system_5fexecutor_5finterface_368',['system_executor_interface',['../classco__ecs_1_1system__executor__interface.html',1,'co_ecs']]],
-  ['system_5finterface_369',['system_interface',['../classco__ecs_1_1system__interface.html',1,'co_ecs']]],
-  ['system_5fregistry_5fstate_370',['system_registry_state',['../classco__ecs_1_1system__registry__state.html',1,'co_ecs']]],
-  ['system_5fstate_371',['system_state',['../classco__ecs_1_1system__state.html',1,'co_ecs']]],
-  ['system_5fstate_5ftrait_372',['system_state_trait',['../structco__ecs_1_1system__state__trait.html',1,'co_ecs']]],
-  ['system_5fstate_5ftrait_3c_20std_3a_3atuple_3c_20ts_2e_2e_2e_20_3e_20_3e_373',['system_state_trait&lt; std::tuple&lt; Ts... &gt; &gt;',['../structco__ecs_1_1system__state__trait_3_01std_1_1tuple_3_01Ts_8_8_8_01_4_01_4.html',1,'co_ecs']]],
-  ['system_5fstate_5ftrait_3c_20system_5farguments_20_3e_374',['system_state_trait&lt; system_arguments &gt;',['../structco__ecs_1_1system__state__trait.html',1,'co_ecs']]],
-  ['system_5fview_5fstate_375',['system_view_state',['../classco__ecs_1_1system__view__state.html',1,'co_ecs']]]
+  ['task_5fpool_254',['task_pool',['../classco__ecs_1_1task__pool.html',1,'co_ecs']]],
+  ['task_5ft_255',['task_t',['../classco__ecs_1_1task__t.html',1,'co_ecs']]],
+  ['thread_5fpool_256',['thread_pool',['../classco__ecs_1_1thread__pool.html',1,'co_ecs']]],
+  ['type_5fmeta_257',['type_meta',['../structco__ecs_1_1type__meta.html',1,'co_ecs']]]
 ];

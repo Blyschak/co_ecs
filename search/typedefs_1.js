@@ -1,5 +1,8 @@
 var searchData=
 [
-  ['block_5ftype_615',['block_type',['../classco__ecs_1_1detail_1_1dynamic__bitset.html#a37402b5bdc8f3e06102e8c0a0f781dd4',1,'co_ecs::detail::dynamic_bitset']]],
-  ['blocks_5ftype_616',['blocks_type',['../namespaceco__ecs.html#a00c8c7b48610a137e377e941b060a999',1,'co_ecs']]]
+  ['chunk_5ftype_435',['chunk_type',['../classco__ecs_1_1chunk__view.html#a19b37b7b5c5138d3aa64861f78bb5fb4',1,'co_ecs::chunk_view']]],
+  ['chunks_5fstorage_5ft_436',['chunks_storage_t',['../classco__ecs_1_1archetype.html#a0a311a178261f58e333967355662cae6',1,'co_ecs::archetype']]],
+  ['component_5fid_437',['component_id',['../namespaceco__ecs.html#a72a4fc38dbc52f314b94cce3aa67a588',1,'co_ecs']]],
+  ['component_5fid_5ft_438',['component_id_t',['../namespaceco__ecs.html#a5bfdecec20f1c8ec4f0282d1a1e6c15e',1,'co_ecs']]],
+  ['const_5fiterator_439',['const_iterator',['../classco__ecs_1_1archetypes.html#aa228e4cc1d84133f94849f14ac770d42',1,'co_ecs::archetypes::const_iterator()'],['../classco__ecs_1_1component__meta__set.html#a1d908d7d796fe4e2ee90f748773eaf80',1,'co_ecs::component_meta_set::const_iterator()']]]
 ];

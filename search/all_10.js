@@ -1,16 +1,11 @@
 var searchData=
 [
-  ['task_2ehpp_261',['task.hpp',['../task_8hpp.html',1,'']]],
-  ['task_5fcount_262',['task_count',['../structco__ecs_1_1thread__pool_1_1worker_1_1worker__stats.html#ae8de8d9495748eb0d4b39a9b330886b2',1,'co_ecs::thread_pool::worker::worker_stats']]],
-  ['task_5fpool_263',['task_pool',['../classco__ecs_1_1task__pool.html',1,'co_ecs']]],
-  ['task_5ft_264',['task_t',['../classco__ecs_1_1task__t.html',1,'co_ecs::task_t'],['../classco__ecs_1_1task__t.html#ac2979f98a55fd56244b63389afbdcbb0',1,'co_ecs::task_t::task_t()=default'],['../classco__ecs_1_1task__t.html#a3c909e49471e35dd42efa1aee588a5db',1,'co_ecs::task_t::task_t(auto &amp;&amp;func, task_t *parent=nullptr)']]],
-  ['test_265',['test',['../classco__ecs_1_1detail_1_1dynamic__bitset.html#a14bd40a3807763c366565a5cbc8ff4c8',1,'co_ecs::detail::dynamic_bitset']]],
-  ['thread_5fpool_266',['thread_pool',['../classco__ecs_1_1thread__pool.html',1,'co_ecs::thread_pool'],['../classco__ecs_1_1thread__pool_1_1worker.html#a63d668995109028bdc9cdbb726de4807',1,'co_ecs::thread_pool::worker::thread_pool()'],['../classco__ecs_1_1thread__pool.html#ae2484663da2b39c520955bf2ddc3a65f',1,'co_ecs::thread_pool::thread_pool(std::size_t num_workers=std::thread::hardware_concurrency())'],['../classco__ecs_1_1thread__pool.html#a678ac98c83fe4367d0b45d40b4ce8fa9',1,'co_ecs::thread_pool::thread_pool(const thread_pool &amp;)=delete'],['../classco__ecs_1_1thread__pool.html#a6b90acf9643f9dcd4644e2035e757c6a',1,'co_ecs::thread_pool::thread_pool(thread_pool &amp;&amp;)=delete']]],
-  ['thread_5fpool_2ehpp_267',['thread_pool.hpp',['../thread__pool_8hpp.html',1,'']]],
-  ['type_268',['type',['../structco__ecs_1_1system__state__trait_3_01std_1_1tuple_3_01Ts_8_8_8_01_4_01_4.html#ac60eb01eb75520c36b8c09470b12cbbb',1,'co_ecs::system_state_trait&lt; std::tuple&lt; Ts... &gt; &gt;::type()'],['../structco__ecs_1_1component__meta.html#a489183c70783b32f9fc6020df91779ec',1,'co_ecs::component_meta::type()']]],
-  ['type_5fid_269',['type_id',['../structco__ecs_1_1detail_1_1type__id.html',1,'co_ecs::detail']]],
-  ['type_5fmeta_270',['type_meta',['../structco__ecs_1_1type__meta.html',1,'co_ecs']]],
-  ['type_5fmeta_2ehpp_271',['type_meta.hpp',['../type__meta_8hpp.html',1,'']]],
-  ['type_5fregistry_272',['type_registry',['../classco__ecs_1_1detail_1_1type__registry.html',1,'co_ecs::detail']]],
-  ['type_5ftraits_2ehpp_273',['type_traits.hpp',['../type__traits_8hpp.html',1,'']]]
+  ['readme_2emd_167',['README.md',['../README_8md.html',1,'']]],
+  ['reference_168',['reference',['../classco__ecs_1_1chunk__view_1_1iterator.html#a4d4043e60d668e08a62669c7fabff986',1,'co_ecs::chunk_view::iterator']]],
+  ['registry_169',['registry',['../classco__ecs_1_1registry.html',1,'co_ecs']]],
+  ['registry_2ehpp_170',['registry.hpp',['../registry_8hpp.html',1,'']]],
+  ['remove_171',['remove',['../classco__ecs_1_1base__registry.html#aaa1f52ba9526541e5fede8dd026ff49d',1,'co_ecs::base_registry::remove()'],['../classco__ecs_1_1command__entity__ref.html#a610e80e258a227be046c4af4dede5fab',1,'co_ecs::command_entity_ref::remove()'],['../classco__ecs_1_1entity__ref.html#a1f2529893421ae0d98edfed0f2688b7c',1,'co_ecs::entity_ref::remove()']]],
+  ['reserve_172',['reserve',['../classco__ecs_1_1base__registry.html#a2ae83723d4b86bbb3c84996c29390120',1,'co_ecs::base_registry']]],
+  ['run_173',['run',['../classco__ecs_1_1system__executor__interface.html#adaac61362442f4a6f9f8fa47ebec2b22',1,'co_ecs::system_executor_interface']]],
+  ['run_5fonce_174',['run_once',['../classco__ecs_1_1experimental_1_1executor.html#aaf21d8f2700faf56975935d6e01091f7',1,'co_ecs::experimental::executor']]]
 ];

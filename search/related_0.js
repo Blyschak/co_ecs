@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['component_5fset_5fhasher_660',['component_set_hasher',['../classco__ecs_1_1component__set.html#a821e42470420e6daa03e3d08b272379e',1,'co_ecs::component_set']]]
+  ['base_5fregistry_461',['base_registry',['../classco__ecs_1_1placeholder__entity.html#a2c939f741f69c1bf0f8ff9dadda44cfd',1,'co_ecs::placeholder_entity::base_registry()'],['../classco__ecs_1_1chunk.html#a2c939f741f69c1bf0f8ff9dadda44cfd',1,'co_ecs::chunk::base_registry()']]]
 ];
