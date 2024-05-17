@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['safety_0',['Safety',['../index.html#autotoc_md15',1,'Exception safety'],['../index.html#autotoc_md13',1,'Safety']]],
+  ['safety_0',['Safety',['../index.html#autotoc_md14',1,'']]],
   ['schedule_1',['schedule',['../classco__ecs_1_1experimental_1_1schedule.html',1,'co_ecs::experimental']]],
   ['schedule_2ehpp_2',['schedule.hpp',['../schedule_8hpp.html',1,'']]],
   ['second_5ftype_5ft_3',['second_type_t',['../namespaceco__ecs_1_1detail.html#aeb89ba75eb97285371c811976e68b099',1,'co_ecs::detail']]],
@@ -19,7 +19,7 @@ var searchData=
   ['submit_16',['submit',['../classco__ecs_1_1thread__pool_1_1worker.html#affc5cb2010e05216e3a91c103ccc9eff',1,'co_ecs::thread_pool::worker::submit(auto &amp;&amp;func, task_t *parent=nullptr)'],['../classco__ecs_1_1thread__pool_1_1worker.html#a23e95c33a79c9b1632f316c8e77c054d',1,'co_ecs::thread_pool::worker::submit(task_t *task)'],['../classco__ecs_1_1thread__pool.html#a35874a838fb4f84be5d784b38f4cdeb7',1,'co_ecs::thread_pool::submit()']]],
   ['swap_5ferase_17',['swap_erase',['../classco__ecs_1_1archetype.html#acb588ca226de4f728501e6f338ff2d73',1,'co_ecs::archetype::swap_erase()'],['../classco__ecs_1_1chunk.html#af023b653acb8a2121adb7823b411f7b7',1,'co_ecs::chunk::swap_erase()']]],
   ['sync_18',['sync',['../classco__ecs_1_1base__registry.html#a00f78f330e3896a4076112733057d187',1,'co_ecs::base_registry']]],
-  ['system_20wide_20installation_19',['System wide installation',['../index.html#autotoc_md8',1,'']]],
+  ['system_20wide_20installation_19',['System wide installation',['../index.html#autotoc_md9',1,'']]],
   ['system_2ehpp_20',['system.hpp',['../system_8hpp.html',1,'']]],
   ['system_5fexecutor_5finterface_21',['system_executor_interface',['../classco__ecs_1_1system__executor__interface.html',1,'co_ecs']]],
   ['system_5finterface_22',['system_interface',['../classco__ecs_1_1system__interface.html',1,'co_ecs']]]

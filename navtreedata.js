@@ -25,33 +25,32 @@
 var NAVTREE =
 [
   [ "co_ecs", "index.html", [
-    [ "API Documentation", "index.html#autotoc_md1", null ],
-    [ "Build", "index.html#autotoc_md2", [
-      [ "Build and run tests", "index.html#autotoc_md3", null ],
-      [ "Build and run benchmarks", "index.html#autotoc_md4", null ],
-      [ "Build documentation", "index.html#autotoc_md5", null ],
-      [ "Build examples", "index.html#autotoc_md6", null ]
+    [ "co_ecs", "index.html#autotoc_md0", [
+      [ "API Documentation", "index.html#autotoc_md1", null ],
+      [ "Table of Contents", "index.html#autotoc_md2", null ],
+      [ "Build", "index.html#autotoc_md3", [
+        [ "Build and run tests", "index.html#autotoc_md4", null ],
+        [ "Build and run benchmarks", "index.html#autotoc_md5", null ],
+        [ "Build documentation", "index.html#autotoc_md6", null ],
+        [ "Build examples", "index.html#autotoc_md7", null ]
+      ] ],
+      [ "Usage", "index.html#autotoc_md8", [
+        [ "System wide installation", "index.html#autotoc_md9", null ],
+        [ "CMake Integration", "index.html#autotoc_md10", null ],
+        [ "Code example", "index.html#autotoc_md11", null ]
+      ] ],
+      [ "Components", "index.html#autotoc_md12", null ],
+      [ "Views", "index.html#autotoc_md13", null ],
+      [ "Safety", "index.html#autotoc_md14", null ],
+      [ "Pitfalls", "index.html#autotoc_md15", null ],
+      [ "Usage Across Binary Boundaries", "index.html#autotoc_md16", null ],
+      [ "License", "index.html#autotoc_md17", null ]
     ] ],
-    [ "Usage", "index.html#autotoc_md7", [
-      [ "System wide installation", "index.html#autotoc_md8", null ],
-      [ "CMake Integration", "index.html#autotoc_md9", null ],
-      [ "Code example", "index.html#autotoc_md10", null ]
-    ] ],
-    [ "Components", "index.html#autotoc_md11", null ],
-    [ "Views", "index.html#autotoc_md12", null ],
-    [ "Safety", "index.html#autotoc_md13", null ],
-    [ "Pitfalls", "index.html#autotoc_md14", null ],
-    [ "Exception safety", "index.html#autotoc_md15", null ],
-    [ "Usage across binary boundaries", "index.html#autotoc_md16", null ],
-    [ "Performance", "index.html#autotoc_md17", null ],
-    [ "Namespaces", "namespaces.html", [
-      [ "Namespace List", "namespaces.html", "namespaces_dup" ],
-      [ "Namespace Members", "namespacemembers.html", [
-        [ "All", "namespacemembers.html", null ],
-        [ "Functions", "namespacemembers_func.html", null ],
-        [ "Variables", "namespacemembers_vars.html", null ],
-        [ "Typedefs", "namespacemembers_type.html", null ]
-      ] ]
+    [ "Namespace Members", "namespacemembers.html", [
+      [ "All", "namespacemembers.html", null ],
+      [ "Functions", "namespacemembers_func.html", null ],
+      [ "Variables", "namespacemembers_vars.html", null ],
+      [ "Typedefs", "namespacemembers_type.html", null ]
     ] ],
     [ "Concepts", "concepts.html", "concepts" ],
     [ "Classes", "annotated.html", [
@@ -80,9 +79,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "annotated.html",
-"classco__ecs_1_1component__meta__set.html#a0d6bfaca85ee8b94558b85d8469e6b92",
-"classco__ecs_1_1thread__pool.html#a6b90acf9643f9dcd4644e2035e757c6a",
-"structco__ecs_1_1type__meta.html#aa85926c9a62d5b9569ce4fb40cd52f3b"
+"classco__ecs_1_1thread__pool.html#a299f550f5c6ba8b4df1b5f8612def163"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
