@@ -33,7 +33,6 @@ public:
     /// @brief Constructs a handle from an ID and a generation.
     /// @param id ID number
     /// @param generation Generation number
-    /// @return Handle
     explicit constexpr handle(id_t id, generation_t generation = 0) noexcept : _id(id), _generation(generation) {
     }
 

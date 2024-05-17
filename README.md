@@ -1,17 +1,45 @@
+<!-- @cond TURN_OFF_DOXYGEN -->
+
+<!-- omit in toc -->
 # co_ecs
+
+<img src="https://github.com/Blyschak/co_ecs/blob/assets/logo.png?raw=true" alt="logo" width="15%"/>
 
 ![C++](https://img.shields.io/badge/STD-C++20-blue)
 [![Doxygen](https://img.shields.io/badge/Documentation-Doxygen-blue)](https://blyschak.github.io/co_ecs/)
-[![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](http://unlicense.org/)
 ![Build badge](https://github.com/Blyschak/co_ecs/actions/workflows/build.yml/badge.svg)
 [![codecov](https://codecov.io/gh/Blyschak/co_ecs/branch/main/graph/badge.svg?token=BZ8Z6TXN55)](https://codecov.io/gh/Blyschak/cobalt-ecs)
 ![LoC](https://raw.githubusercontent.com/Blyschak/co_ecs/badges/badge.svg)
 
 co_ecs is a header-only library implementing an Entity Component System.
 
+<!-- omit in toc -->
 ## API Documentation
 
 [Doxygen](https://blyschak.github.io/co_ecs/)
+
+<!-- omit in toc -->
+## Table of Contents
+
+- [Build](#build)
+  - [Build and run tests](#build-and-run-tests)
+  - [Build and run benchmarks](#build-and-run-benchmarks)
+  - [Build documentation](#build-documentation)
+  - [Build examples](#build-examples)
+- [Usage](#usage)
+  - [System wide installation](#system-wide-installation)
+  - [CMake Integration](#cmake-integration)
+  - [Code example](#code-example)
+- [Components](#components)
+- [Views](#views)
+- [Safety](#safety)
+- [Pitfalls](#pitfalls)
+- [Usage Across Binary Boundaries](#usage-across-binary-boundaries)
+- [License](#license)
+
+<!-- @endcond TURN_OFF_DOXYGEN -->
+
 
 ## Build
 
@@ -103,7 +131,7 @@ target_link_libraries(my-engine co_ecs)
 
 [Example](examples/hello-registry/main.cpp)
 
-```c++
+```cpp
 #include <co_ecs/co_ecs.hpp>
 
 #include <iostream>
@@ -148,29 +176,57 @@ Component is any C++ type that satisfies the following:
 
 ## Views
 
-Views are used to iterate over entities in the registry which have a given set of components attached:
+Views are used to iterate over entities in the registry with a specified set of components attached:
 
-```c++
+```cpp
 for (auto [position, velocity] : registry.view<position&, const velocity&>().each()) {
     // ...
 }
 ```
 
-Note, you don't have to worry about caching a view object returned by a ```registry::view()``` as it is very cheap to create, only when start iterating over it using ```view::each()``` an actual work on matching archetypes is done.
+You don't need to worry about caching a view object returned by `registry::view()` because it is very inexpensive to create. The actual work of matching archetypes is done only when you start iterating over it using `view::each()`.
 
-There's another way to iterate over interesting entities by using ```registry::each()``` which takes in an invocable as a parameter accepting component reference types:
+Another way to iterate over relevant entities is by using `registry::each()`, which takes an invocable as a parameter that accepts component reference types:
 
-```c++
+```cpp
 registry.each([](position& pos, const velocity& vel){
     // ...
 });
 ```
 
-Note that this kind of iteration might be even faster and better optimized by the compiler since the func can operate on a chunk that yields two tuples of pointers to the actual data whereas an each() variant returns an iterator over iterator over iterator to the actual data which is a challenge for compiler to optimize. Look at the benchmarks to see the actual difference. Looking forward for compilers to be better at optimizing ```<ranges>``` machinery for the above two variants to match in performance.
+`co_ecs` aims to provide a const-correct API. For example, a view with `const` references can only be created from a `const` registry reference:
 
-```co_ecs``` tries to provide const-correct API. For example, a view with ```const``` references only can be created with from a ```const``` registry reference:
+```cpp
+void foo(const co_ecs::registry& registry) {
+    registry.view<const position&, const velocity&>(); // OK
+    registry.view<position&, const velocity&>();       // Error
+}
+```
 
-```c++
+
+Views are used to iterate over entities in the registry with a specified set of components attached:
+
+```cpp
+for (auto [position, velocity] : registry.view<position&, const velocity&>().each()) {
+    // ...
+}
+```
+
+You don't need to worry about caching a view object returned by `registry::view()` because it is very inexpensive to create. The actual work of matching archetypes is done only when you start iterating over it using `view::each()`.
+
+Another way to iterate over relevant entities is by using `registry::each()`, which takes an invocable as a parameter that accepts component reference types:
+
+```cpp
+registry.each([](position& pos, const velocity& vel){
+    // ...
+});
+```
+
+This kind of iteration might be even faster and better optimized by the compiler. The function can operate on a chunk that yields two tuples of pointers to the actual data, whereas the `each()` variant returns an iterator over iterators to the actual data, which is more challenging for the compiler to optimize. Refer to the benchmarks to see the actual performance difference. We look forward to compilers improving their optimization of `<ranges>` machinery to make the performance of these two variants match.
+
+`co_ecs` aims to provide a const-correct API. For example, a view with `const` references can only be created from a `const` registry reference:
+
+```cpp
 void foo(const co_ecs::registry& registry) {
     registry.view<const position&, const velocity&>(); // OK
     registry.view<position&, const velocity&>();       // Error
@@ -179,56 +235,53 @@ void foo(const co_ecs::registry& registry) {
 
 ## Safety
 
-```co_ecs``` tries to provide a safe API to work with. In example, creating an entity and specifying same component type more than once is ambiguous and causes undefined behavior, so the following snippet will fail to compile:
+`co_ecs` aims to provide a safe API. For example, creating an entity and specifying the same component type more than once is ambiguous and causes undefined behavior. The following snippet will fail to compile:
 
-```c++
+```cpp
 registry.create<position, position>({ 1, 2 }, { 3, 4 });
 ```
 
-compiler will generate a static assertion error:
+The compiler will generate a static assertion error:
 
 ```
 Types must be unique within parameter pack
 ```
 
-Another example is when trying to assign a component of type ```co_ecs::entity``` by mistake. The ```co_ecs::entity``` structure is handled the same way components are internally. It would be invalid to assign it as a component to an entity, so when attempting to do the following:
+Another example is when mistakenly trying to assign a component of type `co_ecs::entity`. The `co_ecs::entity` structure is handled internally in the same way as components, but it is invalid to assign it as a component to an entity. When attempting the following:
 
-```c++
+```cpp
 registry.create<co_ecs::entity, position>({}, { 3, 4 });
 ```
 
-compiler will raise the following static assertion error:
+The compiler will raise the following static assertion error:
 
 ```
 Cannot give a mutable pointer/reference to the entity
 ```
 
-implying that you cannot have a write access into chunk's memory where ```co_ecs::entity``` objects are stored.
+This implies that you cannot have write access to the memory chunk where `co_ecs::entity` objects are stored.
 
-The same error message appears when trying to create a ```co_ecs::view``` with read-write access to ```co_ecs::entity```:
+The same error message appears when trying to create a `co_ecs::view` with read-write access to `co_ecs::entity`:
 
-```c++
+```cpp
 auto view = registry.view<co_ecs::entity&, position&>(); // Error
 ```
 
-On the other hand, trying to query for ```const co_ecs::entity&``` is valid and the right method to fetch entity IDs together with it's components in the view:
+However, querying for `const co_ecs::entity&` is valid and the correct method to fetch entity IDs together with their components in the view:
 
-```c++
-auto view = registry.view<const co_ecs::entity&, position&>(); // Ok
+```cpp
+auto view = registry.view<const co_ecs::entity&, position&>(); // OK
 ```
-
-
 
 ## Pitfalls
 
-Components are referenced internally with IDs. The component ID is generated statically and the resulting ID is compiler implementation-defined. There should be no logic which expects a concrete ID value.
-Given how the ID generation works there's one limitation that restricts placing components inside implementation files (```*.cpp```) or private headers.
+Components are referenced internally by IDs. The component ID is generated statically, and the resulting ID is compiler implementation-defined. There should be no logic that relies on a specific ID value. Due to how ID generation works, there is a limitation that restricts placing components inside implementation files (`*.cpp`) or private headers.
 
-Consider the following two components with the same name defined in two separate compilation units in a global namespace:
+Consider the following two components with the same name defined in two separate compilation units in the global namespace:
 
 *foo.cpp*:
 
-```c++
+```cpp
 struct my_component {
     int value;
 };
@@ -236,25 +289,20 @@ struct my_component {
 
 *bar.cpp*:
 
-```c++
+```cpp
 struct my_component {
     void* data;
 };
 ```
 
-There is a high chance the compiler will generate the same ID for two different structures which will lead to undefined behavior. Thus, it is recommended to place all components in public header files or even in a single header file to avoid name collisions.
+There is a high chance the compiler will generate the same ID for these two different structures, leading to undefined behavior. Therefore, it is recommended to place all components in public header files, or even in a single header file, to avoid name collisions.
 
-## Exception safety
+## Usage Across Binary Boundaries
 
-TBD
-
-## Usage across binary boundaries
-
-```co_ecs``` can be used across boundaries. One may create an engine shared library with core components and then use the registry inside another shared library or executable that links to the engine.
-The core shared library should be compiled with ```CO_ECS_HOST``` defined and others must define ```CO_ECS_CLIENT```:
+`co_ecs` can be used across binary boundaries. For example, you can create an engine shared library with core components and then use the registry inside another shared library or executable that links to the engine. The core shared library should be compiled with `CO_ECS_HOST` defined, and the others must define `CO_ECS_CLIENT`.
 
 *engine.h*:
-```c++
+```cpp
 #include <co_ecs/co_ecs.hpp>
 
 struct transform {
@@ -265,19 +313,19 @@ struct transform {
 ```
 
 *engine.cpp*:
-```c++
+```cpp
 #define CO_ECS_HOST
 
 #include "engine.h"
 ```
 
 *client.cpp*:
-```c++
+```cpp
 #define CO_ECS_CLIENT
 
 #include "engine.h"
 ```
 
-## Performance
+## License
 
-TBD
+co_ecs is distributed under the MIT license.

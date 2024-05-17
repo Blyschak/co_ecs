@@ -24,7 +24,7 @@ public:
 
     /// @brief Construct a new dynamic bitset object
     ///
-    /// @param initial_bits Initial size of the bitset
+    /// @param initial_blocks Initial size of the bitset
     explicit dynamic_bitset(std::size_t initial_blocks = 1) {
         _blocks.resize(initial_blocks);
     }

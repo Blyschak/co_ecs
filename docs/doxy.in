@@ -1,0 +1,38 @@
+PROJECT_NAME           = @PROJECT_NAME@
+PROJECT_NUMBER         = @PROJECT_VERSION@
+
+PROJECT_BRIEF          = @PROJECT_DESCRIPTION@
+
+INPUT = @DOXY_SOURCE_DIRECTORY@ \
+    @DOXY_DOCS_DIRECTORY@ \
+    @PROJECT_SOURCE_DIR@/README.md
+
+RECURSIVE = YES
+
+EXTRACT_ALL         = YES
+HIDE_UNDOC_MEMBERS  = YES
+BUILTIN_STL_SUPPORT = YES
+EXCLUDE_SYMBOLS     = co_ecs::detail::*,*::detail::*
+
+SHOW_NAMESPACES        = NO
+
+GENERATE_TREEVIEW = YES
+DISABLE_INDEX     = NO
+FULL_SIDEBAR      = NO
+INTERACTIVE_SVG   = YES
+
+HTML_EXTRA_STYLESHEET = \
+    @DOXY_CSS_DIRECTORY@/doxygen-awesome.css \
+    @DOXY_CSS_DIRECTORY@/doxygen-awesome-sidebar-only.css \
+    @DOXY_CSS_DIRECTORY@/doxygen-awesome-sidebar-only-darkmode-toggle.css
+
+HTML_EXTRA_FILES = \
+    @DOXY_CSS_DIRECTORY@/doxygen-awesome-darkmode-toggle.js \
+    @DOXY_CSS_DIRECTORY@/doxygen-awesome-fragment-copy-button.js \
+    @DOXY_CSS_DIRECTORY@/doxygen-awesome-interactive-toc.js
+
+HTML_HEADER            = @CMAKE_CURRENT_SOURCE_DIR@/header.html
+HTML_COLORSTYLE        = LIGHT
+USE_MDFILE_AS_MAINPAGE = @PROJECT_SOURCE_DIR@/README.md
+
+OUTPUT_DIRECTORY       = @DOXY_OUTPUT_DIRECTORY@

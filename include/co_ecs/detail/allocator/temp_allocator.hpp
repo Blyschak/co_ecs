@@ -28,9 +28,9 @@ public:
 
     /// @brief Copy constructor
     /// @tparam U
-    /// @param Other allocator instance
+    /// @param other allocator instance
     template<class U>
-    constexpr temp_allocator(const temp_allocator<U>&) noexcept {
+    constexpr temp_allocator(const temp_allocator<U>& other) noexcept {
     }
 
     /// @brief Allocate n elements

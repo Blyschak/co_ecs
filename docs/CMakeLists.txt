@@ -1,28 +1,30 @@
-set(DOXYGEN_EXTRACT_ALL YES)
-set(DOXYGEN_HIDE_UNDOC_MEMBERS YES)
-set(DOXYGEN_BUILTIN_STL_SUPPORT YES)
-set(DOXYGEN_EXCLUDE_SYMBOLS "co_ecs::detail::*,*::detail::*")
+include(FetchContent)
 
-set(DOXYGEN_GENERATE_TREEVIEW YES)
-set(DOXYGEN_DISABLE_INDEX NO)
-set(DOXYGEN_FULL_SIDEBAR NO)
-set(DOXYGEN_HTML_EXTRA_STYLESHEET
-  doxygen-awesome-css/doxygen-awesome.css
-  doxygen-awesome-css/doxygen-awesome-sidebar-only.css
-  doxygen-awesome-css/doxygen-awesome-sidebar-only-darkmode-toggle.css
+FetchContent_Declare(
+    doxygen-awesome-css
+    GIT_REPOSITORY https://github.com/jothepro/doxygen-awesome-css
+    GIT_TAG main
+    GIT_SHALLOW 1
 )
-set(DOXYGEN_HTML_EXTRA_FILES
-  doxygen-awesome-css/doxygen-awesome-darkmode-toggle.js
-  doxygen-awesome-css/doxygen-awesome-fragment-copy-button.js
-  doxygen-awesome-css/doxygen-awesome-interactive-toc.js
-)
-set(DOXYGEN_HTML_HEADER header.html)
-set(DOXYGEN_HTML_COLORSTYLE LIGHT)
-set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
-set(DOXYGEN_INTERACTIVE_SVG YES)
 
-doxygen_add_docs(docs
-  ${CMAKE_SOURCE_DIR}/README.md
-  ${CMAKE_SOURCE_DIR}/include/
-  COMMENT "Generate documentation"
+FetchContent_GetProperties(doxygen-awesome-css)
+
+if(NOT doxygen-awesome-css_POPULATED)
+    FetchContent_Populate(doxygen-awesome-css)
+    set(doxygen-awesome-css_INCLUDE_DIR ${doxygen-awesome-css_SOURCE_DIR})
+endif()
+
+set(DOXY_SOURCE_DIRECTORY ${co_ecs_SOURCE_DIR}/include/)
+set(DOXY_CSS_DIRECTORY ${doxygen-awesome-css_INCLUDE_DIR})
+set(DOXY_DOCS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+set(DOXY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+configure_file(doxy.in doxy.cfg @ONLY)
+
+add_custom_target(
+    docs ALL
+    COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/doxy.cfg
+    WORKING_DIRECTORY ${co_ecs_SOURCE_DIR}
+    VERBATIM
+    SOURCES doxy.in
 )

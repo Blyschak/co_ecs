@@ -21,7 +21,7 @@ private:
 
 public:
     /// @brief Construct stack allocator
-    /// @param
+    /// @param ptr Pointer to the memory buffer
     /// @param size Size of the underlaying buffer
     stack_allocator(void* ptr, std::size_t size) : _start(static_cast<char*>(ptr)), _size(size) {
     }

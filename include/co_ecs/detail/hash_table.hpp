@@ -277,7 +277,7 @@ public:
     ///
     /// @param bucket_count Initial bucket count to create hash table with
     /// @param hash Hash object
-    /// @param key_equal KeyEqual object
+    /// @param equal KeyEqual object
     /// @param alloc Allocator object
     constexpr explicit hash_table(size_type bucket_count,
         const Hash& hash = Hash(),
@@ -317,7 +317,7 @@ public:
     /// @param last Last iterator
     /// @param bucket_count Initial bucket count to create hash table with
     /// @param hash Hash object
-    /// @param key_equal KeyEqual object
+    /// @param equal KeyEqual object
     /// @param alloc Allocator object
     template<typename input_iterator>
     constexpr hash_table(input_iterator first,
@@ -370,6 +370,7 @@ public:
     /// @param init Initializer list
     /// @param bucket_count Initial bucket count to create hash table with
     /// @param hash Hash object
+    /// @param equal KeyEqual object
     /// @param alloc Allocator object
     constexpr hash_table(std::initializer_list<value_type> init,
         size_type bucket_count = default_bucket_count,
