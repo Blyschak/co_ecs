@@ -22,7 +22,7 @@ set(DOXY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 configure_file(doxy.in doxy.cfg @ONLY)
 
 add_custom_target(
-    docs ALL
+    docs
     COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/doxy.cfg
     WORKING_DIRECTORY ${co_ecs_SOURCE_DIR}
     VERBATIM
