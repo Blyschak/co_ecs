@@ -2,11 +2,6 @@
 
 #include <iostream>
 
-constexpr auto num_entities = 1000;
-
-static co_ecs::registry registry;
-static co_ecs::experimental::schedule schedule;
-
 static int frame;
 
 struct pos {
@@ -48,7 +43,7 @@ void end_frame(co_ecs::command_writer c, co_ecs::view<const co_ecs::entity&, con
     });
 }
 
-void setup(co_ecs::command_writer commands) {
+void setup(co_ecs::registry& r, co_ecs::command_writer commands) {
     static int i;
     commands.create<pos, rot, vel, tan_vel>(
         {}, {}, { .x = -1.0f + 0.005f * i, .y = -2.0f + 0.001f * i }, { .speed = 0.0003f * i });
@@ -56,24 +51,25 @@ void setup(co_ecs::command_writer commands) {
 }
 
 int main() {
-    schedule.add_system(&setup)
-        .barrier()
-        .add_system(&start_frame)
-        .barrier()
-        .add_system(&update_pos) // Two systems running in parallel
-        .add_system(&update_rot)
-        .barrier()
-        .add_system(&end_frame);
+    co_ecs::registry registry;
 
-    co_ecs::experimental::executor executor(schedule, registry);
+    auto schedule = co_ecs::schedule()
+                        .add_init_system([]() { std::cout << "Init...\n"; })
+                        .add_init_system([](co_ecs::registry& reg) { std::cout << "Post-Init...\n"; })
+                        .begin_stage("Setup")
+                        .add_system(co_ecs::main_thread_execution_policy, setup)
+                        .add_system(start_frame)
+                        .end_stage()
+                        .begin_stage("Update")
+                        .add_system(end_frame)
+                        .add_system(update_pos)
+                        .add_system(update_rot)
+                        .end_stage()
+                        .create_executor(registry);
 
-    executor.run_once();
-    executor.run_once();
-    executor.run_once();
-    executor.run_once();
-    executor.run_once();
-    executor.run_once();
-    executor.run_once();
+    for (auto i = 0; i < 5; i++) {
+        schedule->run_once();
+    }
 
     return 0;
 }

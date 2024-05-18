@@ -5,6 +5,8 @@
 #include <co_ecs/thread_pool/thread_pool.hpp>
 #include <co_ecs/view.hpp>
 
+#include <co_ecs/system/access.hpp>
+
 namespace co_ecs {
 
 /// @brief System executor interface, a system is a type that implements run() method
@@ -15,6 +17,21 @@ public:
 
     /// @brief Execute system logic
     virtual void run() = 0;
+
+    /// @brief Get the name of the entity.
+    ///
+    /// @return The name of the entity.
+    virtual auto name() const -> std::string_view = 0;
+
+    /// @brief Get the type name of the entity.
+    ///
+    /// @return The type name of the entity.
+    virtual auto type_name() const -> std::string_view = 0;
+
+    /// @brief Get the access pattern of the entity.
+    ///
+    /// @return The access pattern of the entity.
+    virtual auto access_pattern() const -> access_pattern_t = 0;
 };
 
 /// @brief System interface
@@ -31,7 +48,7 @@ public:
     virtual std::unique_ptr<system_executor_interface> create_executor(registry& registry, void* user_context) = 0;
 };
 
-/// @cond
+/// @cond TURN_OFF_DOXYGEN
 
 /// @brief System argument state trait primary template trait. Helps to get corresponding state class type based on the
 /// input type
@@ -61,6 +78,17 @@ public:
     /// @return system_state_tuple&
     [[nodiscard]] system_state_tuple& get() noexcept {
         return _state;
+    }
+
+    /// @brief Get the access pattern of the entity.
+    ///
+    /// @return The access pattern of the entity.
+    auto access_pattern() const -> access_pattern_t {
+        access_pattern_t pattern;
+        if constexpr (0 < std::tuple_size_v<system_state_tuple>) {
+            pattern &= std::apply([](auto&&... args) { return (args.access_pattern() & ...); }, _state);
+        }
+        return pattern;
     }
 
 private:
@@ -94,8 +122,8 @@ public:
     ///
     /// @param registry Registry reference
     /// @param func Function object
-    explicit system_executor(registry& registry, void* user_context, F func) :
-        _func(std::move(func)), _state(registry, user_context) {
+    explicit system_executor(registry& registry, void* user_context, F func, std::string_view name = {}) :
+        _func(std::move(func)), _state(registry, user_context), _name(name) {
     }
 
     /// @brief Execute system
@@ -103,9 +131,31 @@ public:
         std::apply([this](auto&&... args) { _func(args.get()...); }, _state.get());
     }
 
+    /// @brief Get the name of the entity.
+    ///
+    /// @return The name of the entity.
+    auto name() const -> std::string_view override {
+        return _name;
+    }
+
+    /// @brief Get the type name of the entity.
+    ///
+    /// @return The type name of the entity.
+    auto type_name() const -> std::string_view override {
+        return co_ecs::type_name<F>();
+    }
+
+    /// @brief Get the access pattern of the entity.
+    ///
+    /// @return The access pattern of the entity.
+    auto access_pattern() const -> access_pattern_t override {
+        return _state.access_pattern();
+    }
+
 private:
     F _func;
     typename system_state_trait<system_arguments>::type _state;
+    std::string_view _name;
 };
 
 /// @brief System implementation class for generic F function-like type
@@ -126,7 +176,7 @@ public:
     /// @param user_context User provided context to fetch data from and provide to the system
     /// @return std::unique_ptr<system_executor_interface>
     std::unique_ptr<system_executor_interface> create_executor(registry& registry, void* user_context) override {
-        return std::make_unique<system_executor<F>>(registry, user_context, std::move(_func));
+        return std::make_unique<system_executor<F>>(registry, user_context, _func);
     }
 
 private:
@@ -149,6 +199,13 @@ public:
     /// @return Registry
     [[nodiscard]] registry& get() noexcept {
         return _registry;
+    }
+
+    /// @brief Get the access pattern of the entity.
+    ///
+    /// @return The access pattern of the entity.
+    auto access_pattern() const -> access_pattern_t {
+        return access_pattern_t(access_type::write);
     }
 
 private:
@@ -181,6 +238,13 @@ public:
         return _registry;
     }
 
+    /// @brief Get the access pattern of the entity.
+    ///
+    /// @return The access pattern of the entity.
+    auto access_pattern() const -> access_pattern_t {
+        return access_pattern_t(access_type::read);
+    }
+
 private:
     const registry& _registry;
 };
@@ -211,6 +275,13 @@ public:
         return command_writer(_registry);
     }
 
+    /// @brief Get the access pattern of the entity.
+    ///
+    /// @return The access pattern of the entity.
+    auto access_pattern() const -> access_pattern_t {
+        return access_pattern_t{};
+    }
+
 private:
     registry& _registry;
 };
@@ -226,7 +297,7 @@ public:
 /// @brief System view state, pre-creates a view object needed for components iteration
 ///
 /// @tparam view_t View type
-template<typename view>
+template<typename view_t>
 class system_view_state {
 public:
     /// @brief Construct a new system view state object
@@ -238,13 +309,35 @@ public:
 
     /// @brief Returns the actual state inside to pass to the system
     ///
-    /// @return view_t&
-    [[nodiscard]] view& get() noexcept {
+    /// @return View object
+    [[nodiscard]] view_t& get() noexcept {
         return _view;
     }
 
 private:
-    view _view;
+    template<typename T>
+    struct access_pattern_helper {};
+
+    template<component_reference... Args>
+    struct access_pattern_helper<view<Args...>> {
+        static auto access_pattern() -> access_pattern_t {
+            return (access_pattern_t(
+                        std::is_const_v<std::remove_reference_t<Args>> ? access_type::read : access_type::write,
+                        component_meta::of<decay_component_t<Args>>())
+                    & ...);
+        }
+    };
+
+public:
+    /// @brief Get the access pattern of the entity.
+    ///
+    /// @return The access pattern of the entity.
+    auto access_pattern() const -> access_pattern_t {
+        return access_pattern_helper<view_t>::access_pattern();
+    }
+
+private:
+    view_t _view;
 };
 
 /// @brief Specialization for ecs::view<Args...>
@@ -257,6 +350,6 @@ public:
     using state_type = system_view_state<view<Args...>>;
 };
 
-/// @endcond
+/// @endcond TURN_OFF_DOXYGEN
 
 } // namespace co_ecs

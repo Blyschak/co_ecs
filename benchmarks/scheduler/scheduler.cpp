@@ -5,11 +5,10 @@
 #include <benchmark/benchmark.h>
 
 using namespace co_ecs;
-using namespace co_ecs::experimental;
 
 using namespace std::chrono_literals;
 
-bench_prefix(workers);
+bench_suffix(workers);
 
 struct read_component_a {
     float value;
@@ -40,30 +39,31 @@ static void schedule_execution(benchmark::State& state) {
             { float(i) }, { float(i) }, { 0.0 }, { 0.0 });
     }
 
-    schedule schedule;
-    schedule.add_system([](co_ecs::view<const read_component_a&, write_component_a&> v) {
-        auto func = [](const auto& r, auto& w) { w.value += std::sin(r.value); };
+    auto exec = schedule()
+                    .begin_stage()
+                    .add_system([](co_ecs::view<const read_component_a&, write_component_a&> v) {
+                        auto func = [](const auto& r, auto& w) { w.value += std::sin(r.value); };
 
-        if constexpr (std::is_same_v<P, parallel_iter>) {
-            v.par_each(func);
-        } else {
-            v.each(func);
-        }
-    });
-    schedule.add_system([](co_ecs::view<const read_component_b&, write_component_b&> v) {
-        auto func = [](const auto& r, auto& w) { w.value += std::sin(r.value); };
+                        if constexpr (std::is_same_v<P, parallel_iter>) {
+                            v.par_each(func);
+                        } else {
+                            v.each(func);
+                        }
+                    })
+                    .add_system([](co_ecs::view<const read_component_b&, write_component_b&> v) {
+                        auto func = [](const auto& r, auto& w) { w.value += std::sin(r.value); };
 
-        if constexpr (std::is_same_v<P, parallel_iter>) {
-            v.par_each(func);
-        } else {
-            v.each(func);
-        }
-    });
-
-    executor exec{ schedule, reg };
+                        if constexpr (std::is_same_v<P, parallel_iter>) {
+                            v.par_each(func);
+                        } else {
+                            v.each(func);
+                        }
+                    })
+                    .end_stage()
+                    .create_executor(reg);
 
     for (auto _ : state) {
-        exec.run_once();
+        exec->run_once();
     }
 }
 
