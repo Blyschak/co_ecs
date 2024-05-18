@@ -114,6 +114,7 @@ $(function(){initNavTree('namespaceco__ecs.html',''); initResizable(); });
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#concepts">Concepts</a> &#124;
 <a href="#typedef-members">Typedefs</a> &#124;
+<a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a> &#124;
 <a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">co_ecs Namespace Reference</div></div>
@@ -124,11 +125,12 @@ $(function(){initNavTree('namespaceco__ecs.html',''); initResizable(); });
 Namespaces</h2></td></tr>
 <tr class="memitem:namespaceco__ecs_1_1detail" id="r_namespaceco__ecs_1_1detail"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceco__ecs_1_1detail.html">detail</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:namespaceco__ecs_1_1experimental" id="r_namespaceco__ecs_1_1experimental"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceco__ecs_1_1experimental.html">experimental</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1access__pattern__t.html">access_pattern_t</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Class representing an access pattern for components.  <a href="classco__ecs_1_1access__pattern__t.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1archetype.html">archetype</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Archetype groups entities that share the same types of components. Archetype has a list of fixed size chunks where entities and their components are stored in a packed arrays, in a so called SoA fashion.  <a href="classco__ecs_1_1archetype.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -194,14 +196,32 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1insufficient__chunk__size.html">insufficient_chunk_size</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Insufficient chunk size error.  <a href="classco__ecs_1_1insufficient__chunk__size.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structco__ecs_1_1main__thread__execution__policty__t.html">main_thread_execution_policty_t</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Structure representing the main thread execution policy.  <a href="structco__ecs_1_1main__thread__execution__policty__t.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structco__ecs_1_1mutable__component__reference.html">mutable_component_reference</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Struct to determine mutability of component reference type.  <a href="structco__ecs_1_1mutable__component__reference.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1named__system.html">named_system</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">System implementation class for generic F function-like type with it's name.  <a href="classco__ecs_1_1named__system.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1placeholder__entity.html">placeholder_entity</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Placeholder (reserved) entity.  <a href="classco__ecs_1_1placeholder__entity.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1registry.html">registry</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Registry is a container for all our entities and components. Components are stored in continuously in memory allowing for very fast iterations, a so called SoA approach. A set of unique components form an archetype, where every entity is mapped to an archetype.  <a href="classco__ecs_1_1registry.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1schedule.html">schedule</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Manages the execution of systems in different stages.  <a href="classco__ecs_1_1schedule.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1schedule__executor.html">schedule_executor</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Executes the schedule by running all stages.  <a href="classco__ecs_1_1schedule__executor.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1stage.html">stage</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Class representing a stage in the schedule.  <a href="classco__ecs_1_1stage.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1stage__executor.html">stage_executor</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Class representing a stage executor.  <a href="classco__ecs_1_1stage__executor.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1system__executor__interface.html">system_executor_interface</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">System executor interface, a system is a type that implements <a class="el" href="classco__ecs_1_1system__executor__interface.html#adaac61362442f4a6f9f8fa47ebec2b22" title="Execute system logic.">run()</a> method.  <a href="classco__ecs_1_1system__executor__interface.html#details">More...</a><br /></td></tr>
@@ -254,6 +274,18 @@ Typedefs</h2></td></tr>
 <tr class="memitem:a8671242c026005f0bc41f265322c6258" id="r_a8671242c026005f0bc41f265322c6258"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8671242c026005f0bc41f265322c6258">entity_pool</a> = detail::handle_pool&lt;<a class="el" href="#acb6f48f6f56ae34f433899ff614ca321">entity</a>&gt;</td></tr>
 <tr class="memdesc:a8671242c026005f0bc41f265322c6258"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pool of entities that generates and recycles entity IDs.  <br /></td></tr>
 <tr class="separator:a8671242c026005f0bc41f265322c6258"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a34d635a84c85b9e0f72a50f5cdcb2b87" id="r_a34d635a84c85b9e0f72a50f5cdcb2b87"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a34d635a84c85b9e0f72a50f5cdcb2b87">vector_of_executors_t</a> = std::vector&lt;std::unique_ptr&lt;<a class="el" href="classco__ecs_1_1system__executor__interface.html">system_executor_interface</a>&gt;&gt;</td></tr>
+<tr class="memdesc:a34d635a84c85b9e0f72a50f5cdcb2b87"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector of systems.  <br /></td></tr>
+<tr class="separator:a34d635a84c85b9e0f72a50f5cdcb2b87"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:afcab8a90496a5258f42f6122d650d64d" id="r_afcab8a90496a5258f42f6122d650d64d"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afcab8a90496a5258f42f6122d650d64d">access_type</a> { <a class="el" href="#afcab8a90496a5258f42f6122d650d64da17d5b67e203764ff6fca9629294688a3">none</a>
+, <a class="el" href="#afcab8a90496a5258f42f6122d650d64da649ec3137555493802e02b2b561d26c8">read</a>
+, <a class="el" href="#afcab8a90496a5258f42f6122d650d64da3d490a121984b0f620eda9d85225998a">write</a>
+ }</td></tr>
+<tr class="memdesc:afcab8a90496a5258f42f6122d650d64d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration representing the type of access.  <a href="#afcab8a90496a5258f42f6122d650d64d">More...</a><br /></td></tr>
+<tr class="separator:afcab8a90496a5258f42f6122d650d64d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
@@ -279,6 +311,9 @@ Variables</h2></td></tr>
 <tr class="memitem:a0ae7873efe9570a33cb932bc0b976e4f"><td class="memTemplItemLeft" align="right" valign="top">constexpr bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#a0ae7873efe9570a33cb932bc0b976e4f">const_component_references_v</a> = <a class="el" href="structco__ecs_1_1const__component__references.html">const_component_references</a>&lt;Args...&gt;::value</td></tr>
 <tr class="memdesc:a0ae7873efe9570a33cb932bc0b976e4f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true when all Args are const references.  <br /></td></tr>
 <tr class="separator:a0ae7873efe9570a33cb932bc0b976e4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1021a2d7e2c20879dea806887dc11a28" id="r_a1021a2d7e2c20879dea806887dc11a28"><td class="memItemLeft" align="right" valign="top">constexpr <a class="el" href="structco__ecs_1_1main__thread__execution__policty__t.html">main_thread_execution_policty_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1021a2d7e2c20879dea806887dc11a28">main_thread_execution_policy</a> {}</td></tr>
+<tr class="memdesc:a1021a2d7e2c20879dea806887dc11a28"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constant instance of the main thread execution policy.  <br /></td></tr>
+<tr class="separator:a1021a2d7e2c20879dea806887dc11a28"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Typedef Documentation</h2>
 <a id="adfa7fe8f0127a405e0356c2405ec7736" name="adfa7fe8f0127a405e0356c2405ec7736"></a>
@@ -380,6 +415,49 @@ template&lt;component_reference T&gt; </div>
 </div><div class="memdoc">
 
 <p>Pool of entities that generates and recycles entity IDs. </p>
+
+</div>
+</div>
+<a id="a34d635a84c85b9e0f72a50f5cdcb2b87" name="a34d635a84c85b9e0f72a50f5cdcb2b87"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a34d635a84c85b9e0f72a50f5cdcb2b87">&#9670;&#160;</a></span>vector_of_executors_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">using <a class="el" href="#a34d635a84c85b9e0f72a50f5cdcb2b87">co_ecs::vector_of_executors_t</a> = std::vector&lt;std::unique_ptr&lt;<a class="el" href="classco__ecs_1_1system__executor__interface.html">system_executor_interface</a>&gt;&gt;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Vector of systems. </p>
+<p>This type alias defines a vector of unique pointers to system executor interfaces. </p>
+
+</div>
+</div>
+<h2 class="groupheader">Enumeration Type Documentation</h2>
+<a id="afcab8a90496a5258f42f6122d650d64d" name="afcab8a90496a5258f42f6122d650d64d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afcab8a90496a5258f42f6122d650d64d">&#9670;&#160;</a></span>access_type</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="#afcab8a90496a5258f42f6122d650d64d">co_ecs::access_type</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Enumeration representing the type of access. </p>
+<p>This enum defines the different types of access permissions: none, read, and write. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="afcab8a90496a5258f42f6122d650d64da17d5b67e203764ff6fca9629294688a3" name="afcab8a90496a5258f42f6122d650d64da17d5b67e203764ff6fca9629294688a3"></a>none&#160;</td><td class="fielddoc"><p>No access. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="afcab8a90496a5258f42f6122d650d64da649ec3137555493802e02b2b561d26c8" name="afcab8a90496a5258f42f6122d650d64da649ec3137555493802e02b2b561d26c8"></a>read&#160;</td><td class="fielddoc"><p>Read access. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="afcab8a90496a5258f42f6122d650d64da3d490a121984b0f620eda9d85225998a" name="afcab8a90496a5258f42f6122d650d64da3d490a121984b0f620eda9d85225998a"></a>write&#160;</td><td class="fielddoc"><p>Write access. </p>
+</td></tr>
+</table>
 
 </div>
 </div>
@@ -508,6 +586,30 @@ template&lt;component_reference... Args&gt; </div>
 </div><div class="memdoc">
 
 <p>Invalid component ID. </p>
+
+</div>
+</div>
+<a id="a1021a2d7e2c20879dea806887dc11a28" name="a1021a2d7e2c20879dea806887dc11a28"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1021a2d7e2c20879dea806887dc11a28">&#9670;&#160;</a></span>main_thread_execution_policy</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr <a class="el" href="structco__ecs_1_1main__thread__execution__policty__t.html">main_thread_execution_policty_t</a> co_ecs::main_thread_execution_policy {}</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Constant instance of the main thread execution policy. </p>
 
 </div>
 </div>

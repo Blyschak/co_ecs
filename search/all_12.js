@@ -12,5 +12,6 @@ var searchData=
   ['type_9',['type',['../structco__ecs_1_1component__meta.html#a489183c70783b32f9fc6020df91779ec',1,'co_ecs::component_meta']]],
   ['type_5fmeta_10',['type_meta',['../structco__ecs_1_1type__meta.html',1,'co_ecs']]],
   ['type_5fmeta_2ehpp_11',['type_meta.hpp',['../type__meta_8hpp.html',1,'']]],
-  ['type_5ftraits_2ehpp_12',['type_traits.hpp',['../type__traits_8hpp.html',1,'']]]
+  ['type_5fname_12',['type_name',['../classco__ecs_1_1system__executor__interface.html#a5e1192061c77d3c3e403639e4d05da21',1,'co_ecs::system_executor_interface']]],
+  ['type_5ftraits_2ehpp_13',['type_traits.hpp',['../type__traits_8hpp.html',1,'']]]
 ];

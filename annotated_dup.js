@@ -1,10 +1,7 @@
 var annotated_dup =
 [
     [ "co_ecs", "namespaceco__ecs.html", [
-      [ "experimental", "namespaceco__ecs_1_1experimental.html", [
-        [ "executor", "classco__ecs_1_1experimental_1_1executor.html", "classco__ecs_1_1experimental_1_1executor" ],
-        [ "schedule", "classco__ecs_1_1experimental_1_1schedule.html", "classco__ecs_1_1experimental_1_1schedule" ]
-      ] ],
+      [ "access_pattern_t", "classco__ecs_1_1access__pattern__t.html", "classco__ecs_1_1access__pattern__t" ],
       [ "archetype", "classco__ecs_1_1archetype.html", "classco__ecs_1_1archetype" ],
       [ "archetypes", "classco__ecs_1_1archetypes.html", "classco__ecs_1_1archetypes" ],
       [ "base_registry", "classco__ecs_1_1base__registry.html", "classco__ecs_1_1base__registry" ],
@@ -27,9 +24,15 @@ var annotated_dup =
       [ "entity_not_found", "classco__ecs_1_1entity__not__found.html", "classco__ecs_1_1entity__not__found" ],
       [ "entity_ref", "classco__ecs_1_1entity__ref.html", "classco__ecs_1_1entity__ref" ],
       [ "insufficient_chunk_size", "classco__ecs_1_1insufficient__chunk__size.html", "classco__ecs_1_1insufficient__chunk__size" ],
+      [ "main_thread_execution_policty_t", "structco__ecs_1_1main__thread__execution__policty__t.html", "structco__ecs_1_1main__thread__execution__policty__t" ],
       [ "mutable_component_reference", "structco__ecs_1_1mutable__component__reference.html", null ],
+      [ "named_system", "classco__ecs_1_1named__system.html", "classco__ecs_1_1named__system" ],
       [ "placeholder_entity", "classco__ecs_1_1placeholder__entity.html", "classco__ecs_1_1placeholder__entity" ],
       [ "registry", "classco__ecs_1_1registry.html", "classco__ecs_1_1registry" ],
+      [ "schedule", "classco__ecs_1_1schedule.html", "classco__ecs_1_1schedule" ],
+      [ "schedule_executor", "classco__ecs_1_1schedule__executor.html", "classco__ecs_1_1schedule__executor" ],
+      [ "stage", "classco__ecs_1_1stage.html", "classco__ecs_1_1stage" ],
+      [ "stage_executor", "classco__ecs_1_1stage__executor.html", "classco__ecs_1_1stage__executor" ],
       [ "system_executor_interface", "classco__ecs_1_1system__executor__interface.html", "classco__ecs_1_1system__executor__interface" ],
       [ "system_interface", "classco__ecs_1_1system__interface.html", "classco__ecs_1_1system__interface" ],
       [ "task_pool", "classco__ecs_1_1task__pool.html", null ],

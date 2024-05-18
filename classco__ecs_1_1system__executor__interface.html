@@ -129,6 +129,15 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:adaac61362442f4a6f9f8fa47ebec2b22" id="r_adaac61362442f4a6f9f8fa47ebec2b22"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adaac61362442f4a6f9f8fa47ebec2b22">run</a> ()=0</td></tr>
 <tr class="memdesc:adaac61362442f4a6f9f8fa47ebec2b22"><td class="mdescLeft">&#160;</td><td class="mdescRight">Execute system logic.  <br /></td></tr>
 <tr class="separator:adaac61362442f4a6f9f8fa47ebec2b22"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2dc6081a3a67e0accc96967369380b45" id="r_a2dc6081a3a67e0accc96967369380b45"><td class="memItemLeft" align="right" valign="top">virtual auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2dc6081a3a67e0accc96967369380b45">name</a> () const -&gt; std::string_view=0</td></tr>
+<tr class="memdesc:a2dc6081a3a67e0accc96967369380b45"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the name of the entity.  <br /></td></tr>
+<tr class="separator:a2dc6081a3a67e0accc96967369380b45"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5e1192061c77d3c3e403639e4d05da21" id="r_a5e1192061c77d3c3e403639e4d05da21"><td class="memItemLeft" align="right" valign="top">virtual auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5e1192061c77d3c3e403639e4d05da21">type_name</a> () const -&gt; std::string_view=0</td></tr>
+<tr class="memdesc:a5e1192061c77d3c3e403639e4d05da21"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the type name of the entity.  <br /></td></tr>
+<tr class="separator:a5e1192061c77d3c3e403639e4d05da21"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af378f09376f6c247c42c04b453b1b96c" id="r_af378f09376f6c247c42c04b453b1b96c"><td class="memItemLeft" align="right" valign="top">virtual auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af378f09376f6c247c42c04b453b1b96c">access_pattern</a> () const -&gt; <a class="el" href="classco__ecs_1_1access__pattern__t.html">access_pattern_t</a>=0</td></tr>
+<tr class="memdesc:af378f09376f6c247c42c04b453b1b96c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the access pattern of the entity.  <br /></td></tr>
+<tr class="separator:af378f09376f6c247c42c04b453b1b96c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>System executor interface, a system is a type that implements <a class="el" href="#adaac61362442f4a6f9f8fa47ebec2b22" title="Execute system logic.">run()</a> method. </p>
@@ -161,6 +170,62 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a id="af378f09376f6c247c42c04b453b1b96c" name="af378f09376f6c247c42c04b453b1b96c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af378f09376f6c247c42c04b453b1b96c">&#9670;&#160;</a></span>access_pattern()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual auto co_ecs::system_executor_interface::access_pattern </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"></span></td><td>)</td>
+          <td> const -&gt;  <a class="el" href="classco__ecs_1_1access__pattern__t.html">access_pattern_t</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Get the access pattern of the entity. </p>
+<dl class="section return"><dt>Returns</dt><dd>The access pattern of the entity. </dd></dl>
+
+</div>
+</div>
+<a id="a2dc6081a3a67e0accc96967369380b45" name="a2dc6081a3a67e0accc96967369380b45"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2dc6081a3a67e0accc96967369380b45">&#9670;&#160;</a></span>name()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual auto co_ecs::system_executor_interface::name </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"></span></td><td>)</td>
+          <td> const -&gt;  std::string_view</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Get the name of the entity. </p>
+<dl class="section return"><dt>Returns</dt><dd>The name of the entity. </dd></dl>
+
+</div>
+</div>
 <a id="adaac61362442f4a6f9f8fa47ebec2b22" name="adaac61362442f4a6f9f8fa47ebec2b22"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#adaac61362442f4a6f9f8fa47ebec2b22">&#9670;&#160;</a></span>run()</h2>
 
@@ -188,8 +253,36 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a5e1192061c77d3c3e403639e4d05da21" name="a5e1192061c77d3c3e403639e4d05da21"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5e1192061c77d3c3e403639e4d05da21">&#9670;&#160;</a></span>type_name()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual auto co_ecs::system_executor_interface::type_name </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"></span></td><td>)</td>
+          <td> const -&gt;  std::string_view</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Get the type name of the entity. </p>
+<dl class="section return"><dt>Returns</dt><dd>The type name of the entity. </dd></dl>
+
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>include/co_ecs/<a class="el" href="system_8hpp_source.html">system.hpp</a></li>
+<li>include/co_ecs/system/<a class="el" href="system_8hpp_source.html">system.hpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

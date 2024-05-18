@@ -7,7 +7,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=11" />
   <meta name="generator" content="Doxygen 1.10.0" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>co_ecs: include/co_ecs/schedule.hpp File Reference</title>
+  <title>co_ecs: include/co_ecs/system/schedule.hpp File Reference</title>
   <link href="tabs.css" rel="stylesheet" type="text/css" />
   <script type="text/javascript" src="jquery.js"></script>
   <script type="text/javascript" src="dynsections.js"></script>
@@ -116,25 +116,24 @@ $(function(){initNavTree('schedule_8hpp.html',''); initResizable(); });
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &lt;<a class="el" href="registry_8hpp_source.html">co_ecs/registry.hpp</a>&gt;</code><br />
-<code>#include &lt;<a class="el" href="system_8hpp_source.html">co_ecs/system.hpp</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="thread__pool_8hpp_source.html">co_ecs/thread_pool/thread_pool.hpp</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="stage_8hpp_source.html">co_ecs/system/stage.hpp</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="system_8hpp_source.html">co_ecs/system/system.hpp</a>&gt;</code><br />
 </div>
 <p><a href="schedule_8hpp_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1experimental_1_1schedule.html">co_ecs::experimental::schedule</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Schedule of systems.  <a href="classco__ecs_1_1experimental_1_1schedule.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1schedule.html">co_ecs::schedule</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Manages the execution of systems in different stages.  <a href="classco__ecs_1_1schedule.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1experimental_1_1executor.html">co_ecs::experimental::executor</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Executes the scehdule.  <a href="classco__ecs_1_1experimental_1_1executor.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classco__ecs_1_1schedule__executor.html">co_ecs::schedule_executor</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Executes the schedule by running all stages.  <a href="classco__ecs_1_1schedule__executor.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="namespaces" name="namespaces"></a>
 Namespaces</h2></td></tr>
 <tr class="memitem:namespaceco__ecs" id="r_namespaceco__ecs"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceco__ecs.html">co_ecs</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:namespaceco__ecs_1_1experimental" id="r_namespaceco__ecs_1_1experimental"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceco__ecs_1_1experimental.html">co_ecs::experimental</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 </div><!-- contents -->
@@ -142,7 +141,7 @@ Namespaces</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_93d88f239f32b0a2b845f7f5e4005315.html">co_ecs</a></li><li class="navelem"><a class="el" href="schedule_8hpp.html">schedule.hpp</a></li>
+    <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_93d88f239f32b0a2b845f7f5e4005315.html">co_ecs</a></li><li class="navelem"><a class="el" href="dir_b4b45e8f15d04b72e212a175a437891a.html">system</a></li><li class="navelem"><a class="el" href="schedule_8hpp.html">schedule.hpp</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.10.0 </li>
   </ul>
 </div>
