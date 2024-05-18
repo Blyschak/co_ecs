@@ -29,30 +29,14 @@ using second_type_t = nth_type_t<1, Args...>;
 ///
 /// @tparam F Function type
 template<typename F>
-struct function_traits : public function_traits<decltype(&std::remove_reference<F>::type::operator())> {};
+struct function_traits : public function_traits<decltype(std::function{ std::declval<F>() })> {};
 
-/// @brief Function trait, specialization for const member types
-///
-/// @tparam C Class type
-/// @tparam R Return type
-/// @tparam Args Argument types
-template<typename C, typename R, typename... Args>
-struct function_traits<R (C::*)(Args...) const> : function_traits<R (*)(Args...)> {};
-
-/// @brief Function trait, specialization for member types
-///
-/// @tparam C Class type
-/// @tparam R Return type
-/// @tparam Args Argument types
-template<typename C, typename R, typename... Args>
-struct function_traits<R (C::*)(Args...)> : function_traits<R (*)(Args...)> {};
-
-/// @brief Function trait, specialization for function pointers
+/// @brief Function trait, specialization for std::function
 ///
 /// @tparam R Return type
 /// @tparam Args Argument types
 template<typename R, typename... Args>
-struct function_traits<R (*)(Args...)> {
+struct function_traits<std::function<R(Args...)>> {
     using return_type = R;
 
     using arguments_tuple_type = std::tuple<Args...>;
