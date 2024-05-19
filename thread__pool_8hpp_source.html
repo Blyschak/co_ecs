@@ -438,18 +438,20 @@ $(function(){initNavTree('thread__pool_8hpp_source.html',''); initResizable(); }
 <div class="line"><a id="l00328" name="l00328"></a><span class="lineno">  328</span> </div>
 <div class="line"><a id="l00329" name="l00329"></a><span class="lineno">  329</span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classco__ecs_1_1thread__pool.html#aabf6b8cfd0d9a4b3df393b2815163578">wait</a>() {</div>
 <div class="line"><a id="l00330" name="l00330"></a><span class="lineno">  330</span>        <span class="keyword">constexpr</span> <span class="keyword">auto</span> wait_time = std::chrono::milliseconds(5);</div>
-<div class="line"><a id="l00331" name="l00331"></a><span class="lineno">  331</span>        _worker_wait_semaphore.try_acquire_for(wait_time);</div>
-<div class="line"><a id="l00332" name="l00332"></a><span class="lineno">  332</span>    }</div>
-<div class="line"><a id="l00333" name="l00333"></a><span class="lineno">  333</span> </div>
-<div class="line"><a id="l00334" name="l00334"></a><span class="lineno">  334</span><span class="keyword">private</span>:</div>
-<div class="line"><a id="l00335" name="l00335"></a><span class="lineno">  335</span>    <span class="keyword">static</span> <span class="keyword">inline</span> <a class="code hl_function" href="classco__ecs_1_1thread__pool.html#ae2484663da2b39c520955bf2ddc3a65f">thread_pool</a>* _instance;</div>
-<div class="line"><a id="l00336" name="l00336"></a><span class="lineno">  336</span> </div>
-<div class="line"><a id="l00337" name="l00337"></a><span class="lineno">  337</span>    std::vector&lt;std::unique_ptr&lt;worker&gt;&gt; _workers;</div>
-<div class="line"><a id="l00338" name="l00338"></a><span class="lineno">  338</span>    std::counting_semaphore&lt;&gt; _worker_wait_semaphore{ 0 };</div>
-<div class="line"><a id="l00339" name="l00339"></a><span class="lineno">  339</span>};</div>
+<div class="line"><a id="l00331" name="l00331"></a><span class="lineno">  331</span>        <span class="comment">// could be just acquire() but LLVM has a bug where it looses wake-up in semaphores -</span></div>
+<div class="line"><a id="l00332" name="l00332"></a><span class="lineno">  332</span>        <span class="comment">// https://reviews.llvm.org/D114119.</span></div>
+<div class="line"><a id="l00333" name="l00333"></a><span class="lineno">  333</span>        _worker_wait_semaphore.try_acquire_for(wait_time);</div>
+<div class="line"><a id="l00334" name="l00334"></a><span class="lineno">  334</span>    }</div>
+<div class="line"><a id="l00335" name="l00335"></a><span class="lineno">  335</span> </div>
+<div class="line"><a id="l00336" name="l00336"></a><span class="lineno">  336</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00337" name="l00337"></a><span class="lineno">  337</span>    <span class="keyword">static</span> <span class="keyword">inline</span> <a class="code hl_function" href="classco__ecs_1_1thread__pool.html#ae2484663da2b39c520955bf2ddc3a65f">thread_pool</a>* _instance;</div>
+<div class="line"><a id="l00338" name="l00338"></a><span class="lineno">  338</span> </div>
+<div class="line"><a id="l00339" name="l00339"></a><span class="lineno">  339</span>    std::vector&lt;std::unique_ptr&lt;worker&gt;&gt; _workers;</div>
+<div class="line"><a id="l00340" name="l00340"></a><span class="lineno">  340</span>    std::counting_semaphore&lt;&gt; _worker_wait_semaphore{ 0 };</div>
+<div class="line"><a id="l00341" name="l00341"></a><span class="lineno">  341</span>};</div>
 </div>
-<div class="line"><a id="l00340" name="l00340"></a><span class="lineno">  340</span> </div>
-<div class="line"><a id="l00341" name="l00341"></a><span class="lineno">  341</span>} <span class="comment">// namespace co_ecs</span></div>
+<div class="line"><a id="l00342" name="l00342"></a><span class="lineno">  342</span> </div>
+<div class="line"><a id="l00343" name="l00343"></a><span class="lineno">  343</span>} <span class="comment">// namespace co_ecs</span></div>
 <div class="ttc" id="aclassco__ecs_1_1task__pool_html_a380ac89dfb7c14f5098724fa2be1407a"><div class="ttname"><a href="classco__ecs_1_1task__pool.html#a380ac89dfb7c14f5098724fa2be1407a">co_ecs::task_pool::allocate</a></div><div class="ttdeci">static task_t * allocate(auto &amp;&amp;func, task_t *parent=nullptr)</div><div class="ttdoc">Allocates a task with the specified function and parent, placing it in a circular buffer.</div><div class="ttdef"><b>Definition</b> task.hpp:68</div></div>
 <div class="ttc" id="aclassco__ecs_1_1task__t_html"><div class="ttname"><a href="classco__ecs_1_1task__t.html">co_ecs::task_t</a></div><div class="ttdoc">Represents a task that can be executed, monitored for completion, and linked to a parent task.</div><div class="ttdef"><b>Definition</b> task.hpp:10</div></div>
 <div class="ttc" id="aclassco__ecs_1_1task__t_html_ae52f71b85aef1d822921035f9317234c"><div class="ttname"><a href="classco__ecs_1_1task__t.html#ae52f71b85aef1d822921035f9317234c">co_ecs::task_t::is_completed</a></div><div class="ttdeci">bool is_completed() const noexcept</div><div class="ttdoc">Checks if the task has been completed.</div><div class="ttdef"><b>Definition</b> task.hpp:33</div></div>
